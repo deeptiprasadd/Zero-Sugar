@@ -1,0 +1,65 @@
+# Secrets — never commit
+.env
+*.token
+secrets/
+*cookies*.txt
+
+# Data — large, reproducible, and in Instagram's case not redistributable
+data/raw/*
+data/media/*
+data/interim/*
+data/processed/*
+!data/**/.gitkeep
+
+# Models
+models/*
+!models/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Office lock files
+~$*
+
+# Raw WhatsApp export - holds a contact name and account-linked share tokens.
+# The cleaned, token-free list is docs/curated_zero_sugar_reels.csv.
+Cocacolaaaa/
+
+# Frame sheets from the Zero Sugar checks (63 MB of Coca-Cola video frames).
+# Regenerable from the videos; the answers and the decision are what matter.
+reports/zero_sugar_visual_check/
+reports/clip_zero_sugar_first_attempt_sheets/
+
+# Instagram Reels downloaded by hand + their screenshots (~23 MB).
+# Other accounts' video content - not ours to redistribute, and the corpus
+# lists in reports/ already carry every link.
+insta reels/
+
+data/raw/
+data/media/
+data/interim/
+data/processed/
+
+# Internal working notes - our use only, never on GitHub.
+# Planning, diary and handoff files. The method docs in docs/ stay in the repo.
+internal/
+
+# Word documents at the project root - the proposal, the literature survey and the
+# weekly progress reports. Kept on this computer only, never on GitHub.
+/*.docx
+
+# The main README is being rewritten - kept on this computer only for now (2026-09-24).
+# Only the root file: reports/README.md and reports/shared/README.md stay published.
+/README.md

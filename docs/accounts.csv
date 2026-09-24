@@ -1,0 +1,8 @@
+market,region,language,youtube_channel,youtube_title,instagram_handle,channel_type,verified,source_url,notes
+Global/US,North America & Global,English,UCosXctaTYxN4YPIvI5Fpcrw,Coca-Cola,cocacola,brand,yes,https://www.coca-cola.com/us/en,Both links from the official US site footer. IG followers 3363084 (2026-09-09).
+India,South Asia,Hindi/English,,,cocacola_india,brand,yes,https://www.coca-cola.com/in/en,Verified as having NO separate YouTube channel - the India site's YouTube link is a playlist on the global channel. Contributes Instagram only (D-012).
+LatAm/Mexico,LatAm,Spanish,UCO02nrsyRS6bzxkxDbVhehQ,Industria Mexicana de Coca-Cola,somoscocacola,industry_body,yes,https://www.coca-cola.com/mx/es,"KEPT per D-012. Channel is the Mexican bottlers' association, so content skews corporate rather than consumer advertising. Marked in channel_type so it can be controlled or checked, not silently mixed in."
+Brazil,Brazil,Portuguese,UC1tTYixeA2X9IJDAegAJ-6w,Coca-Cola Brasil,cocacola_br,brand,yes,https://www.coca-cola.com/br/pt,Clean match on both platforms.
+MENA,MENA,Arabic,UC7lUT0AV86gQ0OGeofQBHUg,Coca-Cola Middle East,cocacolamiddleeast,brand,yes,https://www.coca-cola.com/ae/ar,Clean match. Traced from the Arabic-language regional site.
+Indonesia,SE Asia,Indonesian,,,cocacola_id,brand,yes,https://www.coca-cola.com/id/id,Verified as having NO separate YouTube channel - the site's YouTube icon points at the global channel and @cocacolaindonesia 404s. Contributes Instagram only (D-012).
+Thailand,SE Asia,Thai,UCg7qJTHrYfKwpgaP-Wb1jpg,Coca-Cola Thailand,cocacola_th,brand,yes,https://www.coca-cola.com/th/th,Clean match on both platforms.

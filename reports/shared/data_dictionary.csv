@@ -1,0 +1,14 @@
+﻿platform,column,meaning
+both,corpus_group,Why the video is in the 150: Zero Sugar (manually verified or named in text) or another Coca-Cola video drawn at random. On YouTube a random draw can still be Zero Sugar - see zero_sugar_label_method
+both,zero_sugar,True if the video features Coca-Cola Zero Sugar
+both,in_analysis_set,True if the video is in the analysed set (Zero Sugar videos only). The other videos are kept in these files and used only as a comparison check
+both,zero_sugar_label_method,"How the Zero Sugar label was established: text screening, or a manual visual check of the video"
+both,likes / comments,"Engagement counts. Empty means hidden by the account, not zero"
+both,video_width / video_height / video_fps / video_seconds / has_audio,Measured with ffprobe on the downloaded file
+both,video_source,How the video file was obtained
+instagram,coca_cola_account,The Coca-Cola account the Reel belongs to
+instagram,posted_by,Account shown as the poster; differs from coca_cola_account on collaboration posts
+instagram,followers_of_poster,Followers of posted_by; the exposure base for engagement rates
+instagram,engagement_age_ok,Engagement is used only if read at least 7 days after posting
+instagram,region,One of 8 regional groups used for analysis (market-level n is too small)
+youtube,channel_subscribers,Subscribers of the channel; the exposure base for engagement rates

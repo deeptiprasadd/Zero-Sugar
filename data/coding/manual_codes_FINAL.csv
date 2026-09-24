@@ -1,0 +1,63 @@
+sample_order,platform,media_id,has_celebrity,has_influencer,has_cta,humour_present,zero_sugar_visible,notes,first_saved_at,completed_at
+1,instagram,DMF6DohJ-qb,no,no,yes,no,zero_sugar,"its a collaboration with dominos pizza, so its a brand deal",2026-09-15T13:10:11+00:00,2026-09-15T13:10:50+00:00
+2,youtube,r0VTIWU3Uc0,no,unsure,yes,no,zero_sugar,its a collaboration video with fifa world cup where cocacola is a sponsore,2026-09-15T13:11:06+00:00,2026-09-15T13:11:19+00:00
+3,instagram,DVRMTm8EflU,yes,yes,no,no,zero_sugar,its a concert video where singers are singing and cocacola is a sponsore ,2026-09-15T13:12:02+00:00,2026-09-15T13:58:51+00:00
+4,youtube,0R2otzTYwsc,yes,no,no,no,zero_sugar,podcast for fifa world cup where coca cola is a sponsor,2026-09-15T13:13:01+00:00,2026-09-15T13:13:34+00:00
+5,instagram,DdMtvjngRjS,unsure,yes,no,yes,zero_sugar,"a party concept video
+",2026-09-15T13:14:03+00:00,2026-09-15T13:14:13+00:00
+6,youtube,FRS85lR5jBk,yes,yes,no,no,other_coca_cola,"its a video of tasting differenent flavour of cocacola, its not useful because there is no zero suger or diet coke ",2026-09-15T13:14:35+00:00,2026-09-15T13:14:54+00:00
+7,instagram,C2HQ5YdMIm2,yes,yes,yes,unsure,zero_sugar,its a brand deal with a influencer ,2026-09-15T13:15:54+00:00,2026-09-15T13:16:00+00:00
+8,instagram,DbAgpyMThqZ,no,yes,no,yes,zero_sugar,the people are discussing fifa and its sponsoreed by coca cola,2026-09-15T13:16:25+00:00,2026-09-15T13:16:35+00:00
+9,youtube,aI9gTG6OuK8,yes,yes,no,unsure,zero_sugar,podcast discussing fifa ,2026-09-15T13:17:03+00:00,2026-09-15T13:59:02+00:00
+10,youtube,DNeRVszyZaw,yes,unsure,no,unsure,zero_sugar,podcast discussing fifa,2026-09-15T13:17:45+00:00,2026-09-15T13:17:49+00:00
+11,instagram,DPseG8kDvPt,unsure,yes,no,no,zero_sugar,a party where coke studio is involved,2026-09-15T13:17:56+00:00,2026-09-15T13:18:04+00:00
+12,youtube,myeBtx9z9As,no,no,yes,no,zero_sugar,manufacturing of coca cola in mexico,2026-09-15T13:18:30+00:00,2026-09-15T13:18:35+00:00
+13,instagram,Dax6ozkufSd,no,no,no,no,other_coca_cola,a snippet of fifa world cup,2026-09-15T13:19:03+00:00,2026-09-15T13:19:09+00:00
+14,youtube,uoGkRWdb46A,no,no,yes,no,zero_sugar,a collaboration with a food brand ,2026-09-15T13:19:27+00:00,2026-09-15T13:19:33+00:00
+15,youtube,U71CgdTECCs,no,yes,yes,unsure,other_coca_cola,its a marketing video,2026-09-15T13:19:52+00:00,2026-09-15T13:20:18+00:00
+16,instagram,C7DOQ8uhneI,yes,yes,yes,no,zero_sugar,"a ad with a celebrity
+",2026-09-15T13:20:38+00:00,2026-09-15T13:20:43+00:00
+17,instagram,DcOdtwYjXpt,no,no,yes,no,zero_sugar,"a marketing video by coca cola, showing how family enjoy time together",2026-09-15T13:21:06+00:00,2026-09-15T13:21:13+00:00
+18,youtube,8fW_uFD-qxI,no,yes,no,yes,other_coca_cola,again a campaign of cocacola during fifa ,2026-09-15T13:21:41+00:00,2026-09-15T13:21:46+00:00
+19,youtube,eKBjm4_DiQA,no,no,yes,unsure,no_product,its just a ad for cocacola new product ,2026-09-15T13:22:16+00:00,2026-09-15T13:22:28+00:00
+20,youtube,w5qI1m9Qy1w,no,yes,yes,no,zero_sugar,"a influencer trying coca cola, this video is a marketing video ",2026-09-15T13:22:51+00:00,2026-09-15T13:22:56+00:00
+21,instagram,Db4mN1OgLcN,no,no,yes,unsure,zero_sugar,"a brand shoot, where normal coca cola and zero sugar cans are in frame",2026-09-15T13:24:08+00:00,2026-09-15T13:24:13+00:00
+22,youtube,Qd_mTNyMYiM,no,yes,yes,no,zero_sugar,influencer video,2026-09-15T13:24:51+00:00,2026-09-15T13:24:54+00:00
+23,youtube,K2jYMbYGq7I,no,no,yes,no,other_coca_cola,a food video where coca cola is enjoyed with the food,2026-09-15T13:25:17+00:00,2026-09-15T13:25:26+00:00
+24,instagram,CuIVdcfNL0C,no,yes,no,unsure,zero_sugar,a food influencer is making food and serving it with coca cola- brand deal,2026-09-15T13:25:50+00:00,2026-09-15T13:26:02+00:00
+25,instagram,DahF65cT2lv,no,yes,no,yes,zero_sugar,brand deal during fifa,2026-09-15T13:26:29+00:00,2026-09-15T13:26:42+00:00
+26,instagram,CqgEnkAtNAU,unsure,unsure,yes,yes,zero_sugar,its a marketing video ,2026-09-15T13:26:57+00:00,2026-09-15T13:29:02+00:00
+27,youtube,67kX-LViTYY,no,yes,no,no,other_coca_cola,view and disscuss fifa with coca cola in there hands,2026-09-15T13:29:12+00:00,2026-09-15T13:29:22+00:00
+28,instagram,DIvTxfHM-bW,no,yes,no,yes,no_product,audition campaign with no product in it just name ,2026-09-15T13:29:57+00:00,2026-09-15T13:30:08+00:00
+29,instagram,Dc3tcPuAYhc,no,no,yes,no,zero_sugar,a normal product video,2026-09-15T13:30:31+00:00,2026-09-15T13:30:36+00:00
+30,youtube,fzTAYgFx4hU,yes,unsure,no,unsure,zero_sugar,podcast on fifa sharing there views with coca cola in there hands because it is the sponsor,2026-09-15T13:30:51+00:00,2026-09-15T13:31:01+00:00
+31,youtube,pnT74Hfwk00,unsure,unsure,no,unsure,other_coca_cola,a video where 2 people are enjoying there meal with cocacola,2026-09-15T13:32:15+00:00,2026-09-15T13:32:26+00:00
+32,instagram,DZsuaekRtZq,yes,yes,no,yes,zero_sugar,different packaging of zero sugar,2026-09-15T13:32:57+00:00,2026-09-15T13:33:09+00:00
+33,instagram,DZ4mdveiLg2,no,no,no,no,no_product,a concert where there are diffrent gaming booth by coca cola as sponsor,2026-09-15T13:33:58+00:00,2026-09-15T13:34:03+00:00
+34,instagram,Cx-k0o4v4tH,no,no,no,no,other_coca_cola,it shows the journey of coca cola branding throughout many years,2026-09-15T13:34:59+00:00,2026-09-15T13:35:04+00:00
+35,youtube,nUsWSsbWwYg,no,yes,no,no,unsure,again people are discussing and playing games wiith each other and drinking diffrent coca cola ,2026-09-15T13:35:29+00:00,2026-09-15T13:35:42+00:00
+36,instagram,Dc1t-BJh7Xx,unsure,yes,yes,yes,other_coca_cola,a person is saying things about coca cola,2026-09-15T13:36:35+00:00,2026-09-15T13:36:41+00:00
+37,instagram,DSEsIQHksTP,no,no,yes,no,zero_sugar,a product closeup video by the brand,2026-09-15T13:37:07+00:00,2026-09-15T13:37:12+00:00
+38,youtube,EDUD-YDp7fk,no,yes,no,yes,other_coca_cola,people are playing games during fifa discussion,2026-09-15T13:37:32+00:00,2026-09-15T13:37:41+00:00
+39,instagram,DYFHnCeuLKB,no,no,no,no,other_coca_cola,showing journey of 140 years of coca cola,2026-09-15T13:38:42+00:00,2026-09-15T13:38:49+00:00
+40,instagram,DaRnExlT80j,no,yes,no,yes,zero_sugar,,2026-09-15T13:39:08+00:00,2026-09-15T13:39:19+00:00
+41,youtube,BHnxbwPk3Hw,no,yes,no,no,zero_sugar,a concept video were people are enoyting time together while drinking zero sugar,2026-09-15T13:39:26+00:00,2026-09-15T13:39:47+00:00
+42,instagram,C_sNZyopYwK,yes,yes,yes,yes,zero_sugar,2 girls eating and drinking coca cola,2026-09-15T13:40:28+00:00,2026-09-15T13:40:33+00:00
+43,youtube,ShjHKXCSSA8,no,yes,no,no,no_product,its a knowledgeable campaign by coca cola foundation,2026-09-15T13:41:26+00:00,2026-09-15T13:41:31+00:00
+44,instagram,DaoJDxss670,no,yes,no,yes,zero_sugar,enjoying fifa while having coca cola and zero sugar,2026-09-15T13:41:59+00:00,2026-09-15T13:42:03+00:00
+45,instagram,DZdEg_qs4GQ,no,unsure,no,yes,other_coca_cola,,2026-09-15T13:42:31+00:00,2026-09-15T13:42:50+00:00
+46,youtube,vkcBjr9L5q4,no,yes,no,unsure,zero_sugar,podcast discussing fifa ,2026-09-15T13:42:55+00:00,2026-09-15T13:43:00+00:00
+47,youtube,8K30DjRvHnQ,no,unsure,no,yes,zero_sugar,a ad where there shorts of fans of football drinking cocacola,2026-09-15T13:43:16+00:00,2026-09-15T13:43:21+00:00
+48,youtube,d58D_lRiqms,no,no,no,no,other_coca_cola,fifa promotional video,2026-09-15T13:44:02+00:00,2026-09-15T13:44:09+00:00
+49,youtube,DZF3kBggQ4s,no,yes,no,unsure,other_coca_cola,podcast discussing fifa,2026-09-15T13:44:34+00:00,2026-09-15T13:44:41+00:00
+50,youtube,z0zgaEcmzxs,no,yes,no,unsure,other_coca_cola,podcast of fifa discussion,2026-09-15T13:45:00+00:00,2026-09-15T13:45:04+00:00
+51,youtube,CNjRl3R2gmw,no,yes,no,unsure,other_coca_cola,podcast of fifa discussion,2026-09-15T13:45:21+00:00,2026-09-15T13:45:26+00:00
+52,instagram,DcbdGiZCnE8,no,yes,no,unsure,zero_sugar,a person is showing zero sugar bottle,2026-09-15T13:45:36+00:00,2026-09-15T13:45:44+00:00
+53,youtube,mw_Cn69sZlk,no,yes,no,unsure,other_coca_cola,food blogger drinking coca cola during eating,2026-09-15T13:46:09+00:00,2026-09-15T13:46:37+00:00
+54,youtube,hdAI8SL3S9c,no,yes,no,unsure,other_coca_cola,podcast of fifa discussion,2026-09-15T13:47:08+00:00,2026-09-15T13:47:12+00:00
+55,instagram,C4Meop_AIdj,no,no,no,no,zero_sugar,its showing new packaging of zero sugar specially for korean market,2026-09-15T13:47:18+00:00,2026-09-15T13:59:10+00:00
+56,youtube,SCydziSurbg,no,yes,no,unsure,other_coca_cola,podcast of fifa discussion,2026-09-15T13:48:05+00:00,2026-09-15T13:48:09+00:00
+57,instagram,DaKH0VFzqbv,no,yes,no,no,other_coca_cola,group of people discussing fifa ,2026-09-15T13:48:12+00:00,2026-09-15T13:48:20+00:00
+58,youtube,nw7z12FLviU,no,no,yes,no,zero_sugar,fifa and coca cola brand campagin,2026-09-15T13:48:42+00:00,2026-09-15T13:48:59+00:00
+59,instagram,DRHt2lOim74,no,no,yes,no,zero_sugar,christmas special ad for coca cola,2026-09-15T13:49:20+00:00,2026-09-15T13:49:25+00:00
+60,instagram,DXUcZN7AbCB,no,unsure,no,no,no_product,concert clips sponsposerd by coca cola,2026-09-15T13:50:46+00:00,2026-09-15T13:50:55+00:00

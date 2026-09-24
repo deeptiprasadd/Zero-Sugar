@@ -1,0 +1,100 @@
+# Target: Python 3.12+. **Python 3.14 now works** — rechecked against PyPI 2026-09-12:
+# numba 0.67.0, ctranslate2 4.8.2, llvmlite 0.49.0, statsmodels 0.15.0 and shap 0.52.0
+# all ship cp314 wheels; scenedetect/easyocr are pure-Python; xgboost ships py3-none.
+# No separate venv is required. (The old warning about missing 3.14 wheels is obsolete.)
+# Install:  pip install -r requirements.txt
+
+# --- core (already present in the system interpreter, pinned here for the venv) ---
+numpy>=1.26,<3
+pandas>=2.2
+pyarrow>=15
+scikit-learn>=1.5
+matplotlib>=3.8
+seaborn>=0.13
+joblib>=1.4
+
+# --- collection ---
+requests>=2.31
+yt-dlp>=2026.8.19
+# YouTube now needs a JavaScript runtime + challenge solver, or logged-in downloads fail
+# with "The page needs to be reloaded" (D-020). deno.exe lands in Python's Scripts folder;
+# src/collect/download_media.py passes its path to yt-dlp explicitly.
+deno==2.9.6
+yt-dlp-ejs==0.8.0
+youtube-transcript-api>=0.6.2
+# apify-client not required — src/collect/instagram.py uses the Apify REST API
+# through `requests`, matching youtube.py. Re-add only if you script beyond it.
+
+# --- video / vision ---
+opencv-python>=4.10
+scenedetect>=0.6.4
+mediapipe>=0.10            # faces
+ultralytics>=8.2           # YOLO fallback for product detection
+open-clip-torch>=2.24      # CLIP zero-shot product/logo detection
+torch>=2.2
+torchvision>=0.17
+easyocr>=1.7               # multilingual on-screen text (D-003)
+
+# --- audio ---
+faster-whisper>=1.0        # multilingual ASR; needs ctranslate2
+librosa>=0.10              # prosody/energy; needs numba
+soundfile>=0.12
+
+# --- text / NLP ---
+transformers>=4.40         # xlm-roberta sentiment, DistilRoBERTa emotion
+sentencepiece>=0.2         # reads XLM-R's tokenizer; without it transformers 5 picks the
+                           # wrong converter and fails asking for tiktoken (5.9)
+langdetect>=1.0.9          # caption language (docs/04 section 1); used by 5.9 and 5.7
+emoji>=2.12
+
+# --- modelling ---
+xgboost>=2.0
+statsmodels>=0.14          # MixedLM (Phase 6)
+shap>=0.45                 # Phase 8
+
+# --- prediction service (Phase 12, D-017) ---
+flask>=3.0
+waitress>=3.0              # production WSGI server on Windows
+
+# --- reliability / stats ---
+krippendorff>=0.6          # annotation validation (Phase 3)
+scipy>=1.12
+
+# --- installed and verified 2026-09-15 (Python 3.14, RTX 3050) ---------------------------
+# GPU PyTorch comes from the PyTorch index, not PyPI:
+#   pip install torch==2.12.0+cu130 torchvision==0.27.0+cu130 --index-url https://download.pytorch.org/whl/cu130
+# Install the rest with a constraints file pinning those two, or pip may swap in a CPU build.
+# easyocr is installed with --no-deps: its opencv-python-headless would overwrite the
+# opencv-python / opencv-contrib-python already present (pip check reports this, expected).
+seaborn==0.13.2
+scenedetect==0.7.1
+open-clip-torch==3.3.0
+easyocr==1.7.2
+faster-whisper==1.2.1
+ctranslate2==4.8.2
+librosa==1.0.0
+soundfile==0.14.0
+emoji==2.15.0
+xgboost==3.4.1
+statsmodels==0.15.0
+shap==0.52.0
+numba==0.67.0
+krippendorff==0.8.2
+flask==3.1.3
+
+# --- added 2026-09-21: CUDA 12 runtime for faster-whisper on the GPU -----------------------
+# ctranslate2 (faster-whisper's engine) is built for CUDA 12; the PyTorch cu130 build above
+# carries only CUDA 13 libraries, so without these the engine sees the GPU but fails on its
+# first computation. cuDNN is pinned to 9.10.2.21 to match the cuDNN loader ctranslate2
+# bundles - a newer cuDNN refuses to mix. src/features/common.enable_cuda12_dlls() points the
+# engine at these; PyTorch keeps its own CUDA 13 copies. Installed with the constraints file.
+nvidia-cuda-nvrtc-cu12==12.9.86
+nvidia-cublas-cu12==12.9.2.10
+nvidia-cudnn-cu12==9.10.2.21
+
+# --- added 2026-09-23 for 5.9 (sentiment and emotion) --------------------------------------
+# Both installed from prebuilt cp314 wheels, free, ~2.4 MB together; torch, numpy, pandas and
+# OpenCV verified unchanged afterwards. The two models themselves (1.12 GB + 331 MB, approved
+# by the researcher) live in the Hugging Face cache, not here.
+sentencepiece==0.2.2
+langdetect==1.0.9
