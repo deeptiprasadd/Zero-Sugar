@@ -18,8 +18,14 @@ has 4 representative frame paths per Short, the sheet, the video file, and blank
 
 Answers: zero_sugar | not_zero_sugar | unsure. Applied by `src/screen/zero_sugar_labels.py`.
 
+**2c.R2 (2026-09-29, D-039):** `--instagram` appends Instagram's 37 systematically drawn Reels
+that text does not name Zero Sugar (`corpus_reason = regular_fill`) to the same file, after the
+125 Shorts, in the same way: never-seen first, blind-coded last, random within each group (seed
+20260929). The YouTube rows and every existing answer are left exactly as they are.
+
 Usage:
     python -m src.screen.zero_sugar_check
+    python -m src.screen.zero_sugar_check --instagram
 """
 from __future__ import annotations
 
@@ -128,5 +134,53 @@ def main() -> None:
           f"-> {CHECK.relative_to(config.ROOT)}, sheets in {SHEETS.relative_to(config.ROOT)}")
 
 
+def add_instagram() -> None:
+    """2c.R2: append the 37 regular-fill Reels; never rewrite a YouTube row or an answer."""
+    old = pd.read_csv(CHECK, dtype=str).fillna("")
+    if (old["platform"] == "instagram").any():
+        print(f"Instagram rows already listed ({int((old['platform'] == 'instagram').sum())}); "
+              "nothing changed.")
+        return
+    ig = pd.read_parquet(config.PROCESSED / "instagram_corpus.parquet")
+    ig = ig[ig["in_corpus"] & (ig["corpus_reason"] == "regular_fill")
+            & ~ig["is_zero_sugar_before_D029"].astype(bool)].copy()
+    coded = set(pd.read_csv(CODES, dtype={"media_id": str})["media_id"])
+    ig["blind_coded"] = ig["shortcode"].isin(coded)
+    rng = np.random.default_rng(20260929)
+    order = []
+    for grp in (False, True):
+        ids = sorted(ig.loc[ig["blind_coded"] == grp, "shortcode"])
+        order += list(rng.permutation(ids))
+    idx = common.video_index("instagram").set_index("media_id")
+    start = int(old["order"].astype(int).max())
+    rows = []
+    for k, sc in enumerate(order, 1):
+        n = start + k
+        r = ig[ig["shortcode"] == sc].iloc[0]
+        fr = pick_frames("instagram", sc)
+        sheet = SHEETS / f"instagram_{sc}.jpg"
+        make_sheet(sheet, f"#{n}  Instagram {sc}  -  {len(fr)} frames, one per shot  -  "
+                          f"is Coca-Cola Zero Sugar packaging shown?", fr)
+        four = [fr[i] for i in np.linspace(0, len(fr) - 1, min(4, len(fr))).round().astype(int)]
+        rows.append({"order": n, "platform": "instagram", "media_id": sc,
+                     "url": f"https://www.instagram.com/reel/{sc}/",
+                     "account": r["owner_username"], "title": str(r["caption"] or "")[:200],
+                     "video_path": str(Path(idx.at[sc, "video_path"]).relative_to(config.ROOT)),
+                     "why_listed": "regular_fill_2cR2" + ("+blind_coded" if r["blind_coded"] else ""),
+                     "sheet": str(sheet.relative_to(config.ROOT)), "n_frames_on_sheet": len(fr),
+                     **{f"frame_{j + 1}": str(Path(four[j]["file"]).relative_to(config.ROOT))
+                        if j < len(four) else "" for j in range(4)},
+                     "researcher_answer": "", "researcher_note": "", "answered_at": ""})
+    out = pd.concat([old, pd.DataFrame(rows).astype(str)], ignore_index=True)
+    assert out.iloc[:len(old)].equals(old), "existing rows must not change"
+    out.to_csv(CHECK, index=False, encoding="utf-8")
+    print(f"{len(rows)} Instagram Reels appended as orders {start + 1}-{start + len(rows)} "
+          f"({pd.Series([r['why_listed'] for r in rows]).value_counts().to_dict()}); "
+          f"{len(old)} existing rows unchanged.")
+
+
 if __name__ == "__main__":
-    main()
+    if "--instagram" in sys.argv:
+        add_instagram()
+    else:
+        main()

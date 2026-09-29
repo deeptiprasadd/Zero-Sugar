@@ -63,3 +63,6 @@ internal/
 # The main README is being rewritten - kept on this computer only for now (2026-09-24).
 # Only the root file: reports/README.md and reports/shared/README.md stay published.
 /README.md
+
+# Generated frame-check images - local inspection only
+reports/product_frame_check/

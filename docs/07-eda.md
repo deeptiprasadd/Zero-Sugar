@@ -1,6 +1,6 @@
 # 07 — Exploratory Data Analysis
 
-**Status:** Planned. Notebook: `notebooks/eda.ipynb`. Figures: `reports/figures/`.
+**Status:** **Run 2026-09-29** on the table frozen that day (docs/08 §6). Script: `src/eda/explore.py` (a script rather than the planned notebook, so every figure and number regenerates in one command). Figures: `reports/figures/eda*.png`, `diag*.png`; every number cited below: `reports/eda_numbers.md`.
 
 Covers the proposal's EDA 1–9, plus five diagnostics the literature survey showed are
 needed. Every figure gets a one-line finding recorded in §3 — a plot with no written
@@ -10,7 +10,8 @@ finding has not been analysed.
 
 ## 1. Proposal EDA 1–9
 
-**Scope from 2026-09-23 (D-030): every analysis below runs on the focus set** — the 183 usable
+**Scope from 2026-09-23 (D-030): every analysis below runs on the focus set** — since 2c.R2 (D-039,
+2026-09-29) **192 usable Zero Sugar videos, 22 accounts (Instagram 120 / 17, YouTube 72 / 5)**; at registration the 183 usable
 Zero Sugar videos (`in_focus & dv_status == "ok"`; Instagram 111 from 16 accounts, YouTube 72
 from 5). Every figure's title carries its n in videos and accounts. The 107 usable videos that
 are not Zero Sugar stay in the data and are shown only in clearly labelled robustness panels,
@@ -22,7 +23,7 @@ left out is part of describing it.
 | 1 | Distribution of videos | By platform, market, language, account, year, sampling tier |
 | 2 | Engagement distribution | Both DV forms; expect heavy right skew — log for plotting |
 | 3 | Video duration | **Range is now narrow** (both platforms ≤180s). H1 is a within-short-form test |
-| 4 | Product visibility vs engagement | `product_visible_frac` split at median and as a continuous scatter |
+| 4 | Product visibility vs engagement | `product_visible_frac` split at median and as a continuous scatter. **2026-09-29: cannot be drawn** — product visibility is not measured (D-037) |
 | 5 | Human / influencer presence | None / ordinary / influencer / celebrity — check cell sizes, may need collapsing |
 | 6 | Emotional content | Remember emotion is measured post-translation ([04](04-multilingual-pipeline.md) §4) |
 | 7 | Caption and text | Prefer invariant features; normalise caption length within language |
@@ -106,24 +107,27 @@ These are not optional — each one guards a decision made later.
 
 _One line per figure. Fill as the analysis runs._
 
+**Filled 2026-09-29.** Focus set, 192 videos / 22 accounts, unless stated. Every association
+below is descriptive (Spearman or medians): no test was run and none may be read as an effect.
+
 | # | Figure | Finding |
 |---|---|---|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
-| 6 | | |
-| 7 | | |
-| 8 | | |
-| 9 | | |
-| A | | |
-| B | | |
-| C | | |
-| D | | |
-| E | | |
-| F | | |
-| G | | |
+| 1 | `eda1_composition` | The focus set is recent (111 of 192 posted in 2026) and English-led (107 English captions, 12 languages in all); YouTube is concentrated in North America & Global (58 of 72) and the large-follower tier (58), Instagram spreads over 7 regions and all three tiers. |
+| 2 | `eda2_engagement_distribution` | The raw rate is extremely skewed (skewness 9.5; median 0.0013); log10 removes it (0.15). The percentile DV is close to uniform, and the median split is **100 / 92 (52% / 48%) - the docs/06 §4 fallback (worse than 60/40) is not triggered**, so the existing percentile and label stand. |
+| 3 | `eda3_duration` | Durations are short on both platforms (median 18.9 s Instagram, 20.5 s YouTube; 90th percentile 69 / 60 s). Duration and percentile are unrelated overall (Spearman -0.05); the upturn of the smoothed line above about 90 s rests on roughly 15 videos. |
+| 4 | - | Not drawn: product visibility is not measured (D-037). |
+| 5 | `eda5_human_presence` | Faces are almost universal (170 of 192 show one); median percentile 0.52 with no face, 0.48 face in up to half, 0.57 face in most frames - no steady pattern. On Instagram, creator-collaboration Reels sit higher (median 0.64, 31 videos / 8 accounts) than the rest (0.46, 89 / 16), but they come from half as many accounts. Celebrity and creator presence are not measured (D-038), so EDA 5's four categories cannot be built. |
+| 6 | `eda6_emotion` | Caption sentiment is mostly positive and unrelated to percentile (Spearman 0.06, 185 videos); in this set it is also unrelated to caption length (-0.03), so the length check D-031 asked for finds no confound here. Speech emotion exists for 119 videos; only neutral (67), joy (25) and surprise (15) have 10+ videos - the other four labels have 12 between them. |
+| 7 | `eda7_text` | Caption, hashtag, emoji and on-screen-text counts have similar medians on both platforms (hashtags 2, emoji 1). The smoothed rises with hashtags and emoji are carried by a handful of videos at 6+ hashtags or 6+ emoji. `kw_event` videos have a lower median percentile (0.43, 46 videos / 8 accounts) than the rest (0.57); 31 of the 46 are YouTube Shorts, mostly the FIFA campaign (D-035), so this is at least partly composition. |
+| 8 | `eda8_platform_descriptive` | **Composition first:** every hand-picked video is an Instagram Reel (105 of 120); 58 of YouTube's 72 are one global channel (the only YouTube account in the large tier); labels rest on the researcher's curation or look for 161 of 192, with weak repeat agreement (YouTube alpha 0.25, Instagram -0.10). **Then:** the follower-normalised rate differs descriptively - median log10 -2.55 Instagram vs -4.32 YouTube - and a gap in the same direction appears in the robustness set. Platform, selection route and account size cannot be separated in these data (docs/08 §7.9.3(c)); this figure answers nothing about platform. |
+| 9 | `eda9_feature_correlation` | Among the 20 features only five pairs reach Spearman 0.5 in size, the strongest colourfulness - red ratio 0.72; none reaches the 0.85 pruning line. |
+| A | `diagA_videos_per_account` | 22 accounts; the global YouTube channel holds 58 videos (30% of the focus set) and three Instagram accounts another 60; 5 accounts contribute one video. Account-grouped CV (D-006) and the account random intercept are necessary, and account-grouped folds will be very unequal. |
+| B | `diagB_age` | Older videos have higher raw rates (Spearman 0.44 with log10 rate; age 8-2,021 days, median 202) and, more weakly, higher percentiles (0.20). The YouTube Shorts are mostly 50-100 days old and low, so age and platform overlap. Age stays in every model as an exposure control. |
+| C | `eda9_feature_correlation` (+ VIF in `eda_numbers.md`) | VIF is low for all 20 (maximum 3.6, colourfulness; none above 5). No collinearity drop is needed. |
+| D | `diagD_missingness` | The 20 features are nearly complete: `mean_face_area` 11.5% missing (videos with no face - structural), `kw_event` / `kw_promotional` 4.7% ("not searched", D-035; 7 Reels, 2 Shorts), caption sentiment 3.6%, loudness 1% (the silent Reels, D-025). The view-based rate is missing for every Reel by design (YouTube only). |
+| E | (tables in `eda_numbers.md`) | Every YouTube Short comes from a brand channel and 81% from the large tier; Instagram is 77% market brand accounts, 49% medium tier, with 31 creator collaborations. The platform comparison is also a comparison of account size and of curation. |
+| F | (`reports/eda_crossposted_pairs.csv`) | **2 cross-posted pairs** by the rule fixed before looking (frame-embedding cosine >= 0.95, durations within 1 s); 6 YouTube Shorts have any Instagram match even at 0.90. **The paired sub-analysis (8.3, needs 20+) is not viable.** |
+| G | (tables in `eda_numbers.md`) | 19 markets; only 3 (Global/US, Brazil, Thailand) appear on both platforms, and 16 markets have a single account - market and account are nearly the same variable, so market cannot enter a model beside account. |
 
 ---
 
@@ -131,13 +135,17 @@ _One line per figure. Fill as the analysis runs._
 
 _EDA should change the plan. Record what it changed._
 
+**Filled 2026-09-29.** Each rule below uses counts or feature distributions only - none was chosen
+by looking at which option gives a stronger engagement result.
+
 | Decision | Driven by | Outcome |
 |---|---|---|
-| Features dropped for collinearity | Diagnostic C | |
-| Categories collapsed for thin cells | EDA 5, Diagnostic G | |
-| Normalisation scheme confirmed or revised | Diagnostic G | |
-| Paired sub-analysis viable? | Diagnostic F | |
-| Accounts excluded as outliers | Diagnostic A | |
+| Features dropped for collinearity | Diagnostic C | **None.** Max VIF 3.6, max correlation 0.72; the 20 stand (D-036) |
+| Categories collapsed for thin cells | EDA 5, EDA 6, Diagnostic G | **Emotion (H3):** labels with fewer than 10 focus videos merge into "other" - joy 25, neutral 67, surprise 15, other 12. **Human presence (H4):** only the face measures exist (D-038). **Market:** not a model term - it duplicates account in 16 of 19 markets |
+| Normalisation scheme confirmed or revised | EDA 2, Diagnostic G | **Confirmed.** Median split 52 / 48, fallback not triggered; percentile within platform x size stays (docs/06 §3.1) |
+| Paired sub-analysis viable? | Diagnostic F | **No** - 2 pairs against the 20 required. Task 8.3 is closed as not viable |
+| Accounts excluded as outliers | Diagnostic A | **None.** The global channel (30%) stays; its influence is what docs/08 §7.9.3(d)'s pre-registered sensitivity analysis measures |
+| Scale of `cuts_per_sec` (TODO 7.2) | Distribution only (D-026) | **log1p** in every model: one real montage at 9.68 against a next-highest 1.78; skewness 10.2 raw, 1.7 after log1p. The montage stays in (D-026) |
 
 ---
 

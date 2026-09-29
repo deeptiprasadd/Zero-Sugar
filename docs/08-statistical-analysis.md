@@ -15,10 +15,10 @@ observations. They are not, and OLS will overstate significance.
 | H | Claim | Test | Notes under the short-form design |
 |---|---|---|---|
 | H1 | Duration is associated with engagement | Spearman + regression **with quadratic term**, run separately per platform | Range now narrow (≤180s). Read as *within short form*. Munaro's medium/long finding is outside our range and cannot be confirmed or refuted here |
-| H2 | Greater product visibility → higher effectiveness | Mann-Whitney U on median split, then MixedLM with controls | `product_visible_frac` is continuous — prefer the regression |
+| H2 | Greater product visibility → higher effectiveness | Mann-Whitney U on median split, then MixedLM with controls | `product_visible_frac` is continuous — prefer the regression. **2026-09-29: not measured** — the detector failed its pre-set gate B, so H2 has no product-visibility instrument and rests on the Zero Sugar label alone (D-037) |
 | H3 | Positive emotional content → higher engagement | Kruskal-Wallis across emotion labels, then MixedLM | Emotion measured post-translation — state it |
-| H4 | Influencer/celebrity presence → higher engagement | Mann-Whitney U, then MixedLM | Check cell sizes first; may need to collapse to present/absent |
-| H5 | Clear CTA → higher effectiveness | Mann-Whitney U, then MixedLM | `has_cta` must have passed α ≥ 0.67 |
+| H4 | Influencer/celebrity presence → higher engagement | Mann-Whitney U, then MixedLM | Check cell sizes first; may need to collapse to present/absent. **2026-09-29: the celebrity and creator labels failed α (0.10, 0.38; D-038)** - only human presence (`face_present_frac`, `mean_face_area`) remains |
+| H5 | Clear CTA → higher effectiveness | Mann-Whitney U, then MixedLM | `has_cta` must have passed α ≥ 0.67. **2026-09-29: it did not** (α −0.03, D-038) - H5 has no validated instrument |
 | H6 | Text characteristics associated with engagement | Multiple regression, MixedLM | Use invariant features; normalise caption length within language |
 | H7 | Effectiveness differs between platforms | **Mixed model on log10 follower-normalised DV, section 7.5(a)**; Mann-Whitney U descriptive only | Never raw counts. Never mixed DV forms. Pre-registered in section 7 |
 | H8 | Blocks jointly provide predictive power | Likelihood-ratio test, nested models | **This answers the new RQ9** |
@@ -102,13 +102,17 @@ Recorded before any model was fitted and before any engagement value by platform
 | 2026-09-22 | Researcher's answers on all 125 text-unlabelled YouTube Shorts (`docs/zero_sugar_visual_check.csv`; read-only copy `docs/zero_sugar_visual_check_pass1_20260922.csv`): 49 Zero Sugar, 76 not, 0 unsure | `0d03a9e7c90fb7ec65bec9dd623e4f0433ac82c72c297353c64de9595a4505c7` |
 | 2026-09-22 | Analysis table `data/processed/dependent_variable.parquet` with those answers applied: Zero Sugar YouTube 74 / 150 (72 / 144 usable), Instagram 112 / 150 (111 / 146 usable, unchanged) | `4d54d5a688a835c6562ee90cb3db9d964bc397963268fd7717729f5f1febcce6` |
 | **2026-09-23** | **Re-freeze after D-030.** Same table plus the `in_focus` column (the focused scope, section 7.9): **183 usable rows in focus** - Instagram 111 / 16 accounts, YouTube 72 / 5 accounts - and 107 usable rows kept, flagged, as the robustness set. No engagement value, percentile or label changed: checked column by column against `dependent_variable_before_D030_20260923.parquet`, `in_focus` is the only addition. The percentile reference stays as computed over the whole corpus (researcher's decision, D-030) | `ceaead27d13075b4d5d594acee33d929c41b184ff8940a1a237ae7d6b2f30af1` |
+| **2026-09-29** | **2c.R2 (D-039).** Researcher's by-eye answers on Instagram's 37 systematically drawn Reels that text does not name Zero Sugar, appended to the same answers file (orders 126-162; the 125 YouTube rows verified unchanged): **12 Zero Sugar, 25 not, 0 unsure**. Read-only copy `docs/zero_sugar_visual_check_pass2_20260929.csv` | `f2d3123fef552d1ba1e755432ed792dc5253323c38e6fb6af04302d3fb62fb2a` |
+| **2026-09-29** | **Re-freeze after 2c.R2.** Labels re-applied with `src/screen/zero_sugar_labels.py`; table rebuilt by `src/process/dependent_variable.py`. **192 usable rows in focus - Instagram 120 / 17 accounts, YouTube 72 / 5** (was 183); 98 usable rows in the robustness set. Checked column by column against `dependent_variable_before_D039_20260929.parquet`: only `is_zero_sugar`, `zs_label_method` and `in_focus` changed, all on the 37 Reels; **no engagement value, percentile or engagement label changed** (compared without being displayed). Instagram's systematic Zero Sugar cell: **15 usable videos from 9 accounts - below the 20 the 7.9 contingency needs, so 7.5(c) is not run**. Repeat check on the 9 Reels also blind-coded on 15 Sep: **4 of 9 agree, alpha -0.10** | `ba6f0a2dceed49388de8a659e381adb0f74d650c67d6498dceba454d8ab97c23` |
 
 If any label changes before the first model (for example the researcher's re-look at the *José vs
 Mourinho* Shorts, or a check of Instagram's systematic Reels, D-029/D-030), the labels are
 re-applied with `src/screen/zero_sugar_labels.py` and the table is re-frozen with a new dated row
 here - never patched by hand. Label reliability to report with every result that uses the focus
 set: 16 of 25 repeat answers agree, Krippendorff's alpha 0.25 (D-029, section 7.9.5). Under D-030
-this label decides inclusion, not just a control.
+this label decides inclusion, not just a control. **Since 2026-09-29 also report the Instagram
+by-eye label's repeat check: 4 of 9 agree, alpha -0.10 (D-039)** - it decides inclusion for 12
+Reels.
 
 ### Power analysis
 
@@ -117,10 +121,10 @@ To be computed before any null is interpreted. The focused rows are the ones tha
 
 | Test family | n | Accounts | Minimum detectable effect (80% power) |
 |---|---|---|---|
-| **Focus set, pooled (D-030)** | **183** | 21 | |
-| **Focus set, Instagram** | **111** | 16 | |
+| **Focus set, pooled (D-030; 192 since D-039)** | **192** | 22 | |
+| **Focus set, Instagram** | **120** | 17 | |
 | **Focus set, YouTube** | **72** | 5 | |
-| **Focus set, interactions (H9, H10)** | **183** | 21 | |
+| **Focus set, interactions (H9, H10)** | **192** | 22 | |
 | Robustness set, pooled (290 usable) | 300 | 26 | |
 | Robustness set, per platform (144 / 146 usable) | 150 | YouTube 5, Instagram 21 | |
 
@@ -195,6 +199,12 @@ because `src/process/dependent_variable.py` printed them on every run (2026-09-1
 
 No model has been fitted and no test has been run. From 2026-09-22 the script hides engagement
 values unless `--show-outcomes` is passed.
+
+**Addendum 2026-09-29 - Phase 7 exploration (researcher's go-ahead).** Run on the table frozen that
+day (192 focus videos), after the focus set was fixed, as docs/07 §1b registers: composition tables
+first, then descriptive medians of log10 follower-normalised engagement by platform (Instagram
+-2.55, YouTube -4.32) and by selection route, and descriptive feature-vs-percentile plots. **No test,
+p-value or model.** Nothing in §7.9 was changed after these were seen.
 
 ### 7.3 Outcome for every platform comparison
 

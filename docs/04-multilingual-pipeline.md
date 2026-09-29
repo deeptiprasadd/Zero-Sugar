@@ -127,6 +127,52 @@ hashtag count are cheap, robust, and genuinely predictive in the literature.
 call-to-action patterns in six languages is not a good use of the time, and the LLM handles
 it in one prompt.
 
+### 5.1 Keyword groups for task 5.16 — fixed 2026-09-24, before the task runs
+
+Approved by the researcher in advance (2026-09-24) and recorded here **before any engagement
+result was looked at**, which is the condition the task carries. Six groups, chosen from the
+proposal's Block C and from what this corpus actually contains; each is a yes/no flag per video,
+not a count, because counts reward long text.
+
+| Group | Flag | Matches (English stems; ✱ = also written per language, see below) |
+|---|---|---|
+| Offer or prize | `kw_offer` | win, winner, prize, giveaway, contest, sweepstake, free, discount, offer, coupon, code ✱ |
+| New or limited | `kw_new` | new, launch, introducing, limited edition, now available, back, return ✱ |
+| Taste or refreshment | `kw_taste` | taste, tasty, delicious, refreshing, refreshment, thirst, crisp, flavour/flavor, ice cold ✱ |
+| Zero or no sugar | `kw_zero_sugar` | zero sugar, no sugar, sugar free, zero — **reuses the seven-language vocabulary already built and checked in `src/screen/zero_sugar.py`** |
+| Sport or music event | `kw_event` | world cup, FIFA, match, final, stadium, goal, concert, festival, tour, live, playlist, artist ✱ |
+| Togetherness or sharing | `kw_together` | share, sharing, together, friends, family, celebrate, moment, meal, reunion ✱ |
+
+**Where they are matched.** The English translation of the speech (5.6) for every video with
+speech, and the caption in its own language. Captions are **not** translated (D-031), so
+non-English captions are matched with per-language term lists for the corpus's main caption
+languages — Spanish, Portuguese, Korean, Vietnamese, Turkish, Thai, Hindi — built the way
+`zero_sugar.py`'s vocabularies were, and spot-checked before use. A caption in a language with
+no list is recorded as **not searched** (null), never as "no hit".
+
+**Recorded per hit:** which group, which text it came from (`transcript_en` or `caption`), and
+the matched term, so a surprising result can be traced to the word that caused it.
+
+**Rules this task inherits:** word-boundary matching, accent- and case-insensitive; no stemming
+beyond the listed variants (it misfires across languages); hashtags count as caption text with
+the `#` removed (5.9's cleaning). The list is not extended after results are seen — an addition
+would be a dated amendment here, with its reason.
+
+#### Amendments to §5.1
+
+| Date | Amendment | Why |
+|---|---|---|
+| 2026-09-28 | **Matching is case-insensitive and NFKC-normalised but *not* accent-folded** (D-035). Accented and unaccented spellings are listed explicitly instead, as `zero_sugar.py` already does for Spanish and Portuguese. | Folding accents breaks Vietnamese, where they carry meaning: `mới` ("new") folds to `moi`, which collides with `môi` ("lips"). Listing both spellings keeps Spanish and Portuguese recall without inventing Vietnamese matches. |
+| 2026-09-28 | Word boundaries apply to Latin-script terms only; Thai, Korean, Hindi and Arabic terms match as substrings. | Thai and Korean are written without spaces between words, and Hindi and Arabic attach matras and clitics, so a boundary match would miss nearly everything. Same choice as `zero_sugar.py`. |
+| 2026-09-28 | Short words that over-match are used only inside longer phrases: "free" (matches *sugar free*), "back" (*back to school*), "live" (*live your life*), "goal", "match", "final", "tour". | Precision over recall, the rule `zero_sugar.py` states: a false hit is invisible downstream, a miss is recorded as a miss. |
+
+**Coverage as implemented** (`src/features/keywords.py`). Five groups carry lists for **English,
+Spanish, Portuguese, Turkish, Vietnamese, Korean, Thai and Hindi** — the languages §5.1 named.
+`kw_zero_sugar` reuses `zero_sugar.ZERO_TERMS`, whose languages are **en, es, pt, ar, th, id, hi**.
+A caption in a language with no list for a group is recorded as **not searched** for that group,
+never as "no hit", and the English translation of the speech is searched with the English lists
+whatever the spoken language was.
+
 ---
 
 ## 6. Language as a control variable

@@ -1,4 +1,5 @@
-"""Visual Zero Sugar check page (D-029): one YouTube Short at a time, three buttons.
+"""Visual Zero Sugar check page (D-029; Instagram's 37 regular Reels added for 2c.R2, D-039): one
+video at a time, three buttons.
 
 Shows the Short's frame sheet (one frame per shot, `src/screen/zero_sugar_check.py`) and the
 video itself, and asks one question - the codebook's item 5: is Coca-Cola Zero Sugar packaging
@@ -91,7 +92,7 @@ video{width:100%;max-height:60vh;background:#000;border-radius:10px}
 <header><h1>Zero Sugar check</h1><div class="bar"><i id="prog"></i></div><span id="count">-</span></header>
 <main><img id="sheet" class="sheet" alt="frame sheet">
 <div class="row"><div><video id="vid" controls playsinline preload="metadata"></video><div class="meta" id="meta"></div></div>
-<div class="card"><h2>Is Coca-Cola Zero Sugar packaging shown anywhere in this Short?</h2>
+<div class="card"><h2>Is Coca-Cola Zero Sugar packaging shown anywhere in this video?</h2>
 <p class="help">Zero Sugar: a black can, a black label or cap, or the words "Zero Sugar" / "Coke Zero" on a pack or on screen.
 Not Zero Sugar: only red Coca-Cola, silver Diet/Light, other variants, or no pack at all (a logo on a sign or truck does not count).
 <b>A glass bottle looks dark because of the drink inside - judge the label, can or cap colour.</b>
@@ -105,7 +106,7 @@ async function load(){S=await (await fetch('/api/state')).json();const f=S.items
 function progress(){const n=S.items.filter(it=>it.researcher_answer).length;$('#count').textContent=n+' / '+S.items.length+' answered';$('#prog').style.width=(100*n/S.items.length)+'%';}
 function show(i){cur=Math.max(0,Math.min(i,S.items.length-1));const it=S.items[cur];
  $('#sheet').src='/sheet/'+it.order;const v=$('#vid');v.src='/media/'+it.order;v.load();
- $('#meta').innerHTML=(cur+1)+' of '+S.items.length+' &middot; <b>'+esc(it.account)+'</b> &middot; <a href="'+it.url+'" target="_blank" rel="noopener">open on YouTube</a><br>'+esc(it.title||'');
+ $('#meta').innerHTML=(cur+1)+' of '+S.items.length+' &middot; <b>'+esc(it.account)+'</b> &middot; <a href="'+it.url+'" target="_blank" rel="noopener">open on '+(it.platform==='instagram'?'Instagram':'YouTube')+'</a><br>'+esc(it.title||'');
  document.querySelectorAll('.opts button').forEach(b=>b.classList.toggle('on',b.dataset.v===it.researcher_answer));
  $('#note').value=it.researcher_note||'';$('#saved').textContent='';progress();window.scrollTo(0,0);}
 async function answer(v){const it=S.items[cur];it.researcher_answer=v;document.querySelectorAll('.opts button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
@@ -129,7 +130,7 @@ class Handler(_CodingHandler):
         if path == "/":
             return self._send(200, PAGE.encode("utf-8"), "text/html; charset=utf-8")
         if path == "/api/state":
-            items = load()[["order", "media_id", "url", "account", "title", "researcher_answer",
+            items = load()[["order", "platform", "media_id", "url", "account", "title", "researcher_answer",
                             "researcher_note"]].to_dict("records")
             return self._send(200, json.dumps({"items": items}, ensure_ascii=False).encode("utf-8"),
                               "application/json; charset=utf-8")

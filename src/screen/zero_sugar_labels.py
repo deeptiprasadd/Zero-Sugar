@@ -51,7 +51,7 @@ from src import config  # noqa: E402
 CONFIRM = config.DOCS / "zero_sugar_visual_check.csv"          # researcher's answers
 CLIP_SCORES = config.INTERIM / "clip_zero_sugar_scores.csv"    # written by 5.4
 # One backup per decision that changed these files, made once, before that decision's first write.
-BACKUP_TAGS = ["before_D029_20260922", "before_D030_20260923"]
+BACKUP_TAGS = ["before_D029_20260922", "before_D030_20260923", "before_D039_20260929"]
 FILES = {"youtube": (config.PROCESSED / "youtube_corpus.parquet", "video_id"),
          "instagram": (config.PROCESSED / "instagram_corpus.parquet", "shortcode")}
 

@@ -2,7 +2,8 @@
 
 **Status:** Planned. Method specified below; fill results as extraction runs.
 
-Constraint that governs everything here: **~30 features reach the models** (D-007). Extract
+Constraint that governs everything here: **18-20 features reach the models** (D-030; it was ~30
+under D-007, when the analysis set was 300 videos rather than 183 — see §4.0). Extract
 generously, prune deliberately, and record the pruning.
 
 ---
@@ -92,8 +93,13 @@ Prefer language-invariant features (see [04](04-multilingual-pipeline.md) §5).
 
 All via LLM annotation (§3), all requiring reliability validation.
 
-`has_influencer`, `has_celebrity`, `is_sponsored`, `product_vs_lifestyle`, `ugc_vs_brand`,
-`campaign_type`, `humour_present`.
+`has_influencer`, `has_celebrity`, `product_vs_lifestyle`, `ugc_vs_brand`, `humour_present`.
+
+> **Amended by D-032 (2026-09-24):** `is_sponsored` and `campaign_type` are **dropped** - the
+> first is missing for 107 of 150 Reels and near-constant on YouTube, the second is abstract with
+> no manual check. `creator_collab` (task 5.15, from collection metadata) replaces `is_sponsored`.
+> **Voice emotion is dropped too** (Block B): it needs a model the project does not have, and a
+> typical Reel carries speech ~6% of the time. 5.12 therefore annotates **7 constructs**.
 
 ### Block E — Platform and exposure
 
@@ -128,6 +134,20 @@ Krippendorff's α per construct. **Drop any construct below 0.67.**
 
 Expect a reliability gradient: concrete perceptual constructs (`has_celebrity`,
 `has_cta`) will code well; abstract ones (`campaign_type`) will not.
+
+> **Amended by D-038 (2026-09-29) - how 5.12 actually runs.** Seven constructs (D-032). Model:
+> **Qwen2.5-VL 3B** (`qwen2.5vl:3b`, Q4_K_M, 3.2 GB) in Ollama on the laptop GPU. A 10-video pilot
+> on a rule fixed before it ran first chose Qwen3-VL 4B (agreement on the four checked constructs
+> 70% vs 62%), but Qwen3-VL's built-in reasoning ran away on some videos (one took 520 s and
+> answered nothing). With reasoning switched off it was re-piloted on the same videos under a rule
+> written first, reached 57%, and so lost to Qwen2.5-VL (`reports/annotation_pilot.md`,
+> `reports/annotation_pilot_no_reasoning.md`). Input: six evenly spaced grid
+> frames (longest side 768 px), account name, caption, English speech translation - **no OCR
+> text**, because 5.5 part B reads none (D-034); the model reads on-screen text from the frames.
+> The four checked questions are the codebook's own wording (`src/coding/codebook.py`); the
+> three unchecked ones are defined in `src/features/annotate.py`. Temperature 0, fixed seed,
+> answers forced into a JSON schema of the allowed options, every raw answer kept. Validation is
+> 4.2 on the 50 coded videos the pilot did not use (D-038).
 
 ---
 
@@ -449,31 +469,362 @@ are two features, not one.
 English-only, it has no manual check in the 60 codes, and it is therefore reported as an
 unvalidated automated measure under the 4.2 rule.
 
+### 5.13 - music type: measured, and found not measurable (2026-09-28)
+
+| Date | Stage | Videos | Failures | Notes |
+|---|---|---|---|---|
+| 2026-09-28 | **5.13 music genre** (`src/features/music_genre.py`, AST already on disk, GPU) | 300 / 300 | 0 | 9.1 min. 272 videos with music, 26 without, 2 silent (D-025). Seven genre groups fixed before scoring |
+
+**The finding: AudioSet's genre labels do not separate this corpus, so music *type* is not
+measured.** The numbers that decide it, on the 272 videos with music:
+
+| | |
+|---|---|
+| Top genre group's mean probability | median **0.019** (10th-90th 0.004-0.069), max 0.189 |
+| Margin over the second group | median 0.010 |
+| Videos whose top group reaches 0.20 / 0.10 | **0** / 10 of 272 |
+| Strongest single AudioSet label in a music window | median **0.790** - the generic "Music" |
+
+Looking at what the model actually says settles it. On eight inspected videos the confident labels
+are `Music` 0.55-0.73, `Speech`, `Television`; every genre label sits at 0.01-0.03 - the same
+level as `Fart` 0.04, `Ice cream truck` 0.05 and `Animal` 0.01 in the same windows. A genre chosen
+at 0.02 is competing with nonsense at 0.02. Instrument labels occasionally do better (an accordion
+at 0.11), which is a hint that AudioSet's instrument heads work better than its genre heads, not
+evidence that the genre is right.
+
+The choice *is* internally consistent - a video's top group wins a median 85% of its own music
+windows - but consistency without magnitude is not validity: the same small bias repeats across
+windows of the same track. This is the same failure as D-028's singing labels, found the same way.
+
+**Kept, not deleted:** the scores stay in each video's cache and in
+`data/interim/music_genre_summary.csv` with `status`, so the finding is checkable. They do **not**
+enter the feature set (`music_genre_top` is not a feature), and the write-up reports music type as
+not measurable alongside `is_original_audio` and voice emotion. `music_present` and `music_frac`
+from 5.8 are unaffected and remain the audio features for H-tests.
+
+### 5.14 title length and 5.15 creator collaboration (2026-09-28)
+
+| Date | Stage | Videos | Failures | Notes |
+|---|---|---|---|---|
+| 2026-09-28 | **5.14 + 5.15 + Block C text counts** (`src/features/metadata.py`; metadata only, no model) | 300 / 300 | 0 | Instant. Nothing downloaded |
+
+| Feature | Value | Note |
+|---|---|---|
+| `title_char_len` | median **51** characters (10th-90th 29-84), 9 words | YouTube only; null for every Reel |
+| `title_char_len_z_lang` | computed for **145 of 150** Shorts | Arabic (4 titles) and Turkish (1) are too few to standardise - left null and flagged |
+| `creator_collab` | **41 of 150 Reels**; YouTube 0 of 150 | False by construction on YouTube (all brand channels), not missing |
+| `caption_char_len` | median 163 (YouTube), 147 (Instagram) | YouTube = title + description, the same text 5.9 scored |
+| `hashtag_count` | median 2 both platforms | 47% of Shorts and 33% of Reels have none |
+| `mention_count` | median 0 | 81% of Shorts and 67% of Reels have none |
+| `emoji_count` | median 1 both platforms | |
+| `has_question_mark` | 26 Shorts, 33 Reels | Matches the Arabic `؟` as well (docs/04 section 5) |
+
+The caption counts had no task number of their own - they are docs/05 Block C's language-safe
+features, computed here because they come from the same text. Title language is taken from 5.9's
+detection on title + description, not on the 50-character title alone; 5.7 will replace it.
+
+### 5.4 product on screen - first attempt with CLIP: failed its gates (2026-09-28)
+
+| Date | Stage | Videos | Failures | Notes |
+|---|---|---|---|---|
+| 2026-09-28 | **5.4 first attempt** (`src/features/product.py`, reused the existing CLIP embeddings - no download, no re-encoding) | 9,743 grid frames from 300 videos scored | - | **Failed the gates fixed before scoring; nothing was written to the feature cache** |
+
+Gates and results (`reports/product_detection_attempt1_clip.md`), against the researcher's blind
+codes - 54 videos with a Coca-Cola product visible, **5 with none**:
+
+| Check | Gate | Result | Pass |
+|---|---|---|---|
+| A. ROC AUC of `product_prob_mean` | >= 0.70 | **0.419** (95% CI 0.14-0.72) | no |
+| B. All no-product videos in the bottom half | all <= 0.50 | ranks 0.72, 0.94, 0.72, 0.16, 0.51 | no |
+| C. Not near-constant (10th-90th spread) | >= 0.10 | 0.720 | yes |
+
+Median score is **higher** for the no-product videos (0.630) than for the product-visible ones
+(0.523) - the measure points the wrong way. Using the best square instead of the mean gives 0.485,
+so the change made after D-029 was not the problem.
+
+**Why it fails, from looking at the frames' winning prompts.** A Reel coded *no product* scores
+0.935 because "a person holding a Coca-Cola drink" wins 94% of its squares: CLIP matches the
+**scene** - a person holding something - not the brand. The podcast Shorts that genuinely show a
+can on the table score 0.06-0.10, because "a close-up of a person's face" wins: a can covering a
+few percent of the frame cannot win a whole-square comparison. **Whole-image CLIP cannot see a
+small product**, which is the same reason the D-029 Zero Sugar screen failed. No prompt wording
+fixes it.
+
+**Two further limits to state whatever comes next:**
+1. **At video level the construct barely varies** - 54 of the 59 usable codes say a product is
+   visible - so "is a product visible at all" is nearly constant in a brand corpus, and an AUC
+   computed against 5 negatives is weak whatever it says (CI 0.14-0.72).
+2. **What H2 needs is `product_visible_frac`, how much of the video shows the product, and the 60
+   codes contain no ground truth for that at all.** The frame-level check this section was always
+   meant to hold (200 hand-coded frames, above) is the only way to validate it.
+
+**Next, for the researcher to choose:** the YOLO fallback (object detection finds small objects,
+gives boxes, and would make `product_mean_area` possible, but is brand-blind - it would measure
+"a drink container on screen"), a short frame-level check by eye to validate either measure, or
+reporting product visibility as not measured and letting H2 / RQ4 / 5.17 rest on the Zero Sugar
+label alone. Recorded in D-033; nothing is used until that is decided.
+
+### 5.4 second attempt - container detection, and the frame check that will judge it (2026-09-28)
+
+| Date | Stage | Frames | Failures | Notes |
+|---|---|---|---|---|
+| 2026-09-28 | **5.4 second attempt** (`src/features/product_yolo.py`, COCO-trained YOLO) | 9,743 grid frames | 0 | 4.6 min on the GPU. **Nothing downloaded** - a 5.5 MB COCO YOLO already on the laptop was copied to `models/yolo26n.pt` |
+| 2026-09-28 | **5.4v frame sample** (`src/features/product_frame_sample.py`) | 120 frames drawn | - | One random grid frame per video, 60 videos per platform, seed 20260928, **drawn before any score was computed** |
+
+**An object detector is the right tool for the failure CLIP had**: it looks for small objects and
+returns boxes, so `product_mean_area` - which docs/05 Block A asks for and CLIP could never give -
+becomes possible.
+
+**What it measures, named honestly: a drink container, not a Coca-Cola product.** The model is
+COCO-trained and brand-blind (`bottle`, `cup`, `wine glass`); it cannot tell a Coca-Cola can from
+any other. The features are therefore called `container_*`, and the frame check below measures how
+often a detected container really is Coca-Cola's - the number to quote whenever the feature is
+described.
+
+First run, unvalidated and not yet in the feature set:
+
+| | |
+|---|---|
+| Frames with a container | 27% at 0.15, **23% at 0.25**, 19% at 0.40 |
+| Videos with one somewhere | 242 of 300 (Instagram 116, YouTube 126) |
+| `container_visible_frac` | median 0.14 Instagram, 0.13 YouTube (10th-90th 0.00-0.75) |
+| `container_mean_area` | median **7%** of the frame where found (90th 30%) |
+| `time_to_first_container` | median 4.5 s over 242 videos; 58 never |
+
+Per-frame confidence and box area are cached (`data/interim/container_frame_scores.parquet`), so a
+threshold can change without re-running the detector.
+
+**The frame check (5.4v) decides whether any of this is used.** 120 frames, one click each, three
+answers - *a Coca-Cola product* / *another drink container* / *nothing* - which give both the truth
+the brand-blind detector can be judged against and the truth the study actually wants. The page
+(`python -m src.coding.frame_check_app`) never shows a score, a label or a box. Gates are unchanged
+and applied by `src/features/product_validate.py`: frame-level AUC >= 0.70 for *container*, the
+blind-coded no-product videos in the bottom half, and a measure that is not near-constant. Both
+methods are scored on the **same** frames, so the comparison is fair. A failed gate means product
+visibility is reported as not measured (D-033 option C) - not a threshold moved until it passes.
+
+**Result, 2026-09-29: failed gate B - product visibility is not measured (D-037).** All 120
+frames answered (37 Coca-Cola product, 1 other container, 82 nothing).
+
+| Gate | Result | Required | Pass |
+|---|---|---|---|
+| A. Frame-level AUC, container visible | 0.748 (95% CI 0.66-0.84) | >= 0.70 | yes |
+| B. Blind-coded no-product videos in the bottom half | ranks 0.60, 0.10, 0.36, 0.24, 0.10 | all <= 0.50 | **no** |
+| C. Not near-constant (10th-90th spread) | 0.745 | >= 0.10 | yes |
+
+The one video that fails gate B shows a Coca-Cola-branded fountain cup, which the detector counts
+as a container and the codebook's *no product* ("no Coca-Cola pack") does not - the detector and the
+blind code measure different things, and the gate exists to catch that. Neither the code nor the
+gate was changed after the result. At the pre-set 0.25 threshold the detector's precision was 69%
+and recall 58%; 37 of the 38 frames with a container showed a Coca-Cola product. Whole-image CLIP
+ranked the same frames better (AUC 0.844) but failed gate B far worse in the first attempt, so it is
+not reinstated. **The `container_*` features do not enter the feature table**; the cached scores are
+kept for checking. 5.17 is cancelled as specified.
+
+### 5.5 part A - colour, contrast and visual busyness (2026-09-28)
+
+| Date | Stage | Videos | Failures | Notes |
+|---|---|---|---|---|
+| 2026-09-28 | **5.5A colour and busyness** (`src/features/visual.py`, OpenCV, CPU) | 300 / 300 | 0 | 0.6 min, 6 threads. No model, no download. Grid frames at the 360 px working width (D-024) |
+
+| Feature | YouTube median (10th-90th) | Instagram median (10th-90th) |
+|---|---|---|
+| `brightness` | 0.463 (0.345-0.604) | 0.527 (0.306-0.709) |
+| `contrast` | 0.215 (0.167-0.278) | 0.209 (0.154-0.275) |
+| `saturation` | 0.408 (0.238-0.690) | 0.417 (0.278-0.682) |
+| `colourfulness` | 0.196 (0.115-0.322) | 0.231 (0.141-0.381) |
+| `red_ratio` | 0.176 (0.102-0.599) | 0.223 (0.076-0.550) |
+| `edge_density` | 0.049 (0.033-0.073) | 0.046 (0.026-0.078) |
+| `brightness_sd` (across frames) | 0.114 (0.046-0.182) | 0.074 (0.016-0.158) |
+
+**No pair correlates above 0.85**, so all six survive pruning rule 4 for now; the strongest are
+`colourfulness` vs `red_ratio` (Spearman 0.72) and `saturation` vs `colourfulness` (0.69). Re-check
+at 7.2C with every feature present.
+
+**One feature is already a pruning candidate:** `red_frame_frac` (share of frames at least 2% red)
+has a median of **1.000** on both platforms - nearly every frame of nearly every video carries some
+Coca-Cola red, which is unsurprising and nearly constant. The continuous `red_ratio` is the version
+to keep. Recorded here rather than dropped silently.
+
+**`red_ratio` is a colour measure, not a product measure.** Red pixels can be a can, a backdrop, a
+shirt or a logo; product visibility is task 5.4.
+
+### 5.5 part C - faces (2026-09-28)
+
+| Date | Stage | Videos | Failures | Notes |
+|---|---|---|---|---|
+| 2026-09-28 | **5.5C faces** (`src/features/faces_text.py`, MediaPipe BlazeFace short-range) | 300 / 300 | 0 | 3.3 min. Model **230 KB, researcher-approved**; this mediapipe build (0.10.35) ships no models, so it is fetched once to `models/` |
+
+| Feature | YouTube median (10th-90th) | Instagram median (10th-90th) |
+|---|---|---|
+| `face_present_frac` | 0.578 (0.067-0.970) | 0.467 (0.000-0.926) |
+| `mean_face_count` | 0.616 (0.067-1.112) | 0.467 (0.000-0.970) |
+| `mean_face_area` | 0.099 (0.053-0.206) | 0.078 (0.042-0.178) |
+| `face_conf_mean` | 0.865 (0.604-0.919) | 0.810 (0.603-0.913) |
+
+**262 of 300 videos show a face in at least one frame**, 155 in most frames - which is what brand
+advertising should look like, and the sanity check this step needed. `mean_face_area` is kept
+because it separates a close-up from a crowd shot, which `face_present_frac` alone cannot.
+
+### 5.5 part B - on-screen text: detector only, nothing read (2026-09-28)
+
+EasyOCR's CRAFT detector (**83 MB, researcher-approved**), **detection only, no recognition**:
+
+- docs/04 section 3 keeps these features coarse on purpose;
+- detection is **language-free**, so Arabic, Korean and Thai frames are treated like English ones -
+  and docs/04 warns Arabic recognition is where OCR fails worst;
+- text is found on the **full-resolution** frame, not the 360 px working copy (D-024).
+
+`ocr_region_count` replaces docs/04's `ocr_word_count`: without recognition a region is a text line
+or block, not a word, so it is named for what it measures (D-034). **`lang_onscreen` (5.7) is
+therefore not measured** - it would need a reader per script.
+
+| Date | Stage | Videos | Failures | Notes |
+|---|---|---|---|---|
+| 2026-09-28 | **5.5B on-screen text** (EasyOCR CRAFT, detection only, GPU) | 300 / 300 | 0 | 42.1 min, full-resolution frames |
+
+| Feature | YouTube median (10th-90th) | Instagram median (10th-90th) |
+|---|---|---|
+| `ocr_text_frame_frac` | 0.970 (0.500-1.000) | 0.927 (0.372-1.000) |
+| `ocr_region_count` | 4.54 (1.20-12.65) | 3.13 (0.89-10.15) |
+| `ocr_mean_text_area` | 0.063 (0.027-0.101) | 0.040 (0.010-0.113) |
+
+**Checked by drawing the boxes on frames and looking** (the habit that caught 5.2's montage and
+5.8's singing labels). Three videos - busiest, typical and quietest by region count - were
+inspected: **every box was real text**, and the busiest frame is a mock phone-chat screen that
+genuinely is full of writing. No false positives on textures or patterns.
+
+**What the inspection changed, though, is how the feature must be read.** The detector finds the
+**Coca-Cola logo and the legal small print** as readily as a subtitle, and those sit in almost every
+frame of an advert. That is why `ocr_text_frame_frac` is near-saturated: **123 of 300 videos are
+exactly 1.000** and 124 are at 0.99 or above. So:
+- **`ocr_text_frame_frac` is a pruning candidate** for the same reason as `red_frame_frac` - a
+  near-constant feature carries no information.
+- **`ocr_region_count` and `ocr_mean_text_area` carry the variation** (region count median 4.0,
+  10th-90th 1.1-11.4, max 36.7) and are the two to keep into 5.11.
+- Any finding about "on-screen text" means *any* text, including brand marks and disclaimers, not
+  only captions the viewer is meant to read. State it that way in the results.
+
+### 5.7 caption and spoken language, code-switching (2026-09-28)
+
+| Date | Stage | Videos | Failures | Notes |
+|---|---|---|---|---|
+| 2026-09-28 | **5.7 language** (`src/features/language.py`, langdetect) | 300 / 300 | 0 | Instant. `lang_onscreen` left null pending 5.5B recognition, which is not planned |
+
+| | |
+|---|---|
+| Spoken language known | **194** (the rest have no speech, 5.6) |
+| Caption language known | **291**, of which **267** at >= 0.90 probability |
+| Captions too short to classify (< 20 characters) | 9 - left unknown rather than guessed |
+| Both known and reliable | 174 videos: **agree 144, differ 30** |
+| **English caption over non-English speech** | **21 videos** - exactly the pattern docs/04 section 1 predicted |
+| `is_code_switched` | **60 videos**: low-confidence transcript 47, language mismatch 30, uncertain spoken language 9 (a video can have more than one) |
+
+Most common mismatches: Hindi speech with an English caption (8), Nepali speech with an English
+caption (5), English speech with a Spanish caption (4). Captions are written for a wider audience
+than the audio, which is why docs/04 keeps the fields separate instead of collapsing them into one
+"language" variable.
+
+### 5.16 keyword groups (2026-09-28)
+
+| Date | Stage | Videos | Failures | Notes |
+|---|---|---|---|---|
+| 2026-09-28 | **5.16 keywords** (`src/features/keywords.py`, no model, no download) | 300 / 300 | 0 | Instant. List fixed and approved 2026-09-24 in [04](04-multilingual-pipeline.md) §5.1, before this ran and before any engagement result was seen |
+
+Two texts per video, never merged: 5.6's **English translation** (192 videos have one, searched
+with the English lists whatever was spoken) and the **caption in its own language** (291 have a
+detected language). 288 of 300 videos were searched for at least one group.
+
+| Group | Hit | No hit | Not searched | Instagram / YouTube (hits) |
+|---|---|---|---|---|
+| `kw_event` (sport or music event) | **104** | 179 | 17 | 26 / 78 |
+| `kw_together` (togetherness, sharing) | **86** | 197 | 17 | 44 / 42 |
+| `kw_taste` (taste, refreshment) | **53** | 230 | 17 | 32 / 21 |
+| `kw_zero_sugar` | **53** | 220 | 27 | 32 / 21 |
+| `kw_new` (new or limited) | **37** | 246 | 17 | 19 / 18 |
+| `kw_offer` (offer or prize) | **18** | 265 | 17 | 9 / 9 |
+
+Median one group per video; 69 videos hit none; 20 hit three or more. Hits came from the caption
+alone 196 times, the transcript alone 87, and both 68.
+
+**`kw_event` is much more common on YouTube (78 vs 26)** — the FIFA World Cup content in the
+YouTube corpus, which the 2026 campaign is built around. That is a composition fact about the
+corpus, not a platform effect, and it belongs beside any result that uses this feature.
+
+**Not searched is not a zero.** 17 videos have neither an English transcript nor a caption in a
+covered language; `kw_zero_sugar` adds 10 more because its vocabulary covers a different language
+set (it reuses `zero_sugar.ZERO_TERMS`: en, es, pt, ar, th, id, hi, so Turkish, Vietnamese and
+Korean captions are not searched for it). Those rows are **null**, and `kw_*_searched` records
+which text was searched for every video.
+
+**Spot-checked before use, as §5.1 requires.** Matched terms were printed per group: Korean
+경품 (prize), 당첨 (win), 한정 (limited edition), 맛있 (tasty), 함께 (together) all landed in the
+right groups, as did the English hits. Every hit stores the term that caused it, so a surprising
+count can be traced to the word behind it.
+
+Three amendments to the instrument, all recorded in [04](04-multilingual-pipeline.md) §5.1 with
+reasons: no accent folding (it would break Vietnamese), substring matching for Thai/Korean/Hindi/
+Arabic, and short over-matching words used only inside phrases.
+
 ### CLIP product-detection validation
 
 | Metric | Value |
 |---|---|
-| Frames hand-coded | 200 |
-| Precision | |
-| Recall | |
-| Threshold chosen | |
-| Escalated to YOLO? | |
+| Frames hand-coded | **0** - not done; the video-level check above was used instead |
+| Precision | not computed: the gates failed first (AUC 0.419) |
+| Recall | not computed |
+| Threshold chosen | none - no threshold is honest on a measure that points the wrong way |
+| Escalated to YOLO? | **Yes, 2026-09-28** - with a model already on disk, no download (D-033). Judged on 120 hand-answered frames on 2026-09-29: precision 69%, recall 58% at 0.25, frame AUC 0.748, **failed gate B** - not used (D-037) |
 
 ### Annotation reliability (Krippendorff's α)
 
-| Construct | α | Kept? |
+**Filled 2026-09-29 (D-038).** Qwen2.5-VL 3B vs the researcher's blind codes, on the 50 coded
+videos the pilot did not use (46 answered). Rule: keep if α >= 0.67. Report:
+`reports/annotation_reliability.md`.
+
+| Construct | α (95% CI) | Kept? |
 |---|---|---|
-| `has_celebrity` | | |
-| `has_influencer` | | |
-| `has_cta` | | |
-| `product_vs_lifestyle` | | |
-| `ugc_vs_brand` | | |
-| `campaign_type` | | |
-| `humour_present` | | |
+| `has_celebrity` | 0.100 (-0.16 to 0.48) | no |
+| `has_influencer` | 0.382 (0.03 to 0.69) | no |
+| `has_cta` | -0.032 (-0.33 to 0.23) | no |
+| `humour_present` | 0.133 (-0.62 to 0.71), model unsure on 38 of 46 | no |
+| `product_vs_lifestyle` | no manual check | unvalidated column, never modelled |
+| `ugc_vs_brand` | no manual check | unvalidated column, never modelled |
+| `promotional_language` | no manual check | unvalidated column, never modelled |
+| ~~`campaign_type`~~ | dropped by D-032 | - |
 
 ---
 
 ## 6. Pruning record
+
+**Filled 2026-09-28 (D-036).** Full table, every drop with its reason:
+`reports/feature_pruning_record.md`, written by `python -m src.features.prune`.
+
+| | |
+|---|---|
+| Candidates assembled (5.10) | **76** in `data/processed/features.parquet`, 300 rows, no engagement column |
+| Survived rules 0, 1, 2 and 4 | **27** |
+| **The pooled set** | **20** - the top of a priority order fixed before any outcome was seen |
+| Ordered reserve | 7, enter only if a keeper fails rule 3, strictly in order |
+| Rules not yet applied | ~~3~~ applied 2026-09-29 (D-038); **5** (reads the outcome - training folds only, Phase 9) |
+| Re-run 2026-09-29, after 5.4's verdict | `features.parquet` byte-identical (SHA-256 `0f545806...`), same 20 and same reserve. 5.4's `container_*` features do not enter - gate B failed (D-037). Next re-run: after 5.12 |
+| Re-run 2026-09-29, after 5.12 and 4.2 - **rule 3 applied** | 7 `auto_*` columns added (80 candidates in the pruning blocks; SHA-256 `25186e50...`). All four checked labels fail alpha and are dropped under rule 3 (`auto_has_celebrity` is also near-constant); the three unchecked labels are kept as columns and never modelled (D-038). **Same 20 and same 7 in reserve.** Rules left: **5 only** (training folds, Phase 9) |
+| Re-run 2026-09-29, after 2c.R2 (D-039) | Focus set **183 -> 192** (Instagram 111 -> 120). Constancy and correlations re-measured on the 192: only percentages moved (e.g. speech-only features 37% -> 38% missing); **same 20, same 7 in reserve**. The speech-only sub-analysis now has 119 focus videos. SHA-256 `83fab00b...`. The 18-20 budget is kept: the focus set grew, and section 4.0's reasoning only tightens as n falls |
+
+The 20: `duration_sec`, `cuts_per_sec`, `motion_px_per_sec`, `face_present_frac`,
+`mean_face_area`, `edge_density`, `colourfulness`, `red_ratio`, `ocr_region_count`,
+`ocr_mean_text_area`, `music_frac`, `talk_dur_frac`, `loudness_db_mean`, `loudness_range_db`,
+`sentiment_caption`, `caption_char_len`, `hashtag_count`, `emoji_count`, `kw_event`,
+`kw_promotional`.
+
+Exposure controls sit outside the budget and are in every model by design: `followers`,
+`video_age_days`, `account_size_tier`, `platform`, `posting_hour_utc`, `is_weekend_utc`.
+
+Routed rather than dropped: 11 speech-dependent features to a **speech-only sub-analysis** (117
+focus videos have speech); `title_char_len*` to YouTube-only models; `creator_collab` to
+Instagram-only models.
+
+
 
 _To be filled._
 

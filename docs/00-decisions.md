@@ -1377,11 +1377,586 @@ That is a decision for the researcher when 5.16 runs, not something assumed now.
 
 ---
 
+## D-032 - Three proposal features dropped; disclosure settled by the researcher
+
+**Date:** 2026-09-24
+**Status:** Accepted (researcher's decisions)
+**Resolves:** O-13 and O-01. **Amends:** docs/05 section 3 (the annotation set drops from 9
+constructs to 7) and the proposal's Block B and D feature lists.
+
+**1. Three features are dropped** (researcher, 2026-09-24, accepting the recommendation of
+2026-09-22). Each was proposed in the original plan; each is dropped for a measured reason, and
+the reason belongs in the limitations section rather than in silence:
+
+| Dropped | Why |
+|---|---|
+| **Voice emotion** | Needs a speech-emotion model this project does not have, and the available ones are trained mostly on English acted speech. A typical Reel carries speech about 6% of the time (5.8), so for most of the corpus there is nothing to measure. Text sentiment and emotion (5.9, D-031) already cover emotional tone for every video with words |
+| **`is_sponsored`** | Instagram's paid-partnership flag is missing for 107 of the 150 corpus Reels, and every YouTube Short is posted by a brand channel, so the variable is near-constant where it exists at all. It fails the missing-data rule (docs/05 section 4, rule 2) before any model sees it. **`creator_collab` (5.15) replaces it** - the same idea from collection metadata rather than from an unvalidated label |
+| **`campaign_type`** | Abstract, automated-only, and with no manual check among the 60 codes it could never be reported as validated (D-023). The reliability gradient in D-021 predicted it would be the weakest construct. Dropping it before it runs is cheaper than dropping it after |
+
+**Consequences:** 5.12 annotates **7 constructs**, not 9: `has_cta`, `has_influencer`,
+`has_celebrity`, `humour_present`, `product_vs_lifestyle`, `ugc_vs_brand`,
+`promotional_language`. Four of those have a manual check in the 60 codes and go through the
+alpha rule; `product_vs_lifestyle`, `ugc_vs_brand` and `promotional_language` do not and are
+reported as unvalidated automated labels (D-023). Three fewer features also helps the 18-20
+budget (D-030).
+
+**2. Disclosure (O-01 closed).** The researcher reports there is **no institutional data-ethics
+or AI-assistance policy to read** - recorded as the researcher's statement, not as a verified
+fact about the institution - and has decided that assistant involvement is not to be mentioned
+throughout the project's files.
+
+What that does and does not change:
+- **Unchanged and not negotiable (D-010, D-022):** the methods chapter states how the data was
+  actually obtained (YouTube Data API, Apify, yt-dlp logged out and logged in, sssinstagram.com,
+  the researcher's screenshots) and describes every **automated measurement step** factually -
+  speech-to-text, sound events, CLIP embeddings, sentiment and emotion, and the vision-language
+  annotation of 5.12, each named with its model and its reliability figure. Those are parts of
+  the method, not workflow notes, and they stay.
+- **Applied:** writing-assistant involvement is kept out of the published files. The researcher
+  moved the planning and diary files to `internal/` (gitignored) on 2026-09-24 and the leak
+  check now reads its word list from `internal/screen_words.txt`, so the words are not published
+  either. Verified 2026-09-24: no tracked file in the repository mentions the assistant.
+- **If the institution does ask** for a statement on assistance, it is a one-line addition at
+  submission; nothing in the record needs rewriting, because nothing in the record is false.
+
+---
+
+## D-033 - Music type is not measurable here; whole-image CLIP cannot see the product
+
+**Date:** 2026-09-28
+**Status:** Two findings accepted; **one choice open for the researcher** (below)
+**Amends:** the proposal's Block B (music type) and docs/05 Block A (`product_visible_frac`,
+`time_to_first_product`, `product_mean_area`).
+
+**1. Music type (5.13) is measured and reported as not measurable.** AST's AudioSet genre labels
+were run on the 4-second windows 5.8 had already found music in (272 videos; the model was already
+on disk, so nothing was downloaded). Seven genre groups were fixed before scoring. The top group's
+mean probability has a median of **0.019** and never reaches 0.20 on any video, while the strongest
+single label in those windows is the generic "Music" at a median 0.790. On inspection every genre
+label sits at 0.01-0.03 - alongside `Fart` 0.04 and `Ice cream truck` 0.05 in the same windows.
+A video's top group does win a median 85% of its own windows, but that is consistency, not
+validity: the same small bias repeats across windows of one track.
+**This is D-028's singing-label finding again**, and the same rule applies - the scores are kept
+in the cache and the summary for checking, `music_genre_top` does **not** become a feature, and
+music type joins `is_original_audio` and voice emotion (D-032) as a stated limitation.
+`music_present` and `music_frac` from 5.8 are unaffected.
+
+**2. Whole-image CLIP cannot measure product visibility (5.4, first attempt).** The existing
+embeddings were scored against a product-vs-scene prompt set with the three fixes D-029's failure
+implied (mean of the three squares rather than the best; "a dark scene" and "a logo on a sign"
+given as non-product options; a threshold-free primary measure). Gates were fixed in the module
+before scoring, and **it failed them: AUC 0.419** (95% CI 0.14-0.72), with the five no-product
+videos ranking 0.72, 0.94, 0.72, 0.16 and 0.51. Nothing was written to the feature cache.
+
+The cause is visible in the winning prompts: a Reel coded *no product* scores 0.935 because "a
+person holding a Coca-Cola drink" wins 94% of its squares - CLIP matches the **scene**, not the
+brand - while podcast Shorts that do show a can on the table score 0.06-0.10 because "a close-up
+of a person's face" wins. **A product covering a few percent of the frame cannot win a whole-image
+comparison.** Prompt wording does not fix that, and the best-square variant is no better (0.485).
+
+**Two limits that hold whatever is chosen next:**
+- **The video-level construct barely varies:** 54 of the 59 usable blind codes say a product is
+  visible. In a brand corpus "is a product visible at all" is near-constant, so any AUC against
+  5 negatives is weak evidence in either direction.
+- **H2 needs `product_visible_frac` - how much of the video shows the product - and the 60 codes
+  contain no ground truth for it.** Only a frame-level check can validate that, which is what
+  docs/05 section 5's "200 hand-coded frames" placeholder always intended.
+
+**Open choice, for the researcher (nothing is used until it is made):**
+
+| Option | What it gives | What it costs |
+|---|---|---|
+| **A. YOLO fallback** (recommended, with B) | An object detector finds small objects and returns boxes, so `product_visible_frac`, `time_to_first_product` **and** `product_mean_area` become possible. **Brand-blind:** it measures "a drink container on screen", not "a Coca-Cola product", and must be named that way | ~6 MB weights download, free, needs approval; ~1 h |
+| **B. Frame-level check by eye** | ~100-200 sampled frames answered yes/no gives the only real validation for a *fraction* measure, and would validate A or any successor | ~15 min of the researcher's time; a labelling pass, like the 125-Short check, not new construct coding |
+| **C. Report product visibility as not measured** | Honest and free | H2, RQ4 and 5.17 then rest on the Zero Sugar label alone - itself weakly reliable on YouTube (alpha 0.25, D-029). A real loss for a proposal hypothesis |
+
+Recorded so the decision is visible: option C is defensible and costs nothing, but it removes a
+hypothesis the proposal asks about, so it should be chosen deliberately rather than by default.
+
+**Chosen by the researcher, 2026-09-28: A + B - the detector, validated by a frame check.**
+What was done the same day:
+- **No download was needed.** A COCO-trained YOLO (5.5 MB) already existed on the laptop from an
+  unrelated project; it was copied to `models/yolo26n.pt` (gitignored). Nothing was fetched and
+  nothing cost money.
+- **Detection run on all 9,743 grid frames** in 4.6 minutes (`src/features/product_yolo.py`):
+  a container in 23% of frames at the pre-set 0.25, in 242 of 300 videos; `container_mean_area`
+  median 7% of the frame; `time_to_first_container` median 4.5 s. Per-frame confidence and area are
+  cached so a threshold can change without re-running.
+- **The features are named `container_*`, not `product_*`.** The detector is brand-blind: it
+  measures a drink container on screen. The frame check quantifies how often that container is
+  Coca-Cola's, and that ratio is quoted wherever the feature appears.
+- **120 frames drawn for the researcher to answer** (`src/features/product_frame_sample.py`): one
+  random grid frame per video, 60 videos per platform, seed 20260928, **drawn before any score was
+  computed**; the page (`src/coding/frame_check_app.py`) shows no score, label or box. Three
+  answers - Coca-Cola product / other container / nothing - give both the truth the detector can be
+  judged on and the truth the study wants.
+- **Nothing has entered the feature set.** `src/features/product_validate.py` applies the same
+  gates to the frame answers and scores **both** methods on the same frames; it refuses to judge on
+  fewer than 40 answers. If the gates fail, option C stands.
+
+**Outcome, 2026-09-29: the gates failed (gate B), so option C stands - see D-037.**
+
+---
+
+## D-034 - On-screen text is found, not read; faces need a model this build does not ship
+
+**Date:** 2026-09-28
+**Status:** Accepted (both downloads approved by the researcher, with their sizes, the same day)
+**Amends:** docs/04 section 3 (`ocr_word_count`) and docs/04 section 1 (`lang_onscreen`).
+
+**1. OCR runs as a detector only - it finds where text is and never reads it** (EasyOCR's CRAFT,
+83 MB). Three reasons, in order of weight:
+- docs/04 section 3 already required these features to stay coarse: "sentiment or keyword analysis
+  on OCR output across six languages would not survive".
+- **Detection is language-free.** Arabic, Korean, Thai and English frames are treated identically,
+  which removes exactly the failure docs/04 section 3 warns about - Arabic recognition, RTL and
+  cursive script being where OCR breaks.
+- Reading the words would need a separate recogniser per script (Latin, Arabic, Korean, Thai,
+  Devanagari, Bengali) at 10-30 MB each, and the resulting data would be **unevenly reliable across
+  markets** - and market is a grouping variable here, so that noise would not be random (docs/04
+  section 2's standing warning).
+
+**Consequences:**
+- `ocr_word_count` (docs/04 section 3) becomes **`ocr_region_count`**: a detected region is a line
+  or block of text, not a word. Named for what it measures. `ocr_text_frame_frac` and
+  `ocr_mean_text_area` are unaffected - neither ever needed the words.
+- **`lang_onscreen` (docs/04 section 1, task 5.7) is not measured.** The code-switching flag runs on
+  the two fields that exist - spoken language versus caption language, plus 5.6's confidence flags -
+  and `src/features/language.py` records `lang_onscreen_skipped` per video so the gap is visible
+  rather than implied. If recognisers are ever added, re-running 5.7 fills the field and recomputes
+  the flag.
+- Text is detected on the **full-resolution** frame, which is what D-024 reserved full resolution
+  for.
+
+**2. Faces come from a 230 KB model, fetched once.** mediapipe 0.10.35 is the tasks-only build: it
+ships **no** bundled models, so BlazeFace short-range was downloaded to `models/`. The alternative
+needing no download was OpenCV's 2001-era Haar cascade, which misses profiles and small faces; the
+researcher chose the model, and `face_conf_mean` is kept per video so a weak run would be visible
+rather than silent. Result: 262 of 300 videos show a face somewhere, 155 in most frames - which is
+what brand advertising should look like.
+
+**3. What the boxes showed when inspected, and what it changes.** The detector was checked by
+drawing its boxes on frames: every box was real text, including on the busiest frame (a mock
+phone-chat screen). But it finds the **Coca-Cola logo and the legal small print** as readily as a
+subtitle, and those are present in almost every frame of an advert - so `ocr_text_frame_frac` is
+near-constant (**123 of 300 videos exactly 1.000**). Consequences: `ocr_text_frame_frac` is a
+pruning candidate, `ocr_region_count` and `ocr_mean_text_area` carry the real variation and go
+forward, and any statement about "on-screen text" in the results must say it includes brand marks
+and disclaimers, not only viewer-facing captions.
+
+**4. Also recorded from the same session:** `red_frame_frac` has a median of 1.000 on both platforms
+(nearly every frame carries some Coca-Cola red) and is a pruning candidate before modelling starts;
+the continuous `red_ratio` is the version to keep. No colour or busyness pair correlates above 0.85,
+so none is dropped yet - 7.2C re-checks with every feature present. **Two near-constant features
+found the same day** (`red_frame_frac`, `ocr_text_frame_frac`) is a reminder that "share of frames
+with X" saturates in brand advertising, where X is usually always there; the continuous and count
+versions are the informative ones.
+
+---
+
+## D-035 - Keyword matching: no accent folding, and "not searched" is not a zero
+
+**Date:** 2026-09-28
+**Status:** Accepted
+**Amends:** docs/04 section 5.1, the keyword list the researcher approved on 2026-09-24 (the list
+itself is unchanged; these are matching rules).
+
+Task 5.16 ran on all 300 videos with the six approved groups. Three rules had to be settled while
+implementing it, and each is recorded in docs/04 section 5.1's amendment table:
+
+1. **Matching is case-insensitive and NFKC-normalised but not accent-folded.** Section 5.1 said
+   accent-insensitive. Folding would break Vietnamese, where accents carry meaning - `mới` ("new")
+   folds to `moi`, which collides with `môi` ("lips"). Accented and unaccented spellings are listed
+   explicitly instead, which is what `zero_sugar.py` already does for Spanish and Portuguese.
+2. **Word boundaries for Latin-script terms; substring for Thai, Korean, Hindi and Arabic.** Thai
+   and Korean have no spaces between words and Hindi and Arabic attach matras and clitics, so a
+   boundary match would find almost nothing. Same choice as the variant screener.
+3. **Short words that over-match are used only inside phrases** - "free" would match *sugar free*,
+   "back" *back to school*, "live" *live your life*, and "goal", "match" and "final" would fire on
+   football talk in a video about a concert. Precision over recall, as `zero_sugar.py` states: a
+   false hit is invisible downstream, a miss is recorded as a miss.
+
+**Result:** `kw_event` 104 videos, `kw_together` 86, `kw_taste` 53, `kw_zero_sugar` 53, `kw_new` 37,
+`kw_offer` 18. Median one group per video; 69 videos hit none.
+
+**Two things to carry into the analysis:**
+- **`kw_event` is three times more common on YouTube than Instagram (78 vs 26)** because the
+  YouTube corpus is built around the 2026 FIFA World Cup campaign. That is corpus composition, not
+  a platform effect, and it is stated wherever the feature is used.
+- **"Not searched" is null, never False.** 17 videos have neither an English transcript nor a
+  caption in a covered language, and `kw_zero_sugar` has 10 more because its vocabulary covers a
+  different language set (it reuses `ZERO_TERMS`: en, es, pt, ar, th, id, hi - so Turkish,
+  Vietnamese and Korean captions are not searched for it). `kw_*_searched` records which text was
+  searched for every video, so a missing measurement can never be read as an absent keyword.
+
+**Spot-checked before use**, as section 5.1 requires: matched terms printed per group, and the
+Korean, Thai and English hits land where they should. Every hit stores the term behind it.
+
+---
+
+## D-036 - The feature set: 20 features, fixed in order before any outcome was seen
+
+**Date:** 2026-09-28
+**Status:** Accepted
+**Implements:** tasks 5.10 and 5.11 against the 18-20 budget of D-030 and the five rules of
+docs/05 section 4. **Amends** docs/04 section 5.1 (six keyword flags become three features).
+
+**1. One feature table (5.10).** `data/processed/features.parquet`, 300 rows, 76 candidate
+features, assembled from the per-video caches by `src/features/assemble.py`. The candidates are
+**listed explicitly in the code** rather than swept from the caches, because the caches also hold
+transcripts, per-window scores and file paths that are working material, not features.
+**No engagement column is in the table** - the script fails if one appears - and it is joined only
+when a model is fitted, after docs/08 section 7.9's analysis begins.
+
+Two Block E features are deliberately absent, and the reasons matter:
+- **`account_prior_engagement`** is built from *other videos' engagement*, so it can only be
+  computed inside cross-validation folds (Phase 9). Computing it here would put the outcome in the
+  feature table.
+- **`posting_hour_local`** needs each market's timezone, which the data does not carry.
+  `posting_hour_utc` and `is_weekend_utc` stand in, and the limitation is stated: 9 a.m. in Bangkok
+  and 9 a.m. in Sao Paulo are the same UTC hour and different local moments.
+
+**2. Pruning (5.11) applied rules 1, 2 and 4 only - and stopped there on purpose.**
+Rule 3 (alpha < 0.67) needs task 4.2, which needs 5.12's automated labels. **Rule 5 reads the
+outcome**, so it belongs inside training folds in Phase 9 and must not run now. Correlations and
+constancy were measured on the **focus set (183 usable Zero Sugar videos)**, the sample the models
+will use. Full record with every drop and its reason: `reports/feature_pruning_record.md`.
+
+A **rule 0** was added ahead of the others: 17 features whose fate was already decided elsewhere
+(D-024's `aspect_ratio` and `fps`, D-026's `scene_count`, D-034's `red_frame_frac` and
+`ocr_text_frame_frac`, docs/05 Block A's "pick 1-2" for brightness/contrast/saturation, and the
+spread and extreme variants of kept means). Each drop cites where it was decided, so none is
+re-argued here.
+
+**3. Structural missingness is routed, not imputed.** A video with nobody talking has no sentiment,
+no words per minute and no voice pitch. That is not a gap to fill - it is a property of the video.
+So 11 speech-dependent features go to a **speech-only sub-analysis** (the 117 focus videos with
+speech), features where zero is the true measurement (`talk_dur_frac`, `music_frac`) stay in the
+main model, and platform-only features (`title_char_len*`, `creator_collab`) enter only that
+platform's models, as section 4.0 rule 3 requires.
+
+**4. The keyword flags become three features, and two of them make the cut.** Applied strictly by
+correlation and constancy, all six keyword flags fell outside the budget - which would have meant
+the proposal's Block C keywords, and part of H6, had no instrument at all. Rather than let a
+budget silently delete a research question, `kw_offer`+`kw_new` merge into **`kw_promotional`** and
+`kw_taste`+`kw_together` into **`kw_experience`** (null-safe: True if either hit, False only if both
+were searched and neither hit, null if neither was searched). `kw_event` stays separate as the
+largest group. They rank above `spectral_centroid_hz` and `tempo_bpm`, which **docs/05 Block B
+itself marks doubtful** and which D-028 found unrelated to whether music is present.
+
+**5. The final set is the top 20 of a priority order fixed now**, each entry tied to the hypothesis
+or control that needs it:
+
+duration, cuts per second, motion, face presence, face area, edge density, colourfulness, red
+ratio, on-screen text regions, text area, music share, talking share, loudness, loudness range,
+caption sentiment, caption length, hashtags, emoji, `kw_event`, `kw_promotional`.
+
+**Seven sit in an ordered reserve** (`kw_experience`, `spectral_centroid_hz`, `tempo_bpm`,
+`kw_zero_sugar`, `is_code_switched`, `mention_count`, `longest_shot_frac`). They enter **only** if
+a keeper is removed by rule 3 once the automated labels exist, strictly in that order. Nothing
+below the line can be promoted after a result is seen, and rule 5 may only drop further inside
+folds - never add. That is what stops the feature set being chosen by what happens to work.
+
+**Still to come into this record:** 5.12's automated labels (week 4) and 5.4's `container_*`
+features, if the frame check's gates pass (D-033). Both require 5.10 and 5.11 to be re-run, and
+the record to be rewritten with a new date.
+
+---
+
+## D-037 - Product visibility is not measured: the container detector failed gate B
+
+**Date:** 2026-09-29
+**Status:** Accepted - the outcome D-033 fixed in advance for a failed gate (option C)
+**Closes:** task 5.4 and its validation 5.4v. **Cancels** task 5.17 as specified (it needed 5.4).
+
+**What was run.** The researcher answered all 120 sampled frames on 2026-09-29 (37 Coca-Cola
+product, 1 other drink container, 82 nothing; Instagram 20/0/40, YouTube 17/1/42).
+`python -m src.features.product_yolo --validate` then applied the three gates fixed before either
+method was scored. Report: `reports/product_detection_validation.md`.
+
+| Gate | Result | Required | Pass |
+|---|---|---|---|
+| A. Frame-level AUC, container visible | **0.748** (95% CI 0.66-0.84) | >= 0.70 | yes |
+| B. The five blind-coded no-product videos in the bottom half | ranks 0.60, 0.10, 0.36, 0.24, 0.10 | all <= 0.50 | **no** |
+| C. Not near-constant (10th-90th spread) | 0.745 | >= 0.10 | yes |
+
+**Gates A and B both decide, so the verdict is a fail.** Following D-033, product visibility is
+reported as **not measured**; the `container_*` features do not enter the feature table; H2, RQ4
+and 5.17 rest on the Zero Sugar label alone, which is itself weakly reliable on YouTube (alpha 0.25,
+D-029). No threshold was moved and no gate was re-run.
+
+**Why gate B failed, recorded so the limitation is described accurately.** One video fails it:
+YouTube `eKBjm4_DiQA`, container in 19% of its frames (rank 0.60, just above the median of 0.13).
+Its frames were inspected after the verdict: from about 17 s it shows a **Coca-Cola-branded
+fountain cup** - small in a meal offer, then filling the frame. The detector is not wrong about what
+is on screen. The blind code (`no_product`) is not wrong either: the codebook defined *no product*
+as "no Coca-Cola **pack**" (a can or bottle). The two measure different things - the detector any
+drink container, the codebook a pack - and gate B was written to catch exactly that kind of
+mismatch. Re-coding the video, or re-defining the gate after seeing which way it went, would be
+choosing the truth to fit the result, so neither was done. Gate B rests on only five negatives,
+which D-033 already said is weak evidence in either direction; that weakness cuts both ways and is
+not a reason to set the gate aside.
+
+**What the frame check showed anyway, for the limitations section:**
+- At the pre-set threshold 0.25 the detector flagged 32 of 120 frames: **precision 69%**, recall
+  58%. Missed frames are small, blurred or partly out of shot.
+- Of the 38 frames the researcher saw a drink container in, **37 (97%) were Coca-Cola's** - in this
+  corpus a container on screen is almost always the brand's.
+- **Whole-image CLIP ranked frames better (frame AUC 0.844) than the detector (0.748)** on the same
+  120 frames. That does not reopen the first attempt: CLIP failed gate B far worse (no-product
+  videos at 0.72 and 0.94, D-033), and a method that orders single frames well but puts product-free
+  videos near the top cannot give a trustworthy share-of-video measure. Recorded because it is true
+  and a reader of the report will see it.
+
+**What stays.** The per-frame scores and `data/interim/container_summary.csv` are kept for
+checking, as with music type (D-033). The 120 answers stay in `docs/product_frame_check.csv`.
+**5.17 is cancelled as specified** (a `product_focus` threshold on a validated 5.4 measure). The
+only remaining route to product-vs-lifestyle is 5.12's automated `product_vs_lifestyle` label,
+which has no manual code to check it against and so, under 4.2's rule, can only be reported as
+unvalidated. **5.10 and 5.11 need no re-run for 5.4** - no feature was added - and are re-run after
+5.12 as D-036 already requires.
+
+---
+
+## D-038 - Automated labels: pilot rule, reliability rule and where passing labels enter, fixed before any model ran
+
+**Date:** 2026-09-29
+**Status:** Rules accepted and written **before any model produced a label**; results appended below
+**Implements:** 5.12 (seven constructs, D-032), 4.2, and 5.11 rule 3.
+
+**Models.** The researcher approved downloading two free vision-language models on 2026-09-29 and
+declined a third (Gemma 3 4B, which carries Google's own terms): **Qwen3-VL 4B** (`qwen3-vl:4b`,
+3.3 GB) and **Qwen2.5-VL 3B** (`qwen2.5vl:3b`, 3.2 GB), run locally in Ollama (already installed;
+nothing paid). Code: `src/features/annotate.py`.
+
+**Questions.** The four constructs with a manual check use **the codebook's own wording**, imported
+from `src/coding/codebook.py`, so the model and the researcher answer the same question. The three
+without one (`product_vs_lifestyle`, `ugc_vs_brand`, `promotional_language`) have definitions
+written in the same style, in the module, before any model ran. `ugc_vs_brand` is defined as the
+**look** of the video (phone-shot vs produced), not who posted it - every YouTube Short and most
+Reels are posted by brand accounts, so "who posted it" would be near-constant.
+
+**Input.** Six grid frames evenly spaced in time (longest side 768 px), the account name, the
+caption (YouTube: title + description, up to 1,500 characters) and the English speech translation
+(up to 1,500 characters). **No OCR text**, amending docs/05 section 3: 5.5 part B detects text and
+reads none (D-034), so the model reads on-screen text from the frames. Temperature 0, seed
+20260929, answers forced into a JSON schema that allows only the listed options; every raw answer
+is kept.
+
+**Pilot rule.** 10 of the researcher's 60 coded videos, 5 per platform, seed 20260929
+(`data/interim/annotation/pilot_sample.csv`, drawn before any model ran). The winner has the
+highest agreement with the researcher on the four checked constructs; a model answering "unsure"
+counts as not agreeing (no winning by abstaining); pairs the researcher marked "unsure" are left
+out. Ties: more valid answers, then faster. The prompt is not tuned on the pilot's results.
+
+**Reliability rule (4.2).**
+- Krippendorff's alpha, nominal, researcher vs model, per checked construct.
+- **Primary: the 50 coded videos the pilot did not use**, so the chosen model is judged on videos
+  it was not chosen on. All 60 are reported as well.
+- "Unsure" on either side is treated as missing, and the count is reported. If the model says
+  "unsure" on more than 20% of a construct's videos, the construct fails, so it cannot pass by
+  abstaining.
+- 95% interval from 2,000 bootstrap resamples of videos.
+- **The construct is dropped if the point alpha is below 0.67.** If alpha cannot be computed
+  (only one answer occurs), it is not validated and is dropped.
+
+**Where passing labels enter the feature order (5.11 rule 3)** - fixed now, before alpha is known:
+- `auto_has_cta` (H5), then `auto_has_celebrity` and `auto_has_influencer` (H4) are inserted
+  **directly after `sentiment_caption`**, in that order, if they pass. They are the instruments
+  of two proposal hypotheses, and D-036's order ranks hypothesis instruments above generic counts.
+  Each one inserted pushes the lowest of the 20 to the head of the reserve.
+- `auto_humour_present` (Block D, no hypothesis) goes **to the head of the reserve** if it passes.
+- **The three unchecked labels never enter a model.** They are kept as columns, described as
+  unvalidated automated labels (D-023), and may be tabulated descriptively.
+- A construct that fails is recorded under rule 3 in the pruning record, with its alpha.
+
+**Pilot result, 2026-09-29** (`reports/annotation_pilot.md`): **Qwen3-VL 4B chosen by the rule** -
+agreement with the researcher on the four checked constructs 70% (26 of 37 pairs) against 62%
+(23 of 37) for Qwen2.5-VL 3B, and about four times faster (median 23 s vs 100 s a video). Per
+construct the picture is mixed and ten videos decide nothing about reliability: Qwen2.5-VL matched
+all 10 celebrity answers but only 1 of 8 humour answers; Qwen3-VL 8/10 and 7/8. That is 4.2's job.
+
+**Three things found while setting up, recorded because they affect how the labels are described:**
+- **Qwen3-VL reasons before it answers**, and on one pilot video (`Qd_mTNyMYiM`) the reasoning
+  filled the 6,144-token window, so it returned nothing - counted against it in the pilot. The
+  window was raised to **10,240** before the main run. With temperature 0 this changes no answer
+  that already fitted; it costs speed (about 20% of the model now sits in main memory). Answers
+  that still hit the limit are recorded as missing, flagged `done_reason = length`, and counted.
+- **The labels are close to, not exactly, repeatable.** Three uncoded or pilot videos asked three
+  times each: identical seven answers in 8 of 9 runs; the exception (a first run with a different
+  reasoning length) differed on 2 of 7 labels. Reported as a limitation; the cache keeps the answer
+  actually used.
+- **One smoke test was run on a coded, non-pilot video** (`C4Meop_AIdj`) by mistake, before the
+  pilot. Its answer was not compared with the researcher's code, nothing was changed because of it,
+  and the main run labels it afresh. Recorded so the held-out claim is exact.
+
+**Change of set-up, 2026-09-29 - reasoning switched off, and the pilot re-run under a rule written
+first.** The main run was stopped after 7 of the 60 coded videos: Qwen3-VL's reasoning ran away on
+some videos (one took 520 s and still returned nothing), which put 300 videos at a day or more with
+failures. The fix is to switch the model's reasoning step off (Ollama `think: false`). **That is not
+the set-up the pilot chose**, so it was not swapped in silently. Rule, written before the re-run:
+Qwen3-VL with reasoning off labels the **same 10 pilot videos** with the same prompt; it is used
+only if its agreement on the four checked constructs is **at least Qwen2.5-VL's 62% (23 of 37)**,
+ties going to the faster model as before; otherwise Qwen2.5-VL 3B is used. The 7 labels from the
+stopped run are discarded. 4.2's held-out alpha remains the real check whichever model is used.
+
+**Re-run result:** with reasoning off, Qwen3-VL answered in 2.9 s a video but agreed with the
+researcher on **57% (21 of 37)**, below 62%. **By the rule, Qwen2.5-VL 3B labels the corpus**
+(`reports/annotation_pilot_no_reasoning.md`). One more Ollama 0.32.5 quirk was found on the way: with
+reasoning off and a JSON schema, the model's answer is filed under the "thinking" field rather than
+the answer field; the code reads it from there (same text, only the field differs).
+
+**A GPU fault found in the first Qwen2.5-VL run, and how it is contained.** The first run over the
+60 coded videos returned **no valid answer at all** and was stopped. Cause, from Ollama's server log:
+on some videos the GPU arithmetic overflows, the model emits only "@" (the classic sign of invalid
+numbers), and Ollama's answer-format check crashes on it. Worse, Ollama reuses cached state between
+requests, so **one such video poisons every later request** until the model is reloaded - which is
+why a pilot video that answered normally on its own failed when it came after a bad one. A fresh
+server did not help; a reload between requests did. The fix: when a reply comes back blank, the
+model is unloaded and the identical request is sent once more to a clean model; if it still fails,
+the video is recorded as missing (never guessed) and the model is unloaded again so it cannot
+poison the next one. Each video records whether it needed the reload. Checked: after the fix a pilot
+video gave the same answer as in the pilot. Two approaches that did not work are recorded for
+completeness: plain JSON mode (crashes the same way) and no format at all (the model writes only
+"@@@@").
+
+**4.2 result, 2026-09-29: all four checked labels fail and are dropped** (`reports/annotation_reliability.md`).
+Qwen2.5-VL answered 54 of the 60 coded videos (6 blank even on a clean model - including 2 pilot
+videos that had answered in the morning, so the fault is not tied to particular videos alone).
+Primary sample, the 50 coded videos the pilot did not use (46 answered):
+
+| Construct | Pairs | Raw agreement | Alpha | 95% CI | Researcher yes / model yes | Kept? |
+|---|---|---|---|---|---|---|
+| `has_celebrity` | 41 | 80% | 0.100 | -0.16 to 0.48 | 9 / 1 | no |
+| `has_influencer` | 39 | 77% | 0.382 | 0.03 to 0.69 | 30 / 29 | no |
+| `has_cta` | 46 | 48% | -0.032 | -0.33 to 0.23 | 11 / 35 | no |
+| `humour_present` | 7 | 57% | 0.133 | -0.62 to 0.71 | 3 / 6 | no (model "unsure" on 38 of 46) |
+
+All 60 give the same picture (0.118, 0.364, -0.033, -0.044). The failures are not narrow: the model
+calls almost every video a call to action (it agrees with the researcher less often than chance),
+misses 8 of the 9 celebrities, and declines to judge humour. The counts were re-checked directly
+against the codes file before being reported.
+
+**Consequences, as fixed above before alpha was known:** no automated label enters any model; the
+20-feature set is unchanged; the three unchecked labels stay as unvalidated columns. **H5 has no
+validated instrument** (docs/08 required `has_cta` to pass). **H4 keeps only `face_present_frac` /
+`mean_face_area`** - human presence, not celebrity or creator presence. Humour is not measured.
+These join music type and product visibility as stated limitations.
+
+**Not done, and why:** Qwen3-VL with reasoning on won the pilot and was set aside for speed, not
+quality. Trying it now on the same 50 held-out videos would be choosing a model after seeing the
+test result, and its alpha would no longer be a fair check. That would need new, unseen coded
+videos. The researcher can decide whether that is worth it; the default is to accept the result.
+
+**Full run, 2026-09-29: 280 of 300 videos answered, 20 recorded as missing** (blank even on a clean
+model; never guessed). The first attempt at the long tail stalled when one request hung for 91
+minutes; requests now have a hard 3-minute limit, a hung attempt is the only kind re-tried (that
+video then failed normally), and a run stops itself after 8 failures in a row. Finished attempts
+are never re-run, so the labels 4.2 was computed on are exactly the stored ones (checked: 0
+differences). Answer shares across the 280 show the same leaning as on the coded videos - call to
+action "yes" 226, sales language "yes" 259, humour "unsure" 222, celebrity "yes" 7.
+**5.10 and 5.11 re-run:** 7 `auto_*` columns in `features.parquet`, all dropped from modelling by
+rule 3 as fixed above; **the 20 features and the 7 in reserve are unchanged.** Only rule 5 (inside
+training folds, Phase 9) remains.
+
+
+---
+
+## D-039 - The Instagram check (2c.R2) is done before exploration; the José vs Mourinho answers stand
+
+**Date:** 2026-09-29
+**Status:** Accepted (researcher's answers in chat, 2026-09-29); 2c.R2 answers pending
+
+**2c.R1 - the 36 *José vs Mourinho* Shorts: the 22 September answers stand, and the task stays
+open.** Asked in chat whether a re-look had been done, the researcher first wrote "there is no zero
+sugar". Because that would have reversed 17 of the researcher's own 22 September answers and taken
+15 usable Shorts out of the study (analysis set 183 -> 168, YouTube 72 -> 57, the global channel
+58 -> 43), the consequence was put back to the researcher before anything was changed. The
+researcher chose **"No, keep 22 Sep answers"** - there was no video-by-video re-look. Nothing was
+changed. Recorded as given in chat, 2026-09-29. The weak repeat reliability of the YouTube label
+(alpha 0.25, D-029) is unaffected and is still reported with every Zero Sugar result.
+
+**2c.R2 - Instagram's 37 regular Reels: the researcher chose to check them now.** The 37 are the
+systematically drawn Reels that text does not name Zero Sugar (`corpus_reason = regular_fill`).
+They were appended to `docs/zero_sugar_visual_check.csv` as orders 126-162 (`python -m
+src.screen.zero_sugar_check --instagram`): never-seen first, the 9 blind-coded last, random within
+each group (seed 20260929), one frame per shot, the same question and page as the YouTube check
+(`python -m src.coding.zero_sugar_check_app`, now wording "this video"). **The 125 YouTube rows and
+their answers were verified unchanged**, and the frozen copy
+`docs/zero_sugar_visual_check_pass1_20260922.csv` was not touched. The page shows no score,
+label or earlier code.
+
+What happens with the answers is already registered (docs/08 section 7.9, 7.9.5): labels re-applied
+with `src/screen/zero_sugar_labels.py`, the analysis table re-frozen with a dated row in section 6,
+and, **if Instagram's systematic Zero Sugar cell reaches at least 20 videos from at least 3
+accounts, the 7.5(c) "without hand-picked Reels" comparison is run as first registered**. The 9
+blind-coded Reels give a small repeat check against the researcher's earlier codes.
+
+**Order of work - the focus set is frozen before exploration looks at engagement.** The researcher
+said "go" for Phase 7 the same day. Exploration waits for the 37 answers and the re-freeze: if the
+list of analysed videos could still change after engagement had been charted, any change would
+look like - and could be - inclusion chosen by the results.
+
+**Result, 2026-09-29.** The researcher answered all 37 (12 Zero Sugar, 25 not, 0 unsure; all 37
+within two minutes, about 3 seconds each - the same pace as the 125-Short check). Read-only copy
+`docs/zero_sugar_visual_check_pass2_20260929.csv`. Labels re-applied, table rebuilt and re-frozen
+(docs/08 section 6, `ba6f0a2d...`), backups `*_before_D039_20260929.parquet`:
+- **Focus set 183 -> 192 usable** (Instagram 111 -> 120 from 17 accounts; YouTube 72 unchanged).
+  Only `is_zero_sugar`, `zs_label_method` and `in_focus` changed, all on the 37 Reels; **no
+  engagement value changed**, checked without display.
+- **Contingency not met:** Instagram's systematic Zero Sugar cell is **15 usable videos from 9
+  accounts**, short of 20, so 7.5(c) stays unrun and the within-Instagram comparison stays
+  descriptive (105 hand-picked vs 15 systematic, no test).
+- **Repeat check is poor: 4 of the 9 blind-coded Reels agree with the 15 September codes, alpha
+  -0.10** (3 blind "Zero Sugar" now "not", 2 blind "other Coca-Cola" now "Zero Sugar"). Nine
+  videos is a small check, but it points the same way as YouTube's 0.25: **the by-eye Zero Sugar
+  label is weakly reliable on both platforms**, and it decides inclusion for 12 of these Reels.
+  The answers stand as given (as in D-029); the figure is reported with every Zero Sugar result.
+- 5.10 and 5.11 re-run on the 192: same 20 features and 7 in reserve; only percentages moved.
+
+---
+
+## D-040 - What exploration decided: emotion collapsed, log cuts, no paired analysis, market not a term
+
+**Date:** 2026-09-29
+**Status:** Accepted
+**Implements:** Phase 7 (tasks 7.1-7.3) and docs/07 section 4. Run on the table frozen that day
+(192 focus videos, 22 accounts) by `src/eda/explore.py`; findings in docs/07 section 3, numbers in
+`reports/eda_numbers.md`, figures in `reports/figures/`.
+
+**Every rule below was set from counts or feature distributions, not from which option gives a
+stronger engagement result.** No test, p-value or model was run.
+
+1. **Emotion (H3) is collapsed by count:** labels with fewer than 10 focus videos merge into
+   "other" - joy 25, neutral 67, surprise 15, other 12 (disgust 5, fear 3, anger 2, sadness 2).
+   Emotion exists only for the 119 focus videos with speech and stays in the speech-only analysis.
+2. **`cuts_per_sec` enters every model as log1p(cuts_per_sec)** (TODO 7.2): one real montage at
+   9.68 cuts a second against a next-highest 1.78; skewness 10.2 raw, 1.7 after the transform. The
+   montage stays in (D-026).
+3. **The paired cross-platform analysis (task 8.3) is not viable and is closed:** 2 cross-posted
+   pairs by a rule fixed before looking (frame-embedding cosine >= 0.95, durations within 1 s)
+   against the 20 required.
+4. **Market is not a model term:** 16 of 19 markets have one account, so market duplicates the
+   account random intercept.
+5. **Confirmed, unchanged:** no collinearity drop (max VIF 3.6); the percentile DV and its median
+   split (100 / 92, the docs/06 section 4 fallback not triggered); no account excluded (the global
+   channel's 30% is what the pre-registered sensitivity analysis 7.9.3(d) is for).
+
+**What exploration showed that the write-up must carry** (descriptive only):
+- the platform gap in follower-normalised engagement (median log10 -2.55 Instagram vs -4.32
+  YouTube) comes with a complete overlap of platform, selection route (all hand-picked videos are
+  Reels) and account size (YouTube's large tier is one channel) - it answers nothing about platform;
+- age overlaps platform too (YouTube Shorts mostly 50-100 days old);
+- `kw_event` is lower-ranked, and 31 of its 46 videos are YouTube Shorts from the FIFA campaign.
+
+---
+
 ## Open decisions
 
 | ID | Question | Blocking | Needed by |
 |---|---|---|---|
-| O-01 | ~~Guide approval for scraping~~ — **superseded by D-010.** Now: read the institutional data/ethics policy yourself and record the finding. | No | Before IG collection |
+| O-01 | ~~Guide approval for scraping~~ — ~~read the institutional data/ethics policy and record the finding~~ — **closed 2026-09-24 by D-032:** the researcher reports no such policy applies, and decided how assistance is handled. The factual methods description (D-010) stands unchanged. | — | Closed |
 | O-02 | ~~Zero Sugar only, or brand family?~~ - **resolved by D-014: brand family, variant as a feature, Zero Sugar retained and measured.** | - | Closed |
 | O-03 | Apply to Meta Content Library as a backup route? Lead time is weeks. | No | Week 1 if at all |
 | O-04 | ~~Creator content in scope?~~ — **resolved by D-009: yes, brand + sponsored creators.** | — | Closed |
