@@ -1950,6 +1950,460 @@ stronger engagement result.** No test, p-value or model was run.
 - age overlaps platform too (YouTube Shorts mostly 50-100 days old);
 - `kw_event` is lower-ranked, and 31 of its 46 videos are YouTube Shorts from the FIFA campaign.
 
+
+---
+
+## D-041 - The modelling plan after the 1 October meeting: high/low target, one pooled model split by platform, MLP kept
+
+**Date:** 2026-10-01
+**Status:** Accepted
+**Source:** the researcher's answers in chat on 2026-10-01 to the four questions of the meeting
+handout (`modelling-meeting-handout.docx`, 30 Sep). For two of them the researcher's answer was to
+follow the proposal (`coco-cola-proposal.docx`, read only); what the proposal says is quoted so the
+reading can be checked. Recorded as the researcher's answers, not as the supervisor's words.
+
+| Question | Answer | Basis |
+|---|---|---|
+| 1. High vs low as the main target, continuous score for the regression? | **Yes.** `engagement_high` is the machine-learning target; the continuous percentile is the outcome of the mixed-effects statistics | Researcher: "according to the proposal". The proposal's dependent variable is "High-engagement vs Low-engagement", with engagement normalised "within each platform", and its evaluation section is a classification one (F1, PR-AUC, ROC-AUC, confusion matrix, threshold optimisation) |
+| 2. Instagram-only model, YouTube described without one? | **One pooled model, explained separately for each platform; an exploratory Instagram-only model; no YouTube-only model** | Researcher: "according to the proposal". The proposal asks whether predictors differ between platforms (RQ7, H9, H10; SHAP section: "Are their effects different on YouTube and Instagram?") but never asks for a model per platform. A YouTube-only model cannot be tested fairly: 72 videos in 5 channels, 58 from one, so account-grouped folds collapse and the minimum detectable correlation is 0.33 even with no account clustering |
+| 3. Call to action and celebrity - not measured, or hand-code more? | **Reported as not measured** | Researcher. H5 has no instrument; H4 rests on face presence only (D-038) |
+| 4. Keep the neural network (MLP)? | **Kept**, reported honestly if it loses; still first in the cut order if the schedule slips | Researcher |
+
+**Applied the same day:** docs/09 (section 0 added, section 5 rewritten, n=192 / 22 accounts, fold
+balance around the global channel), docs/10 (per-platform section rewritten; dependence plots
+without product visibility), docs/08 section 6 power table filled.
+
+**Power, computed before any test** (`python -m src.stats.power`, `reports/power_analysis.md`): at
+80% power the pooled focus set detects a yes/no difference of d 0.41 and a correlation of r 0.20 if
+accounts did not matter (ICC 0), rising to d 0.77 / r 0.37 at ICC 0.1 - a cautious upper bound,
+since most features vary within accounts. Instagram alone: d 0.52 / r 0.25 at ICC 0. YouTube alone:
+r 0.33 at ICC 0, unusable at any realistic ICC. **Only medium-to-large effects are detectable;
+platform differences in predictors only if very large** - so H9 and H10 stay estimates with
+intervals, and every null is reported as "not detected at this sample size" with these values.
+
+
+---
+
+## D-042 - Phase 8 specification: exactly which test decides each hypothesis, fixed before any test
+
+**Date:** 2026-10-01
+**Status:** Accepted - **written before any hypothesis test or model was run** (researcher's go for
+Phase 8, 2026-10-01). docs/08 sections 1-3 name the kind of test for each hypothesis; this entry
+pins the variables, the decisive test and the family, so no choice can follow a result. The
+platform comparison (H7) is run exactly as docs/08 section 7.9 registers it and is not re-specified
+here. Code: `src/stats/hypotheses.py`; output `reports/statistical_results.md`.
+
+**Sample.** Focus set, `in_focus & dv_status == "ok"`: 192 videos, 22 accounts (table frozen
+2026-09-29, docs/08 section 6). Every result carries the Zero Sugar label's repeat reliability
+(YouTube alpha 0.25, Instagram -0.10).
+
+**Outcome.** H1-H6 and H8: `engagement_pct`, the continuous percentile (docs/08 section 2; D-041).
+H7, H9, H10: as registered - H7 on `log10(engagement_rate_follower)` (7.9.2); H9/H10 on the
+percentile, exploratory.
+
+**Model.** `statsmodels.MixedLM`, random intercept per account. Coefficients from REML fits;
+likelihood-ratio tests from ML fits of nested models on the same rows. **Controls in every
+H1-H6/H8 model:** `platform`, `log10(followers)`, `log10(video_age_days)`. Region and language are
+left out: they vary between accounts, which the random intercept absorbs (as 7.5(a) argues), and
+market duplicates account (D-040). Continuous predictors are z-scored; coefficients are reported in
+percentile points per SD, with the standardised beta (coefficient / SD of the outcome).
+
+**Feature handling, fixed now.** `mean_face_area` = 0 where no face appears (all 22 missing values
+are exactly the 22 no-face videos, so 0 is the true area, not a guess). `cuts_per_sec` as log1p
+(D-040). Caption length as log1p(characters), z-scored **within caption language** where the
+language has 5+ focus videos, otherwise against the whole set (docs/05 Block C). Remaining gaps
+(keywords not searched 9, caption sentiment 7, loudness 2, motion 1) -> complete cases, **179
+videos**; a sensitivity re-run with median imputation is reported beside every model that drops rows.
+
+**Decisive tests (the confirmatory family, Benjamini-Hochberg at q = 0.05, docs/08 section 3):**
+
+| H | Test 1 | Test 2 |
+|---|---|---|
+| H1 duration | LR test of duration + duration^2 (both z) added to the controls model | Spearman, duration vs percentile, pooled |
+| H2 product visibility | **not tested** - not measured (D-037) | - |
+| H3 positive emotion | MixedLM coefficient of caption sentiment (the text every video has; D-036 priority) | Kruskal-Wallis, percentile across the collapsed speech-emotion groups joy / neutral / surprise / other (D-040), 119 speech videos, epsilon^2 |
+| H4 people on screen | LR test of `face_present_frac` + `mean_face_area` added to the controls model | Mann-Whitney U, any face vs none (170 vs 22), rank-biserial r. Celebrity / creator presence not measured (D-038) |
+| H5 call to action | **not tested** - no validated instrument (D-038) | - |
+| H6 text | LR test of the text block - caption length (within-language z), hashtags, emoji, `kw_event`, `kw_promotional` - added to the controls model | Spearman, caption length and hashtags vs percentile (two tests) |
+| H7 platform | 7.9.3(a) platform coefficient, verdict by 7.9.4 | (a2), (b), (c), (d) as registered - robustness, not in the family |
+| H8 joint predictive power | LR test: controls model vs controls + all 20 content features | Per-block LR tests (video, audio, text) - reported, in the family |
+
+Per-platform Spearman for H1 (docs/08 section 1 asks for it) is reported with intervals as a
+description, outside the family. **H9** (feature x platform, one model per feature, each of the 20)
+and **H10** (duration x platform) are exploratory: estimates with 95% intervals, outside the family,
+never called significant (7.7, 7.9.7).
+
+**Assumption checks (docs/08 section 5), run and reported, decisions fixed now:** residual
+normality (Q-Q, Shapiro-Wilk) - the percentile is bounded, so non-normal residuals are expected; if
+present, each H1-H6 conclusion is confirmed against its rank-based test 2, and disagreement is
+reported, not resolved by choice. Account variance near 0 (ICC < 0.01) -> the OLS fit is reported
+beside it. VIF already max 3.6 (D-040). The platform comparison's registered robustness on the
+wider 290-video set (7.5(a) with `is_zero_sugar`) is run and reported as robustness only.
+
+**Wording of results, fixed now:** "associated with", never "causes"; a BH-adjusted p >= 0.05 is
+"not detected at this sample size" with the minimum detectable effect from `reports/power_analysis.md`.
+
+
+---
+
+## D-043 - Phase 8 results: one association, between accounts; no other hypothesis detected
+
+**Date:** 2026-10-01
+**Status:** Accepted - results of the tests fixed in D-042 and docs/08 section 7.9
+**Output:** `reports/statistical_results.md`, `reports/statistical_family.csv` (`python -m src.stats.hypotheses`)
+
+**Confirmatory family (14 tests, Benjamini-Hochberg q = 0.05): one detected.**
+- **H6, hashtags:** Spearman rho 0.244 (95% CI 0.11 to 0.37), BH-adjusted p 0.009. **The association
+  is between accounts, not within them:** with each account's mean removed rho is 0.02 (p 0.77), and
+  in the mixed model the hashtag coefficient (std beta +0.17) has an interval reaching 0. It is
+  described as "accounts that use more hashtags rank higher", never as hashtags raising a video's
+  engagement. 13 videos carry 6+ hashtags.
+- **Not detected at this sample size:** H1 duration (rho -0.045), H3 caption sentiment (std beta +0.10)
+  and speech emotion (eps2 0.006), H4 faces (r_rb +0.036), the H6 text block and caption length, H7
+  platform, H8 all features and each block. Each null is reported with the minimum detectable effect
+  from `reports/power_analysis.md` (pooled r 0.20 at ICC 0).
+- **Not tested:** H2 (product visibility not measured, D-037), H5 (no call-to-action measure, D-038).
+
+**H7 - platform (7.9.3):** platform coefficient +0.470 log10 units, Instagram/YouTube rate ratio 3.0
+(95% CI 0.5 to 17.3), p 0.23 -> **"Not detected"** under 7.9.4. The raw gap seen in exploration (about
+1.8 log10 units) shrinks to 0.47 once follower tier and account are in the model: in the large tier
+Instagram is higher (+1.60, interval +0.31 to +1.86), in the small/medium tier slightly lower (-0.29,
+-1.29 to +1.34); without the global YouTube channel the coefficient is -0.01. The wider 290-video set
+gives the same picture (ratio 3.2, CI including 1). The selection caveat (every hand-picked video is a
+Reel) stands beside it.
+
+**What the models say about accounts:** ICC 0.38 (log10 rate) and 0.30 (percentile) - about a third
+of the variation in engagement belongs to the account, not the video. That, together with the
+reach-only baseline of Phase 9, is the honest headline so far.
+
+**Exploratory (H9, H10; never "significant"):** 8 of the 20 feature x platform intervals exclude 0
+(e.g. face share, talking share, on-screen text area, event words steeper on Instagram; motion,
+colourfulness, sentiment, caption length steeper on YouTube). With 20 intervals, YouTube's 72 videos
+from 5 channels (58 from one) and no correction, these are leads for the SHAP comparison, not
+findings. H10 duration x platform +0.098 per SD, interval -0.012 to +0.207.
+
+**Robustness and checks:** median-imputation sensitivity agrees on every test except H8 overall
+(p 0.042 unadjusted with imputation vs 0.101; still not detected after adjustment). Residuals normal
+(Shapiro-Wilk p 0.24), no spread pattern; VIF max 3.6. Computational note: five optimisers per fit,
+highest finite likelihood kept (Powell in all 52), because the default stopped at degenerate points.
+
+
+---
+
+## D-044 - Phase 9 specification: models, folds, tuning, threshold and the headline test, fixed before any model ran
+
+**Date:** 2026-10-02
+**Status:** Accepted - **written before any model was fitted** (researcher's go, 2026-10-02).
+Implements docs/09 under D-041. Code: `src/models/train.py`; output `reports/model_comparison.md`.
+
+**Data and target.** Focus set, 192 videos / 22 accounts. Target `engagement_high` (100 high / 92
+low). All 192 rows are used: missing values are imputed **inside each training fold** (median),
+never from test rows.
+
+**Feature sets.**
+- **M0 - reach and exposure only:** log10 followers, log10 video age, follower tier (large /
+  medium / small, one-hot), platform, posting hour in UTC (as sine and cosine), weekend flag.
+- **M1 - content only:** the 20 features of D-036 with the D-040/D-042 transforms (log1p cuts, face
+  area 0 where no face, caption length z-scored within language - a transform that reads no outcome).
+- **M2 - M0 + M1.**
+- **Deviation, recorded now: `account_prior_engagement` is not used.** docs/09 asked for it computed
+  within training folds from prior videos. Under account-grouped folds a test account has no videos
+  in training, so the value could only come from that account's own other videos - their outcomes -
+  which is leakage. It is dropped; M0 carries follower count and tier instead.
+
+**Models (docs/09 section 1).** Majority class; logistic regression (L2, scaled); decision tree;
+random forest (class-balanced); XGBoost; MLP (1-2 hidden layers, early stopping; kept, D-041).
+Tuning: randomised search, 20 settings, inside each training fold on **account-grouped inner folds**
+(3), scored by ROC-AUC. Grids are fixed in the code before the first run.
+
+**Validation.** `StratifiedGroupKFold` by account, 5 outer folds, **repeated 3 times** (seeds 42,
+1042, 2042) = 15 fits per model and feature set. Fold make-up (videos, accounts, platform, class
+balance, which fold holds the global channel) is logged.
+
+**Threshold.** For F1 / precision / recall / accuracy, the threshold that maximises F1 on
+**out-of-fold predictions within the training fold**; never chosen on test rows. ROC-AUC, PR-AUC and
+Brier need no threshold.
+
+**Headline (docs/09 section 2), fixed now.** For every model, **M2 minus M0 ROC-AUC**, paired over the
+15 outer folds, with a 95% interval from the **corrected resampled t-test** (Nadeau-Bengio), because
+repeated-CV folds overlap and an ordinary t-interval would be too narrow. **Primary comparison:
+XGBoost M2 against the reach-only logistic baseline (logistic regression M0)** - docs/09's "content
+must beat this" - with the same correction. "Content adds beyond reach" only if that interval
+excludes 0. The best model is reported, but no conclusion rests on picking it after the fact.
+
+**Instagram-only model (exploratory, D-041):** same pipeline and folds on 120 videos / 17 accounts,
+logistic regression and XGBoost, M0 / M1 / M2, plus `creator_collab`. No YouTube-only model.
+
+**Also reported:** calibration (Brier, calibration curve on pooled out-of-fold predictions), a
+learning curve for XGBoost M2 (share of training accounts), mean +/- SD over folds for every metric.
+
+**Note added 2026-10-02, after a one-fold smoke test and before the full run:** the F1-maximising
+threshold often labels every test video "high" (with a near-even split that is a cheap way to a
+fair F1), which makes accuracy, precision, recall and F1 uninformative. The registered F1 rule is
+kept and reported as is; a **secondary Youden's J threshold** (the other rule docs/09 names), chosen
+the same way on training out-of-fold predictions, is reported beside it, with the number of folds in
+which the F1 rule called every video high. ROC-AUC - the headline - uses no threshold and is
+unaffected.
+**Saved for the tool (task 12.1):** the XGBoost and logistic M2 pipelines refitted on all 192, the
+feature order, and a model card with the cross-validated numbers. Calibration for the tool (12.2)
+comes later.
+
+
+---
+
+## D-045 - Phase 9 results: no model predicts engagement for unseen accounts; an Instagram-only lead
+
+**Date:** 2026-10-02
+**Status:** Accepted - results of D-044
+**Output:** `reports/model_comparison.md` (`python -m src.models.train`, 55 min)
+
+**Headline (primary, registered in D-044): content does not add measurably beyond reach.** XGBoost
+M2 against the reach-only logistic baseline: ROC-AUC difference **-0.030** (corrected 95% CI -0.234
+to +0.174, p 0.76). No model's M2 - M0 interval excludes 0.
+
+**The stronger, plainer finding: in the pooled set nothing predicts above chance for an account the
+model has not seen.** Every pooled model sits near ROC-AUC 0.5 (best M0 0.61, best M2 0.53), and each
+one's corrected interval around 0.5 includes 0.5. Two reasons, both structural, belong next to it:
+(1) the target is a percentile ranked **within platform and follower tier**, so reach has been
+normalised out of it by design - a reach-only model *should* sit near chance; (2) about a third of the
+variation in engagement belongs to the account (ICC 0.30-0.38, D-043), and account-grouped testing
+correctly gives the model no access to a new account's level. Together with D-043, the evidence says
+engagement here is mostly an account property this design cannot learn for a new account.
+
+**Exploratory lead - Instagram only (120 videos, 17 accounts; not corrected for the many comparisons):**
+content-only models predict above chance for unseen Instagram accounts - logistic regression M1
+ROC-AUC **0.704 +/- 0.140** (corrected 95% CI for AUC - 0.5: +0.035 to +0.373), XGBoost M1 0.670 (+0.039
+to +0.300). The M2 - M0 gains (+0.23 to +0.25) are flattered by Instagram M0 sitting below chance, so
+they are not quoted as the effect; the comparison with chance is. One plausible reason the pooled
+models fail where Instagram alone does not: the fold that holds the global YouTube channel asks a
+mostly-Instagram model to rank 58 YouTube videos, and the H9 estimates (D-043) suggest content relates
+to engagement differently on the two platforms. That is a hypothesis for the SHAP step, not a finding.
+
+**Also:** calibration is poor (Brier 0.268 / 0.315, worse than a constant guess); the learning curve is
+flat; the F1 threshold rule labelled every video "high" in many folds, so threshold metrics are
+secondary (D-044 note); tuned logistic regression chose the strongest regularisation (C = 0.001) in 9 of
+15 folds - itself a sign there is little signal to fit.
+
+**Consequences for the prediction tool (D-017, docs/11).** The saved pooled models
+(`models/engagement_*_m2.joblib`, task 12.1) predict at about chance for a new account, so docs/11's
+release gates cannot be passed by them as they stand. The researcher decides how the tool proceeds;
+options are recorded in docs/11 when that decision is made. Nothing is changed in the tool's plan here.
+
+
+---
+
+## D-046 - The tool follows its pre-registered fallback: honest base rate, video diagnostics, and an Instagram content score labelled exploratory
+
+**Date:** 2026-10-02
+**Status:** Accepted. The researcher was asked how the tool should proceed after D-045 and answered
+"do whatever is best for the project" (chat, 2026-10-02); this is that choice, and it follows the rule
+docs/11 section 5 wrote before any model ran.
+
+**Why a decision was needed.** Gate G1 (M2 beats the exposure-only baseline on grouped CV) **failed** on
+the pooled focus set (D-045), and no pooled model predicts above chance for a new account. docs/11
+section 5 fixed in advance what then happens: "say so in the write-up and ship the tool as an exposure
+baseline plus content diagnostics". Section 1.5 also fixed what may not happen: quietly changing the
+training set until a gate passes.
+
+**What the tool becomes (both platforms, Zero Sugar creative):**
+1. **An honest base-rate prediction per platform** - the expected engagement percentile for a typical
+   video from an account of that size, with an interval that reflects what the data actually supports
+   (wide), labelled "the models could not predict better than this for a new account".
+2. **Video diagnostics** - the 20 measured features of the submitted video placed against the 192 Zero
+   Sugar videos (for example "faster cutting than 80% of them"), with no claim that any of them raises
+   engagement (H1-H8 not detected except an account-level hashtag association, D-043).
+3. **An Instagram content score, labelled exploratory** - the Instagram-only content model (ROC-AUC
+   0.70 on unseen accounts, D-045) shown with its measured accuracy and the words "exploratory: found
+   in a secondary analysis, not confirmed". It is not offered for YouTube (no YouTube model, D-041).
+4. **No "which platform suits this video better" verdict.** H7 was not detected and H9 is exploratory;
+   the tool shows how Zero Sugar videos fared on each platform descriptively, with the selection
+   caveat, instead of a recommendation.
+
+**Gates.** G1 is reported as failed, in the tool's "about this model" page and in the thesis. G2
+(calibration) and G3 (interval coverage) apply to whatever probabilities and intervals the tool shows -
+the base-rate intervals and the Instagram score must pass them on grouped CV before release, or the
+score is shown without a probability. G4 (training/serving parity) applies unchanged.
+
+**Not chosen, and why:** rebuilding the tool around the Instagram model alone (it would turn an
+exploratory, uncorrected finding into the deliverable's centre); hiding the failed gate; widening the
+training set to the 290-video robustness set to look for a passing model (forbidden by docs/11 section
+1.5).
+
+---
+
+## D-047 - Phase 10 specification: which models SHAP explains, the stability rule, and what may be said, fixed before any SHAP value was computed
+
+**Date:** 2026-10-02
+**Status:** Accepted - **written before any SHAP value was computed** (researcher's go, 2026-10-02).
+Implements docs/10 under D-041, D-045 and D-046. Code: `src/models/explain.py`; output
+`reports/xai_findings.md`, `reports/shap_importance.csv`, `reports/shap_fold_importance.csv`,
+`reports/figures/shap/`.
+
+**Starting point, fixed now whatever SHAP shows.** SHAP divides a model's prediction among its
+inputs. It says what a model relied on, not what causes engagement. D-045 found that **no pooled model
+predicts above chance for an account it has not seen**, so SHAP of the pooled model describes **what a
+model that did not work relied on** - it is reported that way and never as what is associated with
+engagement. Only the Instagram-only content models predicted above chance (exploratory, uncorrected).
+
+**1. Which models are explained - these three and no others.**
+
+| | Model | Why | Explainer |
+|---|---|---|---|
+| **A** | Pooled XGBoost M2 (192 videos, 28 inputs) | The primary model of D-044; docs/10 explains M2 so content is seen beside reach. Gives the per-platform view (RQ7/H9) and the duration x platform interaction (H10) | TreeSHAP (`tree_path_dependent`), log-odds |
+| **B** | Instagram logistic regression M1 (120 videos, 20 content features + `creator_collab`) | The model D-046 made the tool's exploratory Instagram score (ROC-AUC 0.704) - its explanation is what the tool would show | Linear SHAP, log-odds, background = the whole training fold (no subsampling) |
+| **C** | Instagram XGBoost M1 (same inputs) | A cross-check of B with a different kind of model (ROC-AUC 0.670) | TreeSHAP, log-odds |
+
+**Not explained, and why:** Random Forest (docs/10 section 1 named it; pooled M2 0.511, the same
+failure, and XGBoost is the registered primary model); the MLP (docs/10: only "if it performed well
+enough to be worth explaining" - 0.483); the decision tree; the pooled M0/M1 variants; the Instagram M2
+variants (B and C are the content models D-046 put in the tool; Instagram reach alone predicts below
+chance, M0 0.46 / 0.38, and that is reported beside B so exposure is not hidden).
+
+**2. The fold models are rebuilt, not re-tuned, and checked first.** Phase 9 did not save its fold
+models. Each of the **15 outer fold models** (5 folds x 3 repeats, seeds 42 / 1042 / 2042 - docs/10
+section 1 and TODO 10.1 said "5 outer folds"; corrected here to the 15 that D-044 ran) is rebuilt on the
+same training rows with the settings tuned for that fold, read from `reports/model_fold_results.csv`.
+**Check before any SHAP value:** every rebuilt fold's test ROC-AUC must equal the logged value (to
+1e-6), and repeat 1's test predictions must equal the saved out-of-fold predictions
+(`reports/model_oof_predictions.csv`, to 1e-6). If either fails, the run stops and the failure is
+recorded; no SHAP is computed on models that are not the ones evaluated. A SHAP additivity check
+(values + base = model output, to 1e-4) runs on every fold model.
+
+**3. Inputs counted as one feature.** The two posting-hour columns (sine, cosine) and the two
+follower-tier columns are each summed into one feature (SHAP values add exactly), so model A ranks 26
+features, B and C rank 21. Direction is not defined for these two.
+
+**4. Two uses of each fold model.**
+- **Stability (10.1):** each fold model is explained on **all rows** of its data set (192, or 120), so
+  every fold model is judged on the same videos and differences in ranking come from the models, not
+  from which videos fell in the test fold.
+- **Findings (10.2, 10.3):** **out-of-fold SHAP** - each video is explained only by the fold model that
+  did not see it, one value per repeat, averaged over the 3 repeats. Beeswarms, block totals, the
+  per-platform view, dependence plots and waterfalls use these.
+
+**5. The stability rule (10.1) - decides what may be interpreted.**
+- Importance of a feature in a fold model = mean |SHAP| over the reference rows; ranks 1 = highest.
+- **Overall ranking:** Spearman correlation between the importance vectors of every pair of the 15 fold
+  models (105 pairs); reported as the median with the 10th-90th percentile range. Verdict word fixed
+  now: **stable** if the median is >= 0.70, **partly stable** if 0.40-0.70, **unstable** below 0.40.
+- **A feature is stable** if it ranks **in the top 5 in at least 12 of the 15 fold models** *and* its
+  **direction** - the sign of the Spearman correlation between its (imputed, scaled) value and its SHAP
+  value - is the same in at least 12 of 15 (direction not required for the two merged features). Also
+  reported: features in the top 10 of all 15 (the docs/10 table row).
+- **What may be interpreted:** only stable features, in order of out-of-fold mean |SHAP| - **at most 5**
+  if the overall verdict is "stable", **at most 3** otherwise. If no feature is stable, the result is
+  "no feature is used consistently enough to interpret", and the figures are shown as description only.
+- For model A the same rule is applied **separately to its YouTube rows (72) and its Instagram rows
+  (120)** for the per-platform view.
+
+**6. Outputs (10.2), per docs/10 section 2, with three amendments.**
+- Beeswarm (out-of-fold) for A and B; ranking table for C.
+- **Block-grouped importance**, the docs/10 measure (sum of mean |SHAP| over the block's features), with
+  the per-feature average beside it because blocks differ in size. Blocks: A video (10 features), B
+  audio (4), C text (6), D creator, E platform and exposure (6 after merging). **Amendment: Block D is
+  empty in the pooled model** - no creator feature survived (automated labels failed, D-038;
+  `creator_collab` exists only on Instagram) - shown as "not measured"; in B and C it holds
+  `creator_collab`.
+- **Dependence plots:** duration (H1) for A and B, and every feature interpreted under rule 5 for B.
+  **Amendment: no emotion plot** - emotion is not one of the 20 model features (speech-only, D-040).
+  Product visibility is not measured (D-037).
+- **Four waterfalls, from model B only** (the model the tool would explain; waterfalls of a model at
+  chance would be anecdotes). **Amendment: chosen without a threshold** (the F1 rule labels nearly
+  every video high, D-044 note): the high video with the highest out-of-fold probability (true positive),
+  the low video with the highest (false positive), the low video with the lowest (true negative), the
+  high video with the lowest (false negative).
+
+**7. Per-platform comparison (10.3, RQ7/H9) - exploratory throughout.**
+- Model A's out-of-fold mean |SHAP| per feature on YouTube rows against Instagram rows - the key figure.
+- A feature is **divergent** if it is in the top 5 in at least 12 of 15 fold models on one platform and
+  outside the top 10 in at least 12 of 15 on the other. Stated beside every divergence: 58 of the 72
+  YouTube rows come from one channel, and model A did not predict above chance.
+- **Check on the Instagram view (docs/10 section 3):** Spearman between model A's Instagram-row
+  importance and model B's, over the 20 shared content features.
+- **H10:** SHAP interaction value duration x platform from model A (both halves, so 2 x the off-diagonal
+  value), out-of-fold, mean on YouTube rows vs Instagram rows. An estimate, never "significant".
+
+**8. B against C, and the effective-video profile (docs/10 section 5).** Reported: Spearman between B's
+and C's out-of-fold importance over their 21 features, and for each stable B feature, C's rank and
+direction. **The profile is built only from features stable in B whose direction C shares**, Instagram
+only, worded as an exploratory association with the exposure caveat. If none qualify, the profile is
+reported as not supported by this data. **No YouTube profile** (no model predicted above chance there),
+and **nothing from model A enters a profile**.
+
+**9. For the tool (task 12.6).** The tool's "drivers" may come **only from model B, and only from
+features that pass rule 5** here. Nothing from model A is shown to a user.
+
+**10. Wording, fixed now.** "The model relied on", "associated with" - never "drives", "causes" or
+"raises". Every result carries: the Zero Sugar label's repeat reliability (YouTube alpha 0.25,
+Instagram -0.10); that model A did not predict above chance; that B and C are exploratory (Instagram
+only, 17 accounts, not corrected for the many comparisons).
+
+---
+
+## D-048 - Phase 10 results: on Instagram the model leans on hashtags, talking and faces; the pooled model learned a stable pattern that does not carry to new accounts
+
+**Date:** 2026-10-02
+**Status:** Accepted - results of D-047
+**Output:** `reports/xai_findings.md`, `reports/shap_importance.csv`, `reports/shap_fold_importance.csv`,
+8 figures in `reports/figures/shap/` (`python -m src.models.explain`, 0.6 min)
+
+**Check first (rule 2): passed.** All 45 fold models (15 for each of A, B, C), rebuilt from the logged
+settings, reproduce Phase 9 exactly - ROC-AUC and predictions differ by at most 1e-16; SHAP values add
+up to the model output within 5e-6. The models explained are the models evaluated.
+
+**Stability (10.1, rule 5):**
+
+| Model | Rank agreement across 15 fold models (median, 10th-90th) | Verdict | Stable features (direction) |
+|---|---|---|---|
+| A. Pooled XGBoost M2 | 0.72 (0.51-0.87) | stable | hashtags (more -> higher), video age (older -> higher) |
+| B. Instagram logistic regression M1 | 0.74 (0.63-0.88) | stable | hashtags, share with talking, share of frames with a face (all more -> higher) |
+| C. Instagram XGBoost M1 | 0.63 (0.24-0.82) | partly stable | share of frames with a face (more -> higher) |
+
+**What this says, in the wording D-047 fixed:**
+- **Model A is consistent and still useless for a new account.** Its fold models rely on much the same
+  inputs every time (0.72), yet none predicts above chance for unseen accounts (D-045): it learns the
+  same pattern repeatedly, and the pattern does not carry to accounts it has not seen. Its two stable
+  features are reported only as *what a model that failed relied on*.
+- **Model B (exploratory):** Instagram Reels with **more hashtags, more talking and more frames with a
+  face** are scored as more likely to be high-engagement. **Model C agrees on the direction of all three**
+  (positive in 14, 15 and 15 of its 15 fold models), and B and C rank their 21 features similarly
+  (Spearman 0.64). By rule 8 these three form the **effective-video profile - Instagram only,
+  exploratory, an association and not a recommendation.** No YouTube profile; nothing from model A.
+- **Two cautions that go wherever the profile goes.** (1) A model tested on accounts it has not seen
+  can only learn what tells accounts apart. D-043 found hashtags associated with engagement **between
+  accounts only** (within-account rho 0.02), so this reads as "accounts that use more hashtags", not as
+  something that lifts a single video. Whether face share and talking share are account style or a
+  per-video matter was not tested (it is not in D-047's specification); the pooled face test (H4) was
+  not detected. (2) **B's score barely moves:** strongly regularised (C = 0.001 in 9 of 15 folds), its
+  out-of-fold probabilities run from 0.39 to 0.68, and 80% of videos sit between **0.45 and 0.56**. It is
+  a weak lean, not a confident prediction.
+
+**Per-platform view (10.3, RQ7 / H9, exploratory):** model A's rankings on YouTube rows and on
+Instagram rows are each stable (0.73 and 0.72), and **no feature is divergent** under rule 7. Hashtags
+are stable on both platforms' rows. The largest visible gap - face share, 1st on YouTube rows and 12th
+on Instagram rows - is in the top 5 of only 3 and 4 fold models, so it is not a finding. A's Instagram
+view and model B agree moderately (Spearman 0.48 over the 20 content features). **RQ7 from SHAP: no
+platform difference in what the pooled model relied on meets the rule** - with the standing caveats
+(58 of 72 YouTube rows from one channel; model A at chance).
+
+**H10:** the duration x platform interaction is essentially zero (mean +0.0002 log-odds on YouTube
+rows, -0.0000 on Instagram rows), and duration is among the least-used inputs (23rd of 26 in A, 16th of
+21 in B). Agrees with D-043 (H1, H10 not detected).
+
+**Importance by block (docs/10):** model A - video 1.67 (10 features), platform and exposure 1.01 (6),
+audio 0.88 (4), text 0.79 (6); per feature, audio is highest (0.22). Exposure does not dominate, but for
+a model at chance this describes a failed model, not which kind of feature matters. Model B - video
+0.16, text 0.08, audio 0.06, creator 0.02 (B's values are on a much smaller scale; compare within a
+model only). Block D is empty in the pooled model (no creator measure survived).
+
+**Waterfalls (model B):** the most confident correct "high" (p 0.676) is driven mostly by face share and
+talking share; the most confident wrong "high" (p 0.579) by caption sentiment.
+
+**Consequences for the tool (rule 9, D-046):** the tool's "drivers" may name only hashtags, share with
+talking and share of frames with a face, from model B. Because B's probabilities barely move, gate G2
+(calibration, task 12.2) decides whether the Instagram score is shown as a probability at all, as D-046
+already requires.
+
 ---
 
 ## Open decisions

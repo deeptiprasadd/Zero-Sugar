@@ -1,6 +1,6 @@
 # 08 — Statistical Analysis
 
-**Status:** Planned. This supplies the section missing from the proposal (which jumps from
+**Status:** **Run 2026-10-01** (D-042 specification written first; results D-043; full output `reports/statistical_results.md` from `python -m src.stats.hypotheses`). This supplies the section missing from the proposal (which jumps from
 EDA straight to Hypotheses). **The platform comparison (RQ7, H7, H9, H10) is pre-registered in
 section 7 (2026-09-22, D-029); where section 7 and the rows below differ, section 7 wins.**
 
@@ -91,7 +91,9 @@ Run the power calculation before analysis and record it in §6.
 
 ## 6. Results
 
-_To be filled. Output: `reports/statistical_results.md`._
+**Filled 2026-10-01.** Output: `reports/statistical_results.md` (SHA-256 `ff50c35b...`), family table `reports/statistical_family.csv`. Focus set 192 videos / 22 accounts; the H1-H6/H8 models use the 179 complete cases (19 accounts), with a median-imputation sensitivity on all 192.
+
+**Two computational notes, not specification changes:** (1) statsmodels' default optimiser stopped at a degenerate point on some fits (account variance 0, likelihood reported as infinite) or hit a singular Hessian; each model was therefore fitted with five optimisers and the highest finite likelihood kept (Powell in all 52 fits). (2) Three small accounts drop out of the complete cases.
 
 ### Label freeze for the platform comparison (section 7.4)
 
@@ -119,12 +121,19 @@ Reels.
 To be computed before any null is interpreted. The focused rows are the ones that matter now
 (section 7.9.6); the 300-video rows belong to the robustness set.
 
+**Computed 2026-10-01 for the focus set (192 / 22), before any test** - `python -m src.stats.power`,
+full table and method in `reports/power_analysis.md`. Sample sizes and account spread only; no
+engagement value was read. Each cell: minimum detectable effect at 80% power, two-sided alpha 0.05,
+for ICC 0 / 0.1 / 0.3 (the fitted ICC from model (a) is reported with every null). `d` = yes/no
+feature split in halves; `r` = continuous feature. The ICC columns are a cautious upper bound: most
+features vary within an account, which the mixed model uses.
+
 | Test family | n | Accounts | Minimum detectable effect (80% power) |
 |---|---|---|---|
-| **Focus set, pooled (D-030; 192 since D-039)** | **192** | 22 | |
-| **Focus set, Instagram** | **120** | 17 | |
-| **Focus set, YouTube** | **72** | 5 | |
-| **Focus set, interactions (H9, H10)** | **192** | 22 | |
+| **Focus set, pooled (D-030; 192 since D-039)** | **192** | 22 | d 0.41 / 0.77 / 1.25 · r 0.20 / 0.37 / 0.56 |
+| **Focus set, Instagram** | **120** | 17 | d 0.52 / 0.79 / 1.17 · r 0.25 / 0.38 / 0.54 |
+| **Focus set, YouTube** | **72** | 5 | d 0.67 / 1.73 / 4.01 · r 0.33 / 0.71 / 0.97 (one channel holds 58 - effectively very few independent units) |
+| **Focus set, interactions (H9, H10)** | **192** | 22 | gap between the platforms' correlations (Fisher z) 0.43 / 0.98 / 2.16 - only very large differences detectable; exploratory (7.9.7) |
 | Robustness set, pooled (290 usable) | 300 | 26 | |
 | Robustness set, per platform (144 / 146 usable) | 150 | YouTube 5, Instagram 21 | |
 
@@ -132,34 +141,36 @@ To be computed before any null is interpreted. The focused rows are the ones tha
 
 | H | Test | Statistic | Raw p | Adj. p | Effect size | 95% CI | Verdict |
 |---|---|---|---|---|---|---|---|
-| H1 | | | | | | | |
-| H2 | | | | | | | |
-| H3 | | | | | | | |
-| H4 | | | | | | | |
-| H5 | | | | | | | |
-| H6 | | | | | | | |
-| H7 | | | | | | | |
-| H8 | | | | | | | |
-| H9 | | | | | | | |
-| H10 | | | | | | | |
+| H1 | LR duration + duration^2 (MixedLM) · Spearman pooled | chi2 2.15 (df 2) · rho -0.045 | 0.341 · 0.533 | 0.494 · 0.678 | rho -0.045 | -0.19 to 0.10 | **Not detected** (min. detectable r 0.20 at ICC 0) |
+| H2 | - | - | - | - | - | - | **Not tested** - product visibility not measured (D-037) |
+| H3 | MixedLM caption sentiment · Kruskal-Wallis speech emotion | beta +0.10 · H 0.67 (df 3) | 0.178 · 0.881 | 0.415 · 0.949 | std beta +0.10 · eps2 0.006 | coef -0.013 to +0.070 | **Not detected** |
+| H4 | LR face share + size · Mann-Whitney any face vs none | chi2 2.31 (df 2) · U 1936 | 0.316 · 0.788 | 0.494 · 0.919 | r_rb +0.036 | - | **Not detected** (celebrity / creator not measured, D-038) |
+| H5 | - | - | - | - | - | - | **Not tested** - no validated instrument (D-038) |
+| H6 | LR text block · Spearman caption length · Spearman hashtags | chi2 12.59 (df 5) · rho -0.001 · rho 0.244 | 0.028 · 0.984 · <0.001 | 0.149 · 0.984 · **0.009** | hashtags rho 0.244 | 0.11 to 0.37 (account-clustered 0.05 to 0.44) | **Hashtags detected - between accounts only** (within accounts rho 0.02); text block and caption length not detected |
+| H7 | 7.9.3(a) platform coefficient | +0.470 log10 | 0.230 | 0.459 | ratio 10^b = 3.0 | 0.5 to 17.3 | **Not detected** by 7.9.4 (and (d), (a2), tier differences disagree in sign); selection caveat stands |
+| H8 | LR all 20 features · video · audio · text blocks | chi2 28.36 (df 20) · 11.06 · 6.58 · 13.80 | 0.101 · 0.353 · 0.160 · 0.032 | 0.354 · 0.494 · 0.415 · 0.149 | - | - | **Not detected** (imputed sensitivity: all 20, p 0.042 unadjusted) |
+| H9 | Feature x platform, 20 models (exploratory) | - | - | - | 8 of 20 intervals exclude 0 | see report | **Exploratory only**, not tested |
+| H10 | Duration x platform (exploratory) | +0.098 per SD | - | - | - | -0.012 to +0.207 | **Exploratory only** - interval includes 0 |
 
 ### Mixed-effects model
 
-| Term | β | SE | p | Note |
-|---|---|---|---|---|
+Full H8 model (percentile ~ controls + 20 features + (1 | account), REML, n 179): every content
+coefficient's interval includes 0 (table in `reports/statistical_results.md`); largest standardised
+betas `kw_event` -0.43, `ocr_mean_text_area` -0.19, `colourfulness` +0.18, `hashtag_count` +0.17.
 
-**Account random-intercept variance:** ___
-**ICC:** ___ (how much engagement variance is account rather than content — an important
-number in its own right)
+**Account random-intercept variance:** H7 model (log10 rate) 0.407 against residual 0.670.
+**ICC:** **0.38** on the log10 rate (H7 model) and **0.30** on the percentile (full H8 model) -
+roughly a third of the variation in engagement belongs to the account rather than the video. Residuals
+pass the normality check (Shapiro-Wilk p 0.24) and show no spread pattern (Spearman -0.06).
 
 ### Paired sub-analysis
 
 | Metric | Value |
 |---|---|
-| Matched pairs found | |
-| Wilcoxon statistic | |
-| p | |
-| Median difference | |
+| Matched pairs found | **2** (rule fixed before looking; D-040) |
+| Wilcoxon statistic | not run - fewer than the 20 pairs required (task 8.3 closed) |
+| p | - |
+| Median difference | - |
 
 ---
 
@@ -404,7 +415,8 @@ should not be, and 6 of the 17 Shorts the blind codes called "other Coca-Cola" a
 
 **7.9.6 Power.** Section 4's minimum detectable effects were computed for n=300. They are
 recomputed for **n=183 in 21 accounts** (and for YouTube's 5 accounts specifically) and recorded
-in section 6 before any null result is interpreted. A null at this size means "not detected",
+in section 6 before any null result is interpreted. **Done 2026-10-01 for n=192 in 22 accounts**
+(after D-039), before any test: section 6 and `reports/power_analysis.md`. A null at this size means "not detected",
 and the ICC from (a) is reported with it, since 58 of 72 YouTube videos share one intercept.
 
 **7.9.7 H9 and H10.** Still exploratory, exactly as 7.7: effect estimates with 95% intervals,

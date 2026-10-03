@@ -1,0 +1,121 @@
+model,view,feature,label,block,oof_mean_abs_shap,oof_rank,top5_folds,top10_folds,dir_pos_folds,dir_neg_folds,direction,stable
+A,all,hashtag_count,hashtags,C,0.3496895599835423,1,13,15,15,0,higher -> higher,True
+A,all,log_age,video age (log days),E,0.327617048031243,2,12,13,13,2,higher -> higher,True
+A,all,cuts_log1p,cuts per second (log),A,0.31318922088394174,3,11,15,0,15,higher -> lower,False
+A,all,posting_hour,posting hour (UTC),E,0.3118286005115402,4,9,13,0,0,n/a,False
+A,all,face_present_frac,share of frames with a face,A,0.2738985149852749,5,3,5,13,2,higher -> higher,False
+A,all,red_ratio,share of red,A,0.26549042581528837,6,5,14,0,15,higher -> lower,False
+A,all,music_frac,share with music,B,0.2445985688650076,7,2,10,15,0,higher -> higher,False
+A,all,loudness_db_mean,loudness,B,0.23790925380631556,8,6,12,15,0,higher -> higher,False
+A,all,edge_density,visual detail (edges),A,0.23147795169845475,9,3,12,15,0,higher -> higher,False
+A,all,talk_dur_frac,share with talking,B,0.22248538531857776,10,3,7,14,1,higher -> higher,False
+A,all,log_followers,followers (log),E,0.19884224847919543,11,1,8,15,0,higher -> higher,False
+A,all,loudness_range_db,loudness range,B,0.17945132109556047,12,0,8,15,0,higher -> higher,False
+A,all,emoji_count,emoji,C,0.1524977835546856,13,1,4,0,15,higher -> lower,False
+A,all,sentiment_caption,caption sentiment,C,0.14563794991894002,14,2,2,4,11,mixed (mostly -),False
+A,all,caplen_lang,caption length (within language),C,0.13729609689916186,15,1,3,3,11,mixed (mostly -),False
+A,all,face_area0,face size,A,0.13633593112293366,16,1,5,10,5,mixed (mostly +),False
+A,all,motion_px_per_sec,motion,A,0.11216506593579352,17,1,2,5,9,mixed (mostly -),False
+A,all,follower_tier,follower tier,E,0.109361400418695,18,0,0,0,0,n/a,False
+A,all,ocr_region_count,on-screen text regions,A,0.10857954902934987,19,1,1,8,6,mixed (mostly +),False
+A,all,colourfulness,colourfulness,A,0.10803198495907262,20,0,0,11,4,mixed (mostly +),False
+A,all,ocr_mean_text_area,on-screen text area,A,0.07390837604766097,21,0,0,13,2,higher -> higher,False
+A,all,platform_ig,platform (Instagram),E,0.05734030781321863,22,0,1,3,10,mixed (mostly -),False
+A,all,duration_sec,duration,A,0.04505076216790054,23,0,0,9,4,mixed (mostly +),False
+A,all,kw_event,event words,C,0.00251246415326831,24,0,0,0,5,mixed (mostly -),False
+A,all,kw_promotional,promotional words,C,0.001484242397888617,25,0,0,0,2,mixed (mostly -),False
+A,all,weekend,weekend post (UTC),E,0.00022520900852719523,26,0,0,0,1,mixed (mostly -),False
+A,youtube,face_present_frac,share of frames with a face,A,0.42781852839807805,1,3,5,13,2,higher -> higher,False
+A,youtube,cuts_log1p,cuts per second (log),A,0.26830290681768765,2,10,15,0,15,higher -> lower,False
+A,youtube,red_ratio,share of red,A,0.26771110715344554,3,3,11,0,15,higher -> lower,False
+A,youtube,posting_hour,posting hour (UTC),E,0.26344120681406585,4,8,11,0,0,n/a,False
+A,youtube,hashtag_count,hashtags,C,0.2615453976646273,5,13,15,15,0,higher -> higher,True
+A,youtube,music_frac,share with music,B,0.2480956268220864,6,3,10,15,0,higher -> higher,False
+A,youtube,log_followers,followers (log),E,0.2135189005854988,7,3,9,15,0,higher -> higher,False
+A,youtube,sentiment_caption,caption sentiment,C,0.2052171562703464,8,2,2,9,6,mixed (mostly +),False
+A,youtube,talk_dur_frac,share with talking,B,0.20102459251345997,9,4,7,14,1,higher -> higher,False
+A,youtube,log_age,video age (log days),E,0.19003015696890302,10,12,12,12,3,higher -> higher,True
+A,youtube,edge_density,visual detail (edges),A,0.17213052060105846,11,0,9,15,0,higher -> higher,False
+A,youtube,loudness_db_mean,loudness,B,0.1678345220905074,12,9,14,15,0,higher -> higher,False
+A,youtube,face_area0,face size,A,0.16372832121905287,13,1,7,10,5,mixed (mostly +),False
+A,youtube,ocr_region_count,on-screen text regions,A,0.155688251992817,14,1,1,7,7,mixed,False
+A,youtube,motion_px_per_sec,motion,A,0.1553325887954863,15,0,2,6,8,mixed (mostly -),False
+A,youtube,follower_tier,follower tier,E,0.14082467054120373,16,0,0,0,0,n/a,False
+A,youtube,caplen_lang,caption length (within language),C,0.1368955158956211,17,1,3,3,11,mixed (mostly -),False
+A,youtube,emoji_count,emoji,C,0.12891254441260738,18,1,4,0,15,higher -> lower,False
+A,youtube,loudness_range_db,loudness range,B,0.12202110228153525,19,0,8,15,0,higher -> higher,False
+A,youtube,colourfulness,colourfulness,A,0.09141645152811652,20,0,4,11,4,mixed (mostly +),False
+A,youtube,ocr_mean_text_area,on-screen text area,A,0.08121461829351677,21,0,0,13,2,higher -> higher,False
+A,youtube,platform_ig,platform (Instagram),E,0.03504391315099956,22,1,1,0,0,mixed,False
+A,youtube,duration_sec,duration,A,0.034018529739114456,23,0,0,9,4,mixed (mostly +),False
+A,youtube,kw_promotional,promotional words,C,0.0037466551606889368,24,0,0,0,2,mixed (mostly -),False
+A,youtube,kw_event,event words,C,0.0023543658688949002,25,0,0,0,5,mixed (mostly -),False
+A,youtube,weekend,weekend post (UTC),E,0.0005266214925709559,26,0,0,0,1,mixed (mostly -),False
+A,instagram,log_age,video age (log days),E,0.4101691826686471,1,11,13,13,2,higher -> higher,False
+A,instagram,hashtag_count,hashtags,C,0.4025760573748915,2,13,15,15,0,higher -> higher,True
+A,instagram,posting_hour,posting hour (UTC),E,0.34086103673002477,3,10,14,0,0,n/a,False
+A,instagram,cuts_log1p,cuts per second (log),A,0.3401210093236944,4,11,13,0,15,higher -> lower,False
+A,instagram,loudness_db_mean,loudness,B,0.2799540928358005,5,3,12,15,0,higher -> higher,False
+A,instagram,edge_density,visual detail (edges),A,0.26708641035689246,6,3,12,15,0,higher -> higher,False
+A,instagram,red_ratio,share of red,A,0.2641580170123941,7,6,14,0,15,higher -> lower,False
+A,instagram,music_frac,share with music,B,0.24250033409076013,8,3,11,15,0,higher -> higher,False
+A,instagram,talk_dur_frac,share with talking,B,0.23536186100164844,9,4,8,14,1,higher -> higher,False
+A,instagram,loudness_range_db,loudness range,B,0.21390945238397563,10,0,7,15,0,higher -> higher,False
+A,instagram,log_followers,followers (log),E,0.1900362572154134,11,2,7,14,1,higher -> higher,False
+A,instagram,face_present_frac,share of frames with a face,A,0.18154650693759322,12,4,6,13,2,higher -> higher,False
+A,instagram,emoji_count,emoji,C,0.1666489270399324,13,1,4,0,15,higher -> lower,False
+A,instagram,caplen_lang,caption length (within language),C,0.13753644550128633,14,1,3,3,11,mixed (mostly -),False
+A,instagram,face_area0,face size,A,0.11990049706526201,15,0,4,10,5,mixed (mostly +),False
+A,instagram,colourfulness,colourfulness,A,0.11800130501764612,16,0,0,11,4,mixed (mostly +),False
+A,instagram,sentiment_caption,caption sentiment,C,0.10989042610809617,17,1,2,2,13,higher -> lower,False
+A,instagram,follower_tier,follower tier,E,0.09048343834518974,18,0,1,0,0,n/a,False
+A,instagram,motion_px_per_sec,motion,A,0.08626455221997782,19,1,2,5,9,mixed (mostly -),False
+A,instagram,ocr_region_count,on-screen text regions,A,0.08031432725126958,20,1,1,8,6,mixed (mostly +),False
+A,instagram,platform_ig,platform (Instagram),E,0.07071814461055004,21,0,1,0,0,mixed,False
+A,instagram,ocr_mean_text_area,on-screen text area,A,0.06952463070014751,22,0,0,13,2,higher -> higher,False
+A,instagram,duration_sec,duration,A,0.05167010162517221,23,0,0,9,4,mixed (mostly +),False
+A,instagram,kw_event,event words,C,0.002607323123892356,24,0,0,0,5,mixed (mostly -),False
+A,instagram,kw_promotional,promotional words,C,0.00012679474020842462,25,0,0,0,2,mixed (mostly -),False
+A,instagram,weekend,weekend post (UTC),E,4.436151810093886e-05,26,0,0,0,1,mixed (mostly -),False
+B,all,hashtag_count,hashtags,C,0.03326034717717025,1,15,15,15,0,higher -> higher,True
+B,all,talk_dur_frac,share with talking,B,0.029584124300218236,2,14,15,15,0,higher -> higher,True
+B,all,face_present_frac,share of frames with a face,A,0.028770632343512882,3,12,15,15,0,higher -> higher,True
+B,all,red_ratio,share of red,A,0.023488143429469303,4,10,15,0,15,higher -> lower,False
+B,all,ocr_region_count,on-screen text regions,A,0.0222614026702086,5,4,14,15,0,higher -> higher,False
+B,all,cuts_log1p,cuts per second (log),A,0.01983310131000692,6,1,12,0,15,higher -> lower,False
+B,all,sentiment_caption,caption sentiment,C,0.0187601959271766,7,2,15,0,15,higher -> lower,False
+B,all,loudness_range_db,loudness range,B,0.017637957435024675,8,3,13,15,0,higher -> higher,False
+B,all,edge_density,visual detail (edges),A,0.017120528577604436,9,2,4,15,0,higher -> higher,False
+B,all,creator_collab_f,creator collaboration,D,0.01638974991221502,10,6,10,15,0,higher -> higher,False
+B,all,motion_px_per_sec,motion,A,0.015167042424140513,11,3,9,0,15,higher -> lower,False
+B,all,colourfulness,colourfulness,A,0.01475575380730442,12,3,6,0,15,higher -> lower,False
+B,all,caplen_lang,caption length (within language),C,0.01154353307063494,13,0,0,12,3,higher -> higher,False
+B,all,music_frac,share with music,B,0.0077107572814297505,14,0,0,11,4,mixed (mostly +),False
+B,all,emoji_count,emoji,C,0.007382868365414001,15,0,1,3,12,higher -> lower,False
+B,all,duration_sec,duration,A,0.006957779838322536,16,0,3,15,0,higher -> higher,False
+B,all,kw_event,event words,C,0.005868977142568472,17,0,3,15,0,higher -> higher,False
+B,all,kw_promotional,promotional words,C,0.005621505201502006,18,0,0,10,5,mixed (mostly +),False
+B,all,loudness_db_mean,loudness,B,0.0047036491689738625,19,0,0,0,15,higher -> lower,False
+B,all,ocr_mean_text_area,on-screen text area,A,0.0038780294840339625,20,0,0,3,12,higher -> lower,False
+B,all,face_area0,face size,A,0.003252349328054747,21,0,0,9,6,mixed (mostly +),False
+C,all,face_present_frac,share of frames with a face,A,0.28031816995547465,1,13,14,15,0,higher -> higher,True
+C,all,talk_dur_frac,share with talking,B,0.20364560257746944,2,9,12,15,0,higher -> higher,False
+C,all,sentiment_caption,caption sentiment,C,0.1780305754842024,3,11,14,0,15,higher -> lower,False
+C,all,edge_density,visual detail (edges),A,0.14522906342931996,4,6,9,14,0,higher -> higher,False
+C,all,motion_px_per_sec,motion,A,0.14388752589713683,5,8,14,0,15,higher -> lower,False
+C,all,cuts_log1p,cuts per second (log),A,0.12466361067935298,6,7,13,0,15,higher -> lower,False
+C,all,red_ratio,share of red,A,0.12283238786815982,7,3,12,0,14,higher -> lower,False
+C,all,colourfulness,colourfulness,A,0.11233960664095423,8,4,7,0,14,higher -> lower,False
+C,all,ocr_region_count,on-screen text regions,A,0.11215561758274113,9,3,11,14,1,higher -> higher,False
+C,all,ocr_mean_text_area,on-screen text area,A,0.09753129164229098,10,2,10,14,0,higher -> higher,False
+C,all,hashtag_count,hashtags,C,0.07598096789539947,11,4,9,14,0,higher -> higher,False
+C,all,duration_sec,duration,A,0.06102037501283726,12,2,4,8,5,mixed (mostly +),False
+C,all,music_frac,share with music,B,0.053279192276467165,13,0,4,10,3,mixed (mostly +),False
+C,all,loudness_db_mean,loudness,B,0.047976442825165576,14,1,6,6,9,mixed (mostly -),False
+C,all,loudness_range_db,loudness range,B,0.04770405442266364,15,1,8,14,0,higher -> higher,False
+C,all,face_area0,face size,A,0.046166386491677244,16,0,3,3,11,mixed (mostly -),False
+C,all,creator_collab_f,creator collaboration,D,0.03840586778985906,17,0,3,10,2,mixed (mostly +),False
+C,all,caplen_lang,caption length (within language),C,0.03823568553068778,18,1,5,3,11,mixed (mostly -),False
+C,all,emoji_count,emoji,C,0.010407068361463543,19,0,1,3,8,mixed (mostly -),False
+C,all,kw_promotional,promotional words,C,0.001884760847315192,20,0,1,2,1,mixed (mostly +),False
+C,all,kw_event,event words,C,0.0010994497848312473,21,0,1,0,4,mixed (mostly -),False

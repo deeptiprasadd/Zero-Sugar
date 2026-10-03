@@ -1,6 +1,6 @@
 # 11 — Prediction Service (Flask UI)
 
-**Status:** Planned. This is the project's final deliverable and its stated purpose: a tool
+**Status:** Planned; **re-scoped 2026-10-02 by D-046** - gate G1 failed (D-045), so the tool follows section 5's pre-registered fallback: an honest base-rate prediction, video diagnostics, and an Instagram content score labelled exploratory; no platform recommendation. Where this document and D-046 differ, D-046 wins. This is the project's final deliverable and its stated purpose: a tool
 where someone supplies a video (file or link), and gets back a prediction of how it would
 perform **on YouTube Shorts and on Instagram Reels**, so they can decide what to post and
 where.
@@ -195,6 +195,12 @@ If G1 fails, **say so in the write-up and ship the tool as an exposure baseline 
 diagnostics.** That is still a real result — it would corroborate the Frontiers finding —
 and it is far better than shipping a content model that does not work.
 
+**Outcome, 2026-10-02: G1 failed** on the pooled focus set - XGBoost M2 minus the reach-only baseline
+-0.030 ROC-AUC (corrected 95% CI -0.234 to +0.174), and no pooled model above chance for unseen accounts
+(D-045). The fallback above applies, as specified in D-046: base rate with honest intervals, video
+diagnostics against the 192 Zero Sugar videos, and an Instagram-only content score (ROC-AUC 0.70,
+exploratory) shown with its accuracy. G2-G4 still gate whatever the tool displays.
+
 ---
 
 ## 6. Scope boundary
@@ -215,3 +221,5 @@ _Append dated entries as the service is built._
 | Date | Action | Result |
 |---|---|---|
 | 2026-09-12 | Deliverable added to scope (D-017); this document written | Method specified; build begins after Phase 10 |
+| 2026-10-02 | G1 failed (D-045); tool re-scoped to the pre-registered fallback (D-046) | Base rate + diagnostics + exploratory Instagram content score; no platform recommendation. Pooled models saved in `models/` stay for comparison, not for serving |
+| 2026-10-02 | SHAP done (D-047 spec, D-048 results) | The tool's "drivers" may name only three features, from the Instagram logistic model: hashtags, share with talking, share of frames with a face. That model's probabilities barely move (80% of videos 0.45-0.56), so G2 (task 12.2) decides whether the Instagram score is shown as a probability at all |

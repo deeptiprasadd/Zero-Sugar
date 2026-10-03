@@ -1,0 +1,150 @@
+  [pooled] repeat 1/3 fold 1/5 done
+  [pooled] repeat 1/3 fold 2/5 done
+  [pooled] repeat 1/3 fold 3/5 done
+  [pooled] repeat 1/3 fold 4/5 done
+  [pooled] repeat 1/3 fold 5/5 done
+  [pooled] repeat 2/3 fold 1/5 done
+  [pooled] repeat 2/3 fold 2/5 done
+  [pooled] repeat 2/3 fold 3/5 done
+  [pooled] repeat 2/3 fold 4/5 done
+  [pooled] repeat 2/3 fold 5/5 done
+  [pooled] repeat 3/3 fold 1/5 done
+  [pooled] repeat 3/3 fold 2/5 done
+  [pooled] repeat 3/3 fold 3/5 done
+  [pooled] repeat 3/3 fold 4/5 done
+  [pooled] repeat 3/3 fold 5/5 done
+  [instagram] repeat 1/3 fold 1/5 done
+  [instagram] repeat 1/3 fold 2/5 done
+  [instagram] repeat 1/3 fold 3/5 done
+  [instagram] repeat 1/3 fold 4/5 done
+  [instagram] repeat 1/3 fold 5/5 done
+  [instagram] repeat 2/3 fold 1/5 done
+  [instagram] repeat 2/3 fold 2/5 done
+  [instagram] repeat 2/3 fold 3/5 done
+  [instagram] repeat 2/3 fold 4/5 done
+  [instagram] repeat 2/3 fold 5/5 done
+  [instagram] repeat 3/3 fold 1/5 done
+  [instagram] repeat 3/3 fold 2/5 done
+  [instagram] repeat 3/3 fold 3/5 done
+  [instagram] repeat 3/3 fold 4/5 done
+  [instagram] repeat 3/3 fold 5/5 done
+# Phase 9 - model comparison (D-044, docs/09)
+
+Focus set: 192 videos, 22 accounts; target `engagement_high` (100 high / 92 low). Account-grouped 5-fold CV x 3 repeats; tuning on account-grouped inner folds; threshold from training out-of-fold predictions; imputation and scaling inside each training fold. Specification fixed before any fit (D-044). The Zero Sugar inclusion label is weakly reliable (YouTube alpha 0.25, Instagram -0.10).
+
+## Fold make-up (pooled)
+Test fold sizes 25-72 videos, 2-6 accounts; share high 0.42-0.68; the global channel's 58 videos sit in one test fold per repeat (3 of 15 folds).
+
+### Main comparison - mean +/- SD over 15 account-grouped folds
+| Model | Set | Acc | Prec | Rec | F1 | ROC-AUC | PR-AUC | Brier |
+|---|---|---|---|---|---|---|---|---|
+| Majority | M0 | 0.534 +/- 0.089 | 0.534 +/- 0.089 | 1.000 +/- 0.000 | 0.692 +/- 0.074 | 0.500 +/- 0.000 | 0.534 +/- 0.089 | 0.252 +/- 0.003 |
+| Majority | M1 | 0.534 +/- 0.089 | 0.534 +/- 0.089 | 1.000 +/- 0.000 | 0.692 +/- 0.074 | 0.500 +/- 0.000 | 0.534 +/- 0.089 | 0.252 +/- 0.003 |
+| Majority | M2 | 0.534 +/- 0.089 | 0.534 +/- 0.089 | 1.000 +/- 0.000 | 0.692 +/- 0.074 | 0.500 +/- 0.000 | 0.534 +/- 0.089 | 0.252 +/- 0.003 |
+| LogReg | M0 | 0.526 +/- 0.124 | 0.516 +/- 0.144 | 0.898 +/- 0.229 | 0.649 +/- 0.172 | 0.562 +/- 0.204 | 0.617 +/- 0.195 | 0.265 +/- 0.028 |
+| LogReg | M1 | 0.520 +/- 0.074 | 0.529 +/- 0.084 | 0.964 +/- 0.058 | 0.678 +/- 0.066 | 0.505 +/- 0.145 | 0.596 +/- 0.169 | 0.253 +/- 0.024 |
+| LogReg | M2 | 0.523 +/- 0.088 | 0.527 +/- 0.090 | 0.953 +/- 0.081 | 0.675 +/- 0.084 | 0.528 +/- 0.187 | 0.581 +/- 0.210 | 0.259 +/- 0.033 |
+| DecisionTree | M0 | 0.550 +/- 0.101 | 0.546 +/- 0.099 | 0.980 +/- 0.036 | 0.696 +/- 0.080 | 0.584 +/- 0.125 | 0.592 +/- 0.156 | 0.301 +/- 0.094 |
+| DecisionTree | M1 | 0.530 +/- 0.093 | 0.532 +/- 0.091 | 0.979 +/- 0.055 | 0.685 +/- 0.080 | 0.493 +/- 0.131 | 0.562 +/- 0.140 | 0.361 +/- 0.088 |
+| DecisionTree | M2 | 0.524 +/- 0.092 | 0.529 +/- 0.092 | 0.952 +/- 0.094 | 0.676 +/- 0.084 | 0.471 +/- 0.085 | 0.528 +/- 0.127 | 0.390 +/- 0.102 |
+| RandomForest | M0 | 0.499 +/- 0.058 | 0.517 +/- 0.082 | 0.841 +/- 0.154 | 0.633 +/- 0.080 | 0.454 +/- 0.101 | 0.558 +/- 0.129 | 0.305 +/- 0.052 |
+| RandomForest | M1 | 0.531 +/- 0.099 | 0.531 +/- 0.096 | 0.945 +/- 0.100 | 0.676 +/- 0.094 | 0.522 +/- 0.157 | 0.614 +/- 0.158 | 0.259 +/- 0.037 |
+| RandomForest | M2 | 0.531 +/- 0.097 | 0.532 +/- 0.094 | 0.959 +/- 0.060 | 0.681 +/- 0.087 | 0.511 +/- 0.221 | 0.577 +/- 0.213 | 0.260 +/- 0.044 |
+| XGBoost | M0 | 0.528 +/- 0.101 | 0.530 +/- 0.105 | 0.901 +/- 0.142 | 0.662 +/- 0.106 | 0.471 +/- 0.100 | 0.559 +/- 0.128 | 0.339 +/- 0.062 |
+| XGBoost | M1 | 0.530 +/- 0.104 | 0.529 +/- 0.100 | 0.937 +/- 0.108 | 0.673 +/- 0.101 | 0.513 +/- 0.134 | 0.599 +/- 0.153 | 0.288 +/- 0.048 |
+| XGBoost | M2 | 0.536 +/- 0.091 | 0.533 +/- 0.091 | 0.933 +/- 0.111 | 0.675 +/- 0.093 | 0.533 +/- 0.200 | 0.595 +/- 0.207 | 0.313 +/- 0.092 |
+| MLP | M0 | 0.523 +/- 0.101 | 0.516 +/- 0.118 | 0.881 +/- 0.234 | 0.643 +/- 0.155 | 0.606 +/- 0.173 | 0.661 +/- 0.201 | 0.297 +/- 0.066 |
+| MLP | M1 | 0.536 +/- 0.088 | 0.534 +/- 0.090 | 0.889 +/- 0.125 | 0.664 +/- 0.093 | 0.494 +/- 0.131 | 0.567 +/- 0.118 | 0.345 +/- 0.089 |
+| MLP | M2 | 0.523 +/- 0.098 | 0.527 +/- 0.093 | 0.973 +/- 0.089 | 0.680 +/- 0.087 | 0.483 +/- 0.132 | 0.562 +/- 0.149 | 0.283 +/- 0.044 |
+Threshold metrics at the secondary Youden cut-off (added after the smoke test showed the F1 rule often labels every video high; D-044 note):
+| Model | Set | Acc | Prec | Rec | F1 | Folds where the F1 rule called every video high |
+|---|---|---|---|---|---|---|
+| Majority | M0 | 0.534 +/- 0.089 | 0.534 +/- 0.089 | 1.000 +/- 0.000 | 0.692 +/- 0.074 | 15 of 15 |
+| Majority | M1 | 0.534 +/- 0.089 | 0.534 +/- 0.089 | 1.000 +/- 0.000 | 0.692 +/- 0.074 | 15 of 15 |
+| Majority | M2 | 0.534 +/- 0.089 | 0.534 +/- 0.089 | 1.000 +/- 0.000 | 0.692 +/- 0.074 | 15 of 15 |
+| LogReg | M0 | 0.502 +/- 0.137 | 0.458 +/- 0.270 | 0.577 +/- 0.423 | 0.459 +/- 0.296 | 7 of 15 |
+| LogReg | M1 | 0.504 +/- 0.114 | 0.463 +/- 0.186 | 0.575 +/- 0.344 | 0.496 +/- 0.242 | 10 of 15 |
+| LogReg | M2 | 0.496 +/- 0.097 | 0.401 +/- 0.250 | 0.533 +/- 0.419 | 0.436 +/- 0.305 | 9 of 15 |
+| DecisionTree | M0 | 0.540 +/- 0.126 | 0.486 +/- 0.247 | 0.625 +/- 0.381 | 0.515 +/- 0.287 | 10 of 15 |
+| DecisionTree | M1 | 0.496 +/- 0.095 | 0.489 +/- 0.143 | 0.529 +/- 0.347 | 0.473 +/- 0.220 | 13 of 15 |
+| DecisionTree | M2 | 0.487 +/- 0.110 | 0.442 +/- 0.191 | 0.553 +/- 0.332 | 0.474 +/- 0.252 | 10 of 15 |
+| RandomForest | M0 | 0.446 +/- 0.062 | 0.537 +/- 0.162 | 0.525 +/- 0.261 | 0.470 +/- 0.111 | 6 of 15 |
+| RandomForest | M1 | 0.535 +/- 0.120 | 0.529 +/- 0.124 | 0.726 +/- 0.309 | 0.588 +/- 0.194 | 8 of 15 |
+| RandomForest | M2 | 0.477 +/- 0.127 | 0.379 +/- 0.237 | 0.480 +/- 0.403 | 0.408 +/- 0.296 | 8 of 15 |
+| XGBoost | M0 | 0.447 +/- 0.100 | 0.430 +/- 0.201 | 0.371 +/- 0.303 | 0.357 +/- 0.225 | 6 of 15 |
+| XGBoost | M1 | 0.511 +/- 0.100 | 0.498 +/- 0.197 | 0.500 +/- 0.324 | 0.463 +/- 0.231 | 8 of 15 |
+| XGBoost | M2 | 0.481 +/- 0.098 | 0.486 +/- 0.225 | 0.526 +/- 0.288 | 0.472 +/- 0.216 | 9 of 15 |
+| MLP | M0 | 0.462 +/- 0.106 | 0.173 +/- 0.263 | 0.290 +/- 0.431 | 0.214 +/- 0.319 | 9 of 15 |
+| MLP | M1 | 0.497 +/- 0.111 | 0.493 +/- 0.172 | 0.565 +/- 0.263 | 0.505 +/- 0.200 | 5 of 15 |
+| MLP | M2 | 0.505 +/- 0.122 | 0.507 +/- 0.146 | 0.855 +/- 0.259 | 0.625 +/- 0.174 | 13 of 15 |
+
+## The headline - does content add anything beyond reach? (D-044)
+Paired over the 15 folds; intervals from the corrected resampled t-test (Nadeau-Bengio).
+
+| Model | M2 - M0 ROC-AUC | 95% CI (corrected) | p | M1 - M0 | 95% CI (corrected) |
+|---|---|---|---|---|---|
+| LogReg | -0.034 | -0.231 to +0.163 | 0.717 | -0.057 | -0.291 to +0.176 |
+| DecisionTree | -0.113 | -0.237 to +0.010 | 0.069 | -0.091 | -0.257 to +0.075 |
+| RandomForest | +0.057 | -0.217 to +0.330 | 0.664 | +0.068 | -0.176 to +0.312 |
+| XGBoost | +0.061 | -0.173 to +0.296 | 0.584 | +0.042 | -0.161 to +0.245 |
+| MLP | -0.124 | -0.368 to +0.121 | 0.296 | -0.112 | -0.439 to +0.214 |
+
+| Quantity | Value |
+|---|---|
+| Reach-only baseline (LogReg M0) ROC-AUC | 0.562 +/- 0.204 |
+| Best M0 ROC-AUC (reach alone) | 0.606 (MLP) |
+| XGBoost M2 ROC-AUC (reach + content) | 0.533 +/- 0.200 |
+| Best M2 ROC-AUC | 0.533 (XGBoost) - reported, not the basis of any conclusion |
+| **Primary: XGBoost M2 - LogReg M0** | **-0.030** |
+| 95% CI on the difference (corrected) | -0.234 to +0.174 (p = 0.759) |
+| **Does content add beyond reach?** | **not detected - content adds nothing measurable beyond reach** |
+
+## Instagram-only model - exploratory (D-041)
+120 videos, 17 accounts; `creator_collab` added to M1/M2. No YouTube-only model (72 videos, 5 channels, 58 from one).
+
+### Instagram only - mean +/- SD over 15 account-grouped folds
+| Model | Set | Acc | Prec | Rec | F1 | ROC-AUC | PR-AUC | Brier |
+|---|---|---|---|---|---|---|---|---|
+| LogReg | M0 | 0.484 +/- 0.151 | 0.485 +/- 0.151 | 0.957 +/- 0.118 | 0.635 +/- 0.149 | 0.461 +/- 0.270 | 0.555 +/- 0.258 | 0.282 +/- 0.064 |
+| LogReg | M1 | 0.526 +/- 0.139 | 0.508 +/- 0.136 | 0.959 +/- 0.086 | 0.655 +/- 0.128 | 0.704 +/- 0.140 | 0.764 +/- 0.123 | 0.245 +/- 0.020 |
+| LogReg | M2 | 0.525 +/- 0.121 | 0.498 +/- 0.135 | 0.903 +/- 0.199 | 0.630 +/- 0.153 | 0.687 +/- 0.139 | 0.728 +/- 0.168 | 0.252 +/- 0.012 |
+| XGBoost | M0 | 0.438 +/- 0.139 | 0.440 +/- 0.163 | 0.710 +/- 0.354 | 0.509 +/- 0.217 | 0.380 +/- 0.138 | 0.492 +/- 0.155 | 0.366 +/- 0.114 |
+| XGBoost | M1 | 0.583 +/- 0.101 | 0.553 +/- 0.148 | 0.797 +/- 0.191 | 0.636 +/- 0.128 | 0.670 +/- 0.108 | 0.703 +/- 0.084 | 0.243 +/- 0.030 |
+| XGBoost | M2 | 0.518 +/- 0.163 | 0.520 +/- 0.177 | 0.796 +/- 0.208 | 0.605 +/- 0.159 | 0.628 +/- 0.157 | 0.646 +/- 0.175 | 0.261 +/- 0.045 |
+Threshold metrics at the secondary Youden cut-off (added after the smoke test showed the F1 rule often labels every video high; D-044 note):
+| Model | Set | Acc | Prec | Rec | F1 | Folds where the F1 rule called every video high |
+|---|---|---|---|---|---|---|
+| LogReg | M0 | 0.439 +/- 0.172 | 0.399 +/- 0.213 | 0.718 +/- 0.363 | 0.507 +/- 0.259 | 13 of 15 |
+| LogReg | M1 | 0.565 +/- 0.161 | 0.384 +/- 0.340 | 0.323 +/- 0.315 | 0.339 +/- 0.306 | 11 of 15 |
+| LogReg | M2 | 0.486 +/- 0.121 | 0.388 +/- 0.293 | 0.415 +/- 0.373 | 0.345 +/- 0.263 | 9 of 15 |
+| XGBoost | M0 | 0.417 +/- 0.098 | 0.387 +/- 0.192 | 0.557 +/- 0.407 | 0.404 +/- 0.243 | 8 of 15 |
+| XGBoost | M1 | 0.646 +/- 0.101 | 0.677 +/- 0.139 | 0.567 +/- 0.269 | 0.567 +/- 0.210 | 2 of 15 |
+| XGBoost | M2 | 0.581 +/- 0.153 | 0.642 +/- 0.227 | 0.520 +/- 0.237 | 0.526 +/- 0.190 | 4 of 15 |
+
+| Model | M2 - M0 ROC-AUC | 95% CI (corrected) | p | M1 - M0 | 95% CI (corrected) |
+|---|---|---|---|---|---|
+| LogReg | +0.227 | -0.081 to +0.534 | 0.136 | +0.243 | -0.115 to +0.601 |
+| XGBoost | +0.248 | +0.009 to +0.487 | 0.043 | +0.289 | +0.079 to +0.500 |
+
+## Calibration (out-of-fold predictions, repeat 1)
+- LogReg M2: Brier 0.268 on 192 out-of-fold predictions (0.25 = a constant 0.5 guess).
+- XGBoost M2: Brier 0.315 on 192 out-of-fold predictions (0.25 = a constant 0.5 guess).
+Figure: `reports/figures/model_calibration.png`
+
+## Learning curve - XGBoost M2, fixed settings (depth 3, rate 0.05, 200 trees)
+- 40% of training accounts: ROC-AUC 0.523 +/- 0.175
+- 60% of training accounts: ROC-AUC 0.460 +/- 0.139
+- 80% of training accounts: ROC-AUC 0.487 +/- 0.115
+- 100% of training accounts: ROC-AUC 0.527 +/- 0.142
+Change from 40% to 100% of training accounts: +0.004.
+
+## Tuned settings chosen most often (M2, pooled)
+- LogReg: {"m__C": 0.001} (9 of 15 folds)
+- DecisionTree: {"m__min_samples_leaf": 2, "m__max_depth": 4, "m__criterion": "gini"} (2 of 15 folds)
+- RandomForest: {"m__min_samples_leaf": 1, "m__max_features": 0.3, "m__max_depth": 8} (4 of 15 folds)
+- XGBoost: {"m__subsample": 1.0, "m__reg_lambda": 5, "m__n_estimators": 100, "m__min_child_weight": 5, "m__max_depth": 3, "m__learning_rate": 0.1, "m__colsample_bytree": 0.7} (3 of 15 folds)
+- MLP: {"m__learning_rate_init": 0.001, "m__hidden_layer_sizes": [8], "m__alpha": 0.01} (4 of 15 folds)
+
+Saved for the tool (12.1): `models/engagement_xgboost_m2.joblib`, `models/engagement_logreg_m2.joblib`, `models/model_card.json` (not yet calibrated - 12.2).
+
+Run time 55.1 min.
