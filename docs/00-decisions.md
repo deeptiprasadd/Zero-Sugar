@@ -2406,6 +2406,81 @@ already requires.
 
 ---
 
+## D-049 - Hand-coding of the 192 focus videos for the proposal's missing measures: questions, blinding and rules, fixed before the first answer
+
+**Date:** 2026-10-04
+**Status:** Accepted - **written before any answer exists** (`data/coding/focus_codes.csv` did not exist).
+**Source:** the researcher's request of 4 October that nothing in the proposal be left missing (proposal
+gaps P1-P9 in the plan). This **reverses three drops of D-032** - campaign type, sponsored content and
+voice tone - by measuring them by hand instead of by model, and gives a human measure for what the
+automated routes failed to measure: product visibility (D-037), music type (D-033), call to action,
+celebrity, creator and humour (D-038). Code: `src/coding/codebook_focus.py` (questions, SHA-256
+`98cc36a5...` at the time of writing), `src/coding/focus_app.py` (page); codebook in
+`docs/13-focus-coding.md`.
+
+**Who and what.** The researcher codes **all 192 focus videos** (Instagram 120, YouTube 72), one at a
+time, in one random order fixed by seed 20261005 (`data/coding/focus_sample.csv`, drawn once and never
+redrawn), watching the whole video with sound and reading its caption or title.
+
+**Blind.** The page shows the video, the account name and the caption or title, and nothing else: no
+likes, comments, views, followers or engagement measure, no earlier code, no Zero Sugar label, no
+automated output. **Unlike the earlier pages, it has no link to the original post**, because the post
+shows its like count. No transcript or translation is shown, so the conditions match the 15 September
+coding (D-023) and the repeat check below compares like with like; the cost is that speech in a language
+the researcher does not know is judged from the pictures, the caption and the sound alone.
+
+**The 14 questions** (exact wording in the codebook; options in brackets):
+
+| # | Field | Measures | Gap |
+|---|---|---|---|
+| 1 | `product_visibility` | Coca-Cola can or bottle (none / brief / prominent / unsure) | P1 |
+| 2 | `logo_visibility` | Coca-Cola logo or name anywhere (none / brief / prominent / unsure) | P2 |
+| 3 | `people_present` | any real person on screen (yes / no / unsure) | P4 |
+| 4 | `has_celebrity` | **as 15 Sep** | P4 |
+| 5 | `has_influencer` | **as 15 Sep** (social-media creator) | P4 |
+| 6 | `humour_present` | **as 15 Sep** | P5 |
+| 7 | `excitement_present` | meant to be exciting (yes / no / unsure) | P5 |
+| 8 | `music_type` | no music / pop / hip-hop-rap / electronic-dance / rock / traditional-folk / cinematic-orchestral / other-can't tell | P6 |
+| 9 | `voice_tone` | speaking voice (excited / calm / no voice / unsure) | P7 |
+| 10 | `has_cta` | **as 15 Sep** (call to action) | P3 |
+| 11 | `campaign_type` | new product / event / seasonal / promotion / food / general brand / unsure | P8 |
+| 12 | `sponsored_disclosed` | paid or sponsored disclosed in caption or video (yes / no) | P8 |
+| 13 | `product_vs_lifestyle` | **wording of the unchecked automated label** (D-038) | P9 |
+| 14 | `ugc_vs_brand` | **wording of the unchecked automated label** (D-038) - the look, not who posted | P9 |
+
+**Rules fixed now:**
+- **"Can or bottle" means the same as on 15 September.** Product visibility counts cans and bottles
+  only; cups, glasses, signs and trucks go to the logo question. So a "none" here is the 15 September
+  "no product", and the definitional question behind D-037's gate B failure (does a fountain cup count?)
+  is settled in advance: it does not.
+- **P4's four groups are derived, not asked:** celebrity if `has_celebrity` is yes; otherwise creator if
+  `has_influencer` is yes; otherwise ordinary people if `people_present` is yes; otherwise none; "unsure"
+  wherever the deciding answer is unsure (`people_type()` in the codebook module).
+- **Sponsored is judged from the caption and the video only.** The platform's own "Paid partnership" tag
+  is not visible on the page (showing the post would show its likes); this is a stated limitation.
+- **"Unsure" is missing**, never a category, in every analysis.
+- **The questions are frozen from the first answer.** The researcher may ask for changes before coding
+  starts; after that, any change is a dated note here, never a silent edit, and answers already given
+  are not re-asked.
+- **When all 192 are coded**, a read-only copy `data/coding/focus_codes_FINAL.csv` and its SHA-256 are
+  made before any analysis reads the codes - as on 15 September (D-023). `manual_codes_FINAL.csv` is not
+  touched.
+
+**Repeat check (P11) - what it can and cannot cover.** **40 of the 60 videos coded on 15 September are in
+the focus set** (Instagram 24, YouTube 16), not 60 as the 4 October plan assumed. On those 40, four
+questions repeat word for word (celebrity, creator, humour, call to action), and product visibility's
+"none vs any" matches 15 September's "no product vs a pack". **The other nine questions have no repeat
+check** unless the researcher re-codes a subset later; that is the researcher's choice, and the gap is
+stated either way. The exact repeat-check rules (statistic, what follows from a low value) are written
+as their own entry **before P11 runs**, as are the analyses that use the new codes (P12-P14).
+
+**What does not change:** the 20-feature set of D-036 and every result already reported (D-043, D-045,
+D-048). The new codes enter later only as a **declared addition**, reported beside the pre-registered
+results, never in place of them. The automated labels stay out of every model (D-038), whatever the
+comparison with these hand codes shows.
+
+---
+
 ## Open decisions
 
 | ID | Question | Blocking | Needed by |
