@@ -157,3 +157,19 @@ by looking at which option gives a stronger engagement result.
 - Box plots must show individual points at this sample size; a box over 12 observations
   hides more than it shows.
 - Every figure saved to `reports/figures/` at 300 dpi with a descriptive filename.
+
+## 6. Addition, 2026-10-09 - exploration with the hand codes (D-050, D-051)
+
+EDA 4 (product visibility), EDA 5 (four people groups) and EDA 6 (humour, excitement, voice tone), which
+the automated measures could not support, re-run on the researcher's hand codes of the 192 videos;
+descriptive only. Output `reports/eda_codes.md` and four figures (`eda4_product_visibility`,
+`eda5_people_groups`, `eda6_tone`, `eda8_codes_by_platform`). Findings, as description:
+
+- Celebrity videos (17, all Instagram, from 5 accounts) have a median percentile of 0.93; the other people
+  groups 0.45-0.62. YouTube has no celebrity video.
+- Videos with a call to action: median 0.66 against 0.44 without; lifestyle-focused 0.44 against
+  product-focused 0.65; event campaigns 0.35, the lowest group.
+- The 15 AI-character Shorts (one YouTube series) are coded no prominent product, no person and no call to
+  action, and pull several group medians down; every table is also given without them.
+- The codes are weakly reliable where checked (`reports/repeat_check.md`): read every difference as
+  tentative.

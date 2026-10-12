@@ -156,14 +156,15 @@ REPEATED_FROM_SEP15 = ["has_celebrity", "has_influencer", "humour_present", "has
 
 
 def people_type(row: dict) -> str:
-    """P4's four groups, derived (D-049): celebrity > creator > ordinary people > none; unsure if undecidable."""
+    """P4's four groups, derived (D-049): celebrity > creator > ordinary people > none; unsure if undecidable.
+    A question left unanswered counts like "unsure" (D-049 note, 9 Oct)."""
     if row.get("has_celebrity") == "yes":
         return "celebrity"
-    if row.get("has_celebrity") == "unsure":
+    if row.get("has_celebrity") != "no":
         return "unsure"
     if row.get("has_influencer") == "yes":
         return "influencer"
-    if row.get("has_influencer") == "unsure":
+    if row.get("has_influencer") != "no":
         return "unsure"
     if row.get("people_present") == "yes":
         return "ordinary_people"

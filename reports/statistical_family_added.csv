@@ -1,0 +1,7 @@
+H,measure,n,accounts,n_yes,n_no,mde_d,test,p,conv,effect,p_bh,verdict
+H2,product prominent vs none-or-brief,192,22,136,56,0.44709050702371533,"LR test (mixed model), 1 df",0.017267019491110605,True,+10.4 pct points (+1.9 to +18.8),0.020720423389332724,detected
+H2,product prominent vs none-or-brief,192,22,136,56,0.44709050702371533,Mann-Whitney U,0.05912886571179932,True,r_rb +0.174; medians 0.564 vs 0.436,0.05912886571179932,not detected at this sample size
+H4,creator or celebrity vs neither,129,17,41,88,0.5337906549062417,"LR test (mixed model), 1 df",0.007246193125256531,True,+14.3 pct points (+1.8 to +26.8),0.013988812650027172,detected
+H4,creator or celebrity vs neither,129,17,41,88,0.5337906549062417,Mann-Whitney U,0.009325875100018114,True,r_rb +0.285; medians 0.723 vs 0.462,0.013988812650027172,detected
+H5,call to action vs none,192,22,88,104,0.4078503543431109,"LR test (mixed model), 1 df",0.005551640012264864,True,+11.0 pct points (+3.0 to +19.0),0.013988812650027172,detected
+H5,call to action vs none,192,22,88,104,0.4078503543431109,Mann-Whitney U,6.44841819484144e-05,True,r_rb +0.335; medians 0.662 vs 0.444,0.0003869050916904864,detected

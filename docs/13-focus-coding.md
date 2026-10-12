@@ -1,7 +1,11 @@
 # 13 — Hand-coding of the 192 focus videos (proposal measures P1–P9)
 
-**Status:** Codebook fixed 2026-10-04 (D-049), before the first answer. Coding page built; coding by the
-researcher not yet started.
+**Status:** Codebook fixed 2026-10-04 (D-049), before the first answer. **Coded by the researcher on
+2026-10-09 and locked the same day** (`data/coding/focus_codes_FINAL.csv`, read-only, SHA-256 in
+`focus_codes_FINAL.sha256`): 192 videos, 180 with every question answered, 14 answers left blank (missing).
+The coding took 110 minutes for 100 minutes of video, so most videos were not watched in full with sound.
+The 15 videos of an AI-generated-character series were set to "no person, no celebrity, no creator" by
+the researcher's rule (D-049 note of 9 October; changes listed in `data/coding/focus_codes_changes.csv`).
 
 ---
 

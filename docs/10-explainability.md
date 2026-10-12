@@ -86,16 +86,19 @@ Build from the top-k stable SHAP features:
 
 | Feature | Direction | Threshold from dependence plot | Platform |
 |---|---|---|---|
-| Hashtags | more -> higher | none fitted; the linear model's contribution turns positive above the Instagram average (2.3) | Instagram only |
-| Share with talking | more -> higher | as above, average share 0.29 | Instagram only |
-| Share of frames with a face | more -> higher | as above, average share 0.47 | Instagram only |
+| Share of the video with talking | more -> higher | none fitted; the linear model's contribution turns positive above the Instagram average (0.29) | Instagram (model-based, exploratory); **opposite on YouTube** (described) |
+| Share of frames with a face | more -> higher | as above, average 0.47 | Instagram (model-based, exploratory); **opposite on YouTube** (described) |
+| A call to action (hand-coded) | present -> higher | - (yes/no) | Both, pooled statistics (H5); same direction on YouTube (62% vs 24%) |
+| Hashtags | more -> higher | Instagram average 2.3 | Listed, not in the profile: associated only between accounts |
 
-**Filled 2026-10-02 (D-048) - exploratory association, not a recommendation.** Built by D-047 rule 8:
-stable in the Instagram logistic model, with the Instagram XGBoost model agreeing on direction. **No
-YouTube profile** (no model predicted above chance there), and nothing from the pooled model. Caveats
-that travel with it: hashtags are associated with engagement only *between* accounts (D-043), so read
-"accounts that use more hashtags"; the model's scores barely move (80% of videos between 0.45 and 0.56);
-follower count is not in this content model.
+**Filled 2026-10-09 (D-052), replacing the 2 October version.** Items pass every check fixed in advance:
+stability with both Instagram models agreeing (D-047), and for tested items, within accounts and without
+the 15 AI-character Shorts (D-050). Product prominence and creator or celebrity presence were detected in
+the declared addition but do not survive without that series, so they are listed in
+`reports/effective_video_profile.md`, not here. **YouTube is described, not modelled** (72 videos, 58 from
+one channel): there, high-engagement Shorts had less talking and fewer faces than low ones. An empirical
+association, not a recommendation; engagement is ranked within platform and follower tier, so the profile
+says nothing about reach.
 
 Rules to follow when writing it:
 

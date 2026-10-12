@@ -163,6 +163,21 @@ betas `kw_event` -0.43, `ocr_mean_text_area` -0.19, `colourfulness` +0.18, `hash
 roughly a third of the variation in engagement belongs to the account rather than the video. Residuals
 pass the normality check (Shapiro-Wilk p 0.24) and show no spread pattern (Spearman -0.06).
 
+### Declared addition, 2026-10-09 - H2, H4, H5 with the hand codes (D-050 spec, D-051 results)
+
+Not part of the 14-test family above, which is unchanged: six tests in their own Benjamini-Hochberg family,
+same mixed model and controls. Output `reports/statistical_results_added.md`.
+
+| H | Measure | Effect, percentile points (95% CI) | BH p (LR; Mann-Whitney) | Without the 15 AI-character Shorts |
+|---|---|---|---|---|
+| H2 | product prominent vs none-or-brief | +10.4 (+1.9 to +18.8) | 0.021; 0.059 | +1.9, p 0.68 - not detected |
+| H4 | creator or celebrity vs neither (n 129) | +14.3 (+1.8 to +26.8) | 0.014; 0.014 | +9.0, p 0.08 - not detected |
+| H5 | call to action vs none | +11.0 (+3.0 to +19.0) | 0.014; <0.001 | +5.4, p 0.15; rank test p 0.002 |
+
+H2 and H4 rest on one 15-video AI-character series and are not robust; H4 is mainly between accounts.
+H5 holds within accounts and in the rank test without the series. All three measures are weakly reliable
+(repeat alpha 0.38-0.52) and were coded at about one video per 30 seconds.
+
 ### Paired sub-analysis
 
 | Metric | Value |

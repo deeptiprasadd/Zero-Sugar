@@ -2479,6 +2479,332 @@ D-048). The new codes enter later only as a **declared addition**, reported besi
 results, never in place of them. The automated labels stay out of every model (D-038), whatever the
 comparison with these hand codes shows.
 
+**Note 2026-10-09 - state of the coding** (the researcher coded on 9 October, 16:55-18:45 IST; checked
+without reading engagement and without comparing with the 15 September codes). **No answer was changed.**
+- **180 of 192 complete;** 12 videos carry 14 blank answers (page numbers 7, 22, 27, 50, 59, 80, 81, 84,
+  94, 122, 171, 185). The FINAL copy is not made until they are filled.
+- **Pace, for the methods:** 110 minutes for 192 videos whose running time totals 100 minutes. Had every
+  video been played once in full, about 3 seconds per video would remain for 14 answers and the caption,
+  so **most videos were not watched in full with sound**, as this entry assumed (about 2 minutes a video
+  was planned). Stated as a limitation, as D-039 recorded the pace of the by-eye check. It bears most on
+  the sound questions (music type, voice tone) and on humour and excitement.
+- **Celebrity and creator "unsure" on 71 videos each** (70 the same videos). Under the rules above these
+  are missing, so the four people groups will rest on about 120 videos.
+- **AI-generated characters.** The researcher noted (in the codes, and in chat on 9 October: "José vs
+  Mourinho - these are AI generated characters") that the *José vs Mourinho* Shorts show AI-generated
+  characters. 15 of them are in the focus set (all from the global YouTube channel). They were coded "a
+  person appears: yes" (15 of 15) and celebrity / creator "unsure" (10) or "no" (5). The codebook did not
+  foresee AI-generated people (it excludes cartoons and animated characters). How they are coded is the
+  researcher's rule to set, applied to all 15 alike, before the FINAL copy. This does not touch the Zero
+  Sugar labels or which videos are in the study.
+
+**Note 2026-10-09, later - rule for AI-generated characters applied; codes locked.**
+- **The researcher chose rule A in chat (9 October): AI-generated characters are not real people**, so
+  for all 15 *José vs Mourinho* Shorts "a person appears", "celebrity" and "creator" are all "no". This
+  changed **35 answers** (person 15 yes -> no; celebrity 10 and creator 10 unsure -> no), exactly as shown
+  to the researcher before choosing. Every change is listed with its old value and source in
+  `data/coding/focus_codes_changes.csv`; no other answer changed (checked row by row). The 15 are flagged
+  for every analysis of the new codes, which is run with and without them.
+- **The 14 blank answers stay blank.** The researcher asked for them to be filled for her; they were
+  not, because an answer not given by the researcher is not a hand code and could not be described as
+  one. They count as missing, like "unsure" (0.5% of 2,688 answers). `people_type()` now treats an
+  unanswered question like "unsure" (the questions' wording is unchanged; module SHA-256 now
+  `e52c4d80...`).
+- **FINAL copy made:** `data/coding/focus_codes_FINAL.csv` (read-only), SHA-256 `ab52f980f6cd1cc3...`
+  (full value in `focus_codes_FINAL.sha256`): 192 videos, 180 with every question answered.
+  `manual_codes_FINAL.csv` is unchanged (`82c4afec...`).
+
+---
+
+## D-050 - Specification for the proposal-gap analyses (P10-P15), fixed before any of them ran
+
+**Date:** 2026-10-09
+**Status:** Accepted - **written before any new code was set against engagement and before the new
+codes were compared with the 15 September codes** (researcher's go, 9 October). Only the locked codes
+(`focus_codes_FINAL.csv`, `ab52f980...`) and their answer counts had been looked at. Every result here is
+a **declared addition**: the registered results (D-043, D-045, D-048) stay exactly as reported.
+
+**Rules for all of P11-P14.**
+- Codes come from `focus_codes_FINAL.csv` only; "unsure" and blank are missing.
+- **Small categories are merged, fixed now from the answer counts (fewer than 10 videos merges):**
+  product visibility "none" (3) joins "brief" -> none-or-brief 56 vs prominent 136; logo "none" (1) the
+  same; music hip-hop/rap 6, electronic 3, other 2 and rock 1 -> "other" (12), beside cinematic/orchestral
+  96, no music 45, pop 36; campaign "seasonal" (3) joins "general brand" (12). People groups: none 61,
+  ordinary people 27, creator 24, celebrity 17, missing 63; YouTube has no celebrity (stated).
+- **AI-character sensitivity:** every P12-P14 result is also given without the 15 *José vs Mourinho*
+  Shorts (D-049), beside the main result, never instead of it.
+- Every result carries the coding caveats: one coder, 110 minutes for 100 minutes of video, and each
+  measure's repeat reliability from P11 (or "not measured").
+
+**P11 - repeat check.** The 40 videos coded on 15 September and 9 October (Instagram 24, YouTube 16; 4
+are AI-character Shorts). Constructs: celebrity, creator, humour and call to action (same wording), and
+product visibility as "none" vs "brief or prominent" against 15 September's "no product" vs a pack.
+Krippendorff's alpha, nominal (`alpha_nominal` in `src/features/reliability.py`, already checked against
+the reference package), 2,000 bootstrap resamples of videos (seed 20261009), with raw agreement and the
+number of pairs. Main result on the FINAL codes; sensitivity without the 4 AI-character Shorts, whose
+answers rule A changed. **Bands fixed now:** alpha >= 0.80 reliable; 0.667-0.80 tentative; below 0.667
+weakly reliable; one value only on both sides = not estimable. **No construct is dropped for a low
+value** - it is the only measure, as with the Zero Sugar label (D-029); its band goes with every result.
+
+**P10 - local posting time.** Each market mapped to a time zone (IANA, daylight saving handled):
+single-zone countries their own zone; Brazil `America/Sao_Paulo`, Indonesia `Asia/Jakarta`,
+LatAm/Mexico `America/Mexico_City`, Chile `America/Santiago`; regional accounts approximate - Europe
+`Europe/Paris`, MENA `Asia/Dubai`; **Global/US (77 videos) keeps UTC** (no single audience), flagged.
+Each video gets `posting_hour_local`, `is_weekend_local` and the quality of its zone. Used in (a) a
+description of how many videos change day or hour band, and (b) **one sensitivity re-run** of the
+pooled logistic M0 and XGBoost M2 with local hour and weekend in place of UTC (same folds and grids),
+reported beside the registered numbers.
+
+**P12 - exploration with the new codes (descriptive only: no test, no p-value).** EDA 4 (percentile by
+product visibility), EDA 5 (by the four people groups), EDA 6 (by humour, excitement, voice tone), EDA 8
+rows (every new measure's composition by platform, then a descriptive figure), EDA 9 (Spearman of each
+new yes/no or ordinal measure with the percentile, as description). Also: the two unchecked automated
+labels (`product_vs_lifestyle`, `ugc_vs_brand`) against the hand codes - agreement and alpha - which
+keeps them out of every model whatever it shows (D-038).
+
+**P13 - H2, H4, H5 as a declared addition.** Focus set; complete cases per test; percentile outcome;
+mixed model with an account intercept and the D-042 controls (platform, log followers, log video age),
+fitted with `fit()` from `src/stats/hypotheses.py`.
+
+| H | Measure (1 vs 0) | Test 1 | Test 2 |
+|---|---|---|---|
+| H2 | product prominent vs none-or-brief | LR test, 1 df, added to the controls | Mann-Whitney U, rank-biserial r |
+| H4 | creator or celebrity vs neither (ordinary people or no person) | LR test, 1 df | Mann-Whitney U |
+| H5 | call to action yes vs no | LR test, 1 df | Mann-Whitney U |
+
+- **These six tests are their own Benjamini-Hochberg family (q = 0.05).** The 14-test family of D-042
+  is not re-opened.
+- For any test detected after correction, the within-account check of D-043 (Spearman with each
+  account's mean removed) is reported; it describes, and changes no verdict.
+- Each null carries the minimum detectable effect for its own group sizes (two-sample, 80% power,
+  alpha 0.05, no account clustering - a lower bound).
+- Outside the family, estimates with 95% intervals only, never "significant": the four people groups
+  (Kruskal-Wallis), and a mixed-model coefficient for each other new measure (logo prominent,
+  excitement, excited voice, music groups, campaign groups, sponsored, lifestyle, homemade look).
+
+**P14 - the hand codes in the models (declared addition).** One feature set **H** of 11 yes/no columns:
+product prominent, logo prominent, person present, creator or celebrity, humour, excitement, excited
+voice (calm or no voice = 0), call to action, sponsored, lifestyle, homemade (UGC) look. Missing ->
+median inside each training fold. Music and campaign type stay out of the models (several categories;
+P12 describes them), which keeps every set within the 18-20 budget (D-030). Sets: **Mh1 = H**, **Mh2 =
+M0 + H** (M1 + H would be 31 features and is not fitted). Logistic regression and XGBoost only, the
+D-044 grids, folds (5 x 3, seeds 42 / 1042 / 2042), inner tuning and thresholds. **Pooled headline of
+the addition:** XGBoost Mh2 and logistic Mh2, each minus the logistic M0 from the same folds, corrected
+resampled t-test. Instagram (exploratory): Mh1 against chance and beside the registered Instagram
+logistic M1 (0.704). Sensitivity: the pooled headline without the 15 AI-character Shorts. SHAP
+stability by D-047 rule 5 for the Instagram logistic Mh1 and the pooled XGBoost Mh2, reported
+descriptively; it feeds the effective-video profile (P17), whose own rules are written before it runs.
+
+**P15 - confusion matrices.** For each pooled model x set and each Instagram model x set: one matrix
+summed over the five test folds of repeat 1 (each video once, from the saved out-of-fold predictions),
+at each fold's registered F1 threshold and at its Youden threshold (both logged in
+`reports/model_fold_results.csv`). Fold membership is recomputed with the same splitter and seed and
+checked: each fold's ROC-AUC from the saved predictions must equal the logged value.
+
+**Code:** `src/features/local_time.py` (P10), `src/coding/repeat_check.py` (P11),
+`src/eda/explore_codes.py` (P12), `src/stats/hypotheses_added.py` (P13), `src/models/train_added.py` (P14
+and P10's re-run), `src/models/confusion.py` (P15). P16 (statistics vs machine learning compared), P17
+(profile for both platforms) and P18 (changes from the proposal) follow from these results.
+
+---
+
+## D-051 - Results of the proposal-gap analyses: three hand-coded associations, two of which rest on one AI-character series
+
+**Date:** 2026-10-09
+**Status:** Accepted - results of D-050, a declared addition; the registered results are unchanged.
+**Outputs:** `reports/repeat_check.md`, `reports/local_time.md`, `reports/confusion_matrices.md`,
+`reports/eda_codes.md`, `reports/statistical_results_added.md`, `reports/model_comparison_added.md`.
+
+**P11 - the hand codes are weakly reliable where they can be checked** (40 videos coded twice, about three
+weeks apart): humour alpha 0.69 (tentative); celebrity 0.52, call to action 0.50, product none-vs-any 0.48
+and creator 0.38 (all weakly reliable; most intervals wide). Without the 4 AI-character Shorts: celebrity
+0.78 and humour 0.75 (tentative), creator 0.49, call to action 0.45. The other nine questions have no
+repeat check. With the coding pace (110 minutes for 100 minutes of video), every result below rests on
+noisy measures.
+
+**P10 - local time.** 115 of the 192 videos got a local zone (77 Global/US stay UTC). In UTC, 28 videos
+looked like night posts (0-6 h); in local time 2 are. The hour band changes for 93 of the 115, the
+weekend flag for 1. [Model re-run with local time: see P14 below.]
+
+**P15 - confusion matrices** (repeat 1, each video once; check passed, fold ROC-AUCs reproduced to 1e-16).
+The registered F1 threshold predicts nearly every video "high" (pooled XGBoost M2: 94 / 88 / 6 / 4 for TP /
+FP / FN / TN, accuracy 0.51); at the Youden threshold accuracy is 0.42-0.54 pooled. Instagram XGBoost M1
+reaches 0.62 and logistic M1 0.57 at both thresholds.
+
+**P12 - exploration (description only).** Celebrity videos (17, all Instagram, 5 accounts) have a median
+percentile of 0.93 against 0.45-0.62 for the other people groups; videos with a call to action 0.66 against
+0.44; lifestyle-focused 0.44 against product-focused 0.65; event campaigns 0.35, the lowest. Spearman with
+the percentile: call to action +0.29, creator or celebrity +0.23, lifestyle -0.20; the others within 0.16.
+The two unchecked automated labels disagree with the hand codes (product vs lifestyle alpha 0.15, UGC vs
+brand 0.34): they stay out of every model (D-038).
+
+**P13 - H2, H4, H5 (own BH family of six tests).**
+
+| H | Measure | Mixed-model effect (95% CI) | BH p (LR; Mann-Whitney) | Verdict | Without the 15 AI-character Shorts | Within accounts |
+|---|---|---|---|---|---|---|
+| H2 | product prominent | +10.4 points (+1.9 to +18.8) | 0.021; 0.059 | LR detected, rank test not | +1.9 points, p 0.68 - **gone** | rho +0.18 (p 0.012) |
+| H4 | creator or celebrity (n 129) | +14.3 points (+1.8 to +26.8) | 0.014; 0.014 | detected | +9.0 points, p 0.08; rank p 0.06 - **not detected** | rho +0.09 (p 0.31) - between accounts |
+| H5 | call to action | +11.0 points (+3.0 to +19.0) | 0.014; <0.001 | detected | +5.4 points, p 0.15; **rank test p 0.002** | rho +0.19 (p 0.009) - within accounts |
+
+**How to read it.** All 15 AI-character Shorts are coded the same way - no prominent product, no call to
+action, no person - and they come from one channel. The H2 association disappears without them, and H4
+weakens below detection; both are therefore **not robust**, and H4 is mainly between accounts (5 accounts
+supply the 17 celebrity videos). **H5 (call to action) is the most robust**: detected by both tests, its
+rank test holds without the series, and it holds within accounts - but the call-to-action code is weakly
+reliable (alpha 0.50) and its mixed-model effect without the series is not detected. Outside the family,
+estimates only: lifestyle focus -10.1 points (-17.8 to -2.4; without the series -5.1, interval crossing 0);
+event campaigns -14.8 points against promotions (-25.8 to -3.7).
+
+**P14 - the hand codes do not help prediction for unseen accounts** (`python -m src.models.train_added`;
+fold check passed - the re-computed logistic M0 equals the logged one in all 15 folds). Reach + hand codes
+against the reach-only logistic baseline: XGBoost Mh2 -0.085 (corrected 95% CI -0.309 to +0.139),
+logistic Mh2 +0.043 (-0.067 to +0.154) - not detected. No hand-code model is above chance: pooled logistic
+Mh1 0.601 (CI for AUC - 0.5: -0.016 to +0.219), XGBoost Mh1 0.595; Instagram logistic Mh1 0.588 and XGBoost
+Mh1 0.613 (exploratory), below the registered Instagram logistic M1 (0.704). Without the 15 AI-character
+Shorts the differences are -0.144 and -0.092 (intervals include 0). SHAP stability: Instagram logistic Mh1
+partly stable (0.45; stable: humour and creator or celebrity, both positive); pooled XGBoost Mh2 partly
+stable (0.63; stable features are reach: video age, posting hour, followers).
+
+**P10's model re-run - local time changes nothing measurable:** logistic M0 0.585 against 0.562 registered
+(+0.022, CI -0.084 to +0.129); XGBoost M2 0.488 against 0.533 (-0.045, -0.137 to +0.047).
+
+**Together.** The hand codes reproduce the pattern of D-043/D-045: some associations inside these 22
+accounts (call to action the most robust), none that a model can use to predict a new account's video. For
+the tool (D-046): the hand-coded questions may be shown to a user as diagnostics against the 192 videos,
+but no score is built from them.
+
+---
+
+## D-052 - Specification of the effective-video profile (P17, Objective 15), written before it was built
+
+**Date:** 2026-10-09
+**Status:** Accepted - written before the profile tables were computed. **Stated plainly:** the results it
+draws on (D-043, D-048, D-051) were already known, so this entry does not choose items by result; it
+lists every item that has evidence and attaches the checks that were fixed before those results existed.
+
+**What the profile is.** Proposal Objective 15: "an empirical profile of an effective Coca-Cola Zero Sugar
+marketing video". docs/10 section 5 sets its rules: stable features only, an association not a
+recommendation, separate profiles where the platforms differ, and the exposure caveat.
+
+**Items - every measure with evidence, none left out:**
+1. **Model-based, Instagram (pre-registered in D-047 rule 8):** hashtags, share with talking, share of
+   frames with a face - stable in the Instagram logistic model, with the Instagram XGBoost agreeing (D-048).
+2. **Statistical associations detected:** hashtags (H6, registered family, D-043); product prominent (H2),
+   creator or celebrity (H4) and call to action (H5) (addition family, D-051).
+
+**Labels attached to each item, all from checks fixed in advance:** whether the association holds within
+accounts (D-043 / D-050 check); whether it survives without the 15 AI-character Shorts in at least one of
+its two tests (D-050); the measure's repeat reliability (P11). **The one-line profile names only the items
+that pass every check that applies to them**; the rest stay in the table with their labels, so the reader
+sees the full picture.
+
+**Two platforms (docs/10 section 5).** Instagram: the model-based items plus the statistical ones. YouTube:
+**descriptive only** - no YouTube model can be tested (D-041). For every item, the median (or share) among
+the platform's high- vs low-engagement videos is shown side by side for Instagram and YouTube, no test;
+a YouTube direction is "same" or "opposite" by the sign of that difference. Stated beside YouTube: 72
+videos, 58 from one channel.
+
+**Threshold column.** The Instagram logistic model has no threshold of its own: its contribution changes
+sign at the training average, which is reported (D-048). Otherwise medians, no fitted cut-off.
+
+**Wording, fixed now:** "videos with ... were associated with higher engagement in this sample"; never
+"do ...", "should" or "increases". The exposure caveat goes with every line: engagement here is ranked
+within platform and follower tier, so the profile says nothing about reach.
+
+Code: `src/eda/profile.py`; output `reports/effective_video_profile.md`; docs/10 section 5 filled.
+
+**Result, 2026-10-09.** One-line profile - items that pass every check that applies to them: **on
+Instagram, more talking and more frames showing a face** (model-based, exploratory); **pooled, a call to
+action** (within accounts and in the rank test without the AI-character series; the code is weakly
+reliable, alpha 0.50). Listed but not in the line: hashtags (between accounts only), product prominent and
+creator or celebrity (do not survive without the series). **YouTube, described:** high-engagement Shorts
+had *less* talking (median 0.00 vs 0.65) and fewer face frames (0.40 vs 0.73) than low ones - the opposite
+of Instagram, matching the exploratory H9 signs of D-043 - while call to action (62% vs 24%), hashtags and
+product prominence point the same way on both. YouTube's column is mostly one channel (58 of 72).
+
+---
+
+## D-053 - Specification of the tool's two models and their checks (tasks 12.1-12.2), written before they were fitted
+
+**Date:** 2026-10-09
+**Status:** Accepted - written before either model below was fitted or checked (researcher: "complete the
+half work of week 6"). Implements D-046 items 1 and 3 and docs/11 gates G2 and G3. Code
+`src/serve/build_models.py`; outputs in `models/` and `reports/serving_models.md`.
+
+**1. Base rate per platform (D-046 item 1).**
+- **What it predicts:** the engagement **rate** (likes + comments per follower) of a typical Zero Sugar video
+  from a new account of a given platform and follower count, with an **80% prediction interval**; the
+  tool derives a likes + comments range from it when the user gives a follower count. **Not a percentile:**
+  the percentile is ranked within platform and follower tier, so by construction every cell's typical value
+  is the middle (about the 50th, with an 80% range of roughly the 10th to 90th) - the tool says so instead
+  of showing a model for it.
+- **Model:** mixed model, `log10(rate) ~ platform + log10(followers)` with a random intercept per account,
+  fitted with `fit()` of `src/stats/hypotheses.py` (REML) on the 192 videos. For a new account the
+  prediction variance is account variance + residual variance + the fixed-effect uncertainty; the interval
+  is mean +/- 1.2816 x its square root (80%). Video age is not a term (the tool predicts a mature video;
+  stated as a limitation: engagement was read at 7 days or later, ages vary).
+- **G3, fixed now:** account-grouped cross-validation with the D-044 folds (5 x 3, seeds 42 / 1042 / 2042):
+  fit on the training accounts, interval for each test video as for a new account, coverage = share of test
+  videos inside it. **G3 passes if coverage is within 70-90% overall and on each platform.** If it fails,
+  the interval is widened by the factor that brings overall coverage to 80% on the same folds, reported,
+  and the tool says so; if YouTube alone fails, YouTube's interval is shown with that warning.
+- G2 does not apply (no probability is shown for the base rate).
+
+**2. Instagram content score (D-046 item 3, exploratory).**
+- **Model:** the registered Instagram logistic regression M1 (the 20 content features + `creator_collab`;
+  imputation and scaling in the pipeline), tuned as D-044 on account-grouped inner folds, refitted on all
+  120 Instagram videos.
+- **G2, fixed now - calibration on out-of-fold probabilities** (all 3 repeats, 360 predictions; fold models
+  rebuilt from the logged settings and checked against the logged ROC-AUCs): ten equal-count bins of the
+  predicted probability; **G2 passes if every bin's observed share of high-engagement videos is within 0.10
+  of its mean predicted probability.** Brier score reported beside it.
+- **Order fixed now:** (a) the model as fitted; if (a) fails, (b) Platt scaling fitted inside each training
+  fold on its own account-grouped inner out-of-fold predictions and checked the same way; if (b) passes, the
+  tool ships the calibrator with the model. **If both fail, the tool shows no probability:** the score is
+  shown as a position - "higher than X% of the 120 Instagram Zero Sugar videos" - labelled exploratory.
+- No YouTube score (D-041, D-046).
+
+**3. Saved for the tool (12.1).** `models/base_rate.json` (coefficients, covariance of the fixed effects,
+variance components, training ranges), `models/instagram_content_logreg.joblib` (+ calibrator if G2 passes
+with it), `models/reference_quantiles.json` (the 20 features' 0-100% quantiles per platform from the 192
+videos, and the hand-coded measures' shares, for the diagnostics of D-046 item 2), and `models/model_card.json`
+rewritten for D-046 (what each output is, its measured accuracy, gates G1-G4 and their status). The pooled
+models of 2 October stay in `models/` for comparison and are not served.
+
+**Out of range:** follower counts outside the training range (7,594 to 17.1 million) are flagged by the
+tool, never extrapolated silently (docs/11 section 4.3).
+
+---
+
+## D-054 - Results for 12.1-12.2: both release checks fail, and the tool takes the fallbacks D-053 fixed
+
+**Date:** 2026-10-09
+**Status:** Accepted - results of D-053. Output `reports/serving_models.md`,
+`reports/figures/instagram_score_calibration.png`, `models/` (`python -m src.serve.build_models`).
+
+**Base rate - G3 fails, interval widened, YouTube still warned.** The 80% interval for a new account's
+typical video held 67% of test videos on account-grouped folds (Instagram 79%, YouTube 49%; rule 70-90%).
+Widened by x1.26 as fixed in advance: overall 80% (by construction - the factor was chosen on these folds),
+Instagram 86%, **YouTube 69%, still under 70%**, so the tool shows YouTube's interval with a warning that
+it is too narrow. The intervals are very wide - for an Instagram account of 500,000 followers, a typical
+rate of 0.26% with an 80% range of 0.004% to 18% - because 46% of the unexplained variation lies between
+accounts, which the tool cannot know for a new one. That width is the honest finding, not a defect.
+
+**Instagram content score - G2 fails both ways; no probability is shown.** Out-of-fold calibration (360
+predictions, ten bins): largest gap 0.32 as fitted and 0.27 after Platt scaling inside the folds (rule
+0.10). The reason: within each fold the score ranks videos above chance (mean ROC-AUC 0.704), but its level
+shifts from one refit to the next, so pooled across folds it ranks at chance (0.522). Following D-053, the
+tool shows the score only as a position - "higher than X% of the 120 Instagram Zero Sugar videos", scored
+by the same model - labelled exploratory. Stated limitation: the 120 reference scores are in-sample for the
+final model (C = 0.01).
+
+**Gates now:** G1 failed (D-045); G2 failed -> no probability; G3 failed -> widened interval + YouTube
+warning; G4 (training/serving parity) pending, task 12.8. The model card says each in plain words.
+
+**Saved (12.1):** `models/base_rate.json`, `models/instagram_content_logreg.joblib`,
+`models/reference_quantiles.json`, `models/model_card.json` (the 2 October card was replaced; its pooled-model entries are kept inside it as comparison only).
+No calibrator is saved (G2 failed with it).
+
 ---
 
 ## Open decisions

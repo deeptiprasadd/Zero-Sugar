@@ -181,3 +181,17 @@ Youden threshold, and the M0/M1/M2 rows not shown here, are in the report. ROC-A
 | Learning curve — would more data help? | Flat: XGBoost M2 0.52 with 40% of training accounts, 0.53 with 100% - more accounts of the same kind would not obviously help |
 | Selected threshold | The registered F1 rule called every test video "high" in 6-13 of 15 folds per model; Youden's J reported beside it (D-044 note). Threshold metrics are therefore secondary |
 | Calibration acceptable? | **No.** Brier 0.268 (LogReg M2) and 0.315 (XGBoost M2), worse than a constant 0.5 guess (0.25) |
+
+### Declared addition, 2026-10-09 - hand codes in the models; local posting time (D-050 spec, D-051 results)
+
+The registered results above are unchanged. Output `reports/model_comparison_added.md`; same folds,
+grids and pipeline (fold check passed: the re-computed logistic M0 equals the logged one in all 15 folds).
+
+| Set (logistic / XGBoost) | Pooled ROC-AUC | Instagram ROC-AUC (exploratory) | vs reach-only logistic M0 (0.562) |
+|---|---|---|---|
+| Mh1 - 11 hand codes only | 0.601 / 0.595 | 0.588 / 0.613 | none above chance |
+| Mh2 - reach + hand codes | 0.606 / 0.477 | - | +0.043 / -0.085, intervals include 0 |
+
+Local posting time in place of UTC: logistic M0 0.585 (+0.022) and XGBoost M2 0.488 (-0.045), both within
+fold noise. Confusion matrices for every model: `reports/confusion_matrices.md` (P15).
+

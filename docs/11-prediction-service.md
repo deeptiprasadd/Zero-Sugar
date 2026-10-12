@@ -201,6 +201,10 @@ and it is far better than shipping a content model that does not work.
 diagnostics against the 192 Zero Sugar videos, and an Instagram-only content score (ROC-AUC 0.70,
 exploratory) shown with its accuracy. G2-G4 still gate whatever the tool displays.
 
+**Outcome, 2026-10-09 (D-054):** G2 failed -> the Instagram score is shown as a position among the 120 videos,
+not a probability; G3 failed -> the base-rate interval is widened x1.26 and YouTube's carries a warning; G4
+pending (12.8).
+
 ---
 
 ## 6. Scope boundary
@@ -222,4 +226,5 @@ _Append dated entries as the service is built._
 |---|---|---|
 | 2026-09-12 | Deliverable added to scope (D-017); this document written | Method specified; build begins after Phase 10 |
 | 2026-10-02 | G1 failed (D-045); tool re-scoped to the pre-registered fallback (D-046) | Base rate + diagnostics + exploratory Instagram content score; no platform recommendation. Pooled models saved in `models/` stay for comparison, not for serving |
+| 2026-10-09 | 12.1-12.2 done (D-053 spec, D-054 results) | Base rate fitted; G3 failed (67%; YouTube 49%) -> interval widened x1.26, YouTube still warned (69%). Instagram score: G2 failed as fitted and after Platt -> shown only as a position among the 120 videos, no probability. G4 pending (12.8). `reports/serving_models.md` |
 | 2026-10-02 | SHAP done (D-047 spec, D-048 results) | The tool's "drivers" may name only three features, from the Instagram logistic model: hashtags, share with talking, share of frames with a face. That model's probabilities barely move (80% of videos 0.45-0.56), so G2 (task 12.2) decides whether the Instagram score is shown as a probability at all |
