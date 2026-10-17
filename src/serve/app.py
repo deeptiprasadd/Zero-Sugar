@@ -131,7 +131,21 @@ def result_view(job: dict) -> dict:
     for h, d in (r.get("hand_codes") or {}).items():
         hand.append({"label": d["label"][:1].upper() + d["label"][1:], "answer": "yes" if d["answer"] else "no",
                      "all": f"{d['share_among_192']:.0%}", "platform": f"{d[f'share_among_{platform}']:.0%}"})
-    return {"platform": W.PLATFORM[platform], "platform_key": platform,
+    drivers, others = None, None
+    if platform == "instagram":                                     # 12.6: model B only, three features (D-060)
+        import numpy as np
+        import pandas as pd
+        from src.serve.explain_video import explain
+        X = pd.DataFrame([{k: (np.nan if x is None else x) for k, x in r["model_inputs"].items()}])
+        e = explain(X, art)
+        drivers, others = W.driver_lines(e), W.others_line(e)
+    b = r.get("base_rate")
+    return {"notices": W.top_notices(r, job["inputs"].get("zero_sugar"), art["schema"]),   # 12.7
+            "certainty": W.certainty(b) if b else None,
+            "youtube_range": W.youtube_range_note(b) if (b and platform == "youtube") else None,
+            "drivers": drivers, "others": others, "no_drivers": W.NO_DRIVERS_YOUTUBE if platform == "youtube" else None,
+            "cannot": W.CANNOT, "checks": W.checks_line(art["card"]["gates"]),
+            "platform": W.PLATFORM[platform], "platform_key": platform,
             "base": W.base_sentence(r["base_rate"], platform) if r.get("base_rate") else None,
             "followers_from_link": job.get("followers_from_link", False),
             "ig": W.ig_sentence(r["instagram_score"]) if r.get("instagram_score") else None,
@@ -198,7 +212,7 @@ def job_page(jid: str):
     if job is None:
         abort(404)
     if job["status"] == "done":
-        return render_template("result.html", T=W.TEXT, job=job, v=result_view(job))
+        return render_template("result.html", T=W.TEXT, W=W, job=job, v=result_view(job))
     others = [json.loads(p.read_text(encoding="utf-8")) for p in JOBS.glob("*.json")]
     ahead = sum(1 for j in others if j["id"] != jid and (j["status"] == "running" or
                                                          (j["status"] == "queued" and j["created"] < job["created"])))

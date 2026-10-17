@@ -3146,6 +3146,82 @@ YouTube's too-narrow range and the Zero Sugar answer (12.7).
 
 ---
 
+## D-060 - Specification of the tool's explanations (task 12.6) and warnings (task 12.7), written before either was built
+
+**Date:** 2026-10-17
+**Status:** Accepted - written before any explanation was computed for a new video and before the warning code
+(researcher: "continue 12.6 and 12.7"). Code: `src/serve/explain_video.py` (12.6), `src/serve/wording.py`
+(12.7 text), shown on the result page of D-059.
+
+### Part 1 - explanations ("drivers", 12.6)
+
+**Which, fixed by D-047 rule 9 and D-048:** only the Instagram content model (model B), and only its three
+stable features - hashtags, share of the video with talking, share of frames with a face. **Instagram results
+only.** The other 18 inputs also move the score but none was used consistently enough to be explained; the page
+says so. YouTube results show no explanation and say why (no YouTube model could be tested, D-041).
+
+**How, the same method as D-047:** `shap.LinearExplainer` on the served model, with the model's own imputed and
+scaled inputs and **the 120 Instagram training videos as the background, all of them** (`max_samples` set - the
+subsampling trap of D-047). The background is stored in `models/serving_schema.json`. Before anything is shown,
+an additivity check (SHAP values + base value = the model's log-odds, to 1e-6) runs on every call, and at schema
+build the served model's SHAP values for the 120 are checked against the plain linear formula (coefficient x
+(scaled value - background mean)).
+
+**Direction rule, fixed now:** a feature is explained only if the served model's coefficient has the sign D-048
+found stable (more -> higher for all three). If a sign differs, that feature is listed as "not explained: the
+served model does not agree with the stable direction" - never shown the other way round.
+
+**What is shown per feature:** this video's value beside the average of the 120 Instagram videos (the SHAP
+reference point), and the model's position with and without that difference - "with the average amount of
+talking, the model would place it higher than X% of the 120 instead of Y%". A feature the tool could not measure
+(missing, filled by the imputer) is shown as "not known" and not explained. **Wording:** "the model scores ...
+higher", "associated with in this sample", never "drives", "causes", "add more ... to"; the hashtag line carries
+D-043's caution (between accounts only: accounts that use more hashtags, not something shown to help one video);
+the talking and face lines carry D-052's YouTube description (on YouTube the 72 Shorts showed the opposite -
+described, not tested).
+
+### Part 2 - warnings (12.7; docs/11 section 4.3, D-046, D-053, D-055 section 2)
+
+A notice at the top of the result when any of these holds (each with its reason in plain words):
+1. **Not Zero Sugar:** the user answered "no" or "not sure" to "Does the video show Coca-Cola Zero Sugar?" - the
+   models learned from Zero Sugar videos only (D-030); the result is shown, marked as unlike the training data.
+   The tool cannot check this itself (automatic product detection failed, D-033, D-037).
+2. **Followers outside 7,594 to 17.1 million** - the typical-rate range is then an extrapolation (D-053).
+3. **Shorter than 3.9 s, or a shape outside the width-to-height range 0.45-0.80** (D-055 section 2).
+4. **Measures outside the range of the 192** (any of the 20 above or below every one), naming them.
+5. **Instagram score outside the range of the 120** (above or below every training score).
+
+Always shown, in their sections:
+6. **How sure (docs/11 "confidence badge", driven by the interval width):** high if the top of the 80% range is
+   at most 3 times the bottom, moderate up to 10 times, low above that - with the ratio in words. (With the
+   intervals of D-054 every result is "low", and the page says why.)
+7. **YouTube's range is too narrow** - on every YouTube base rate: on accounts the model had not seen it held 69%
+   of videos, not 80% (D-054).
+8. **Exploratory** on the Instagram score (already in D-059) and **no probability**.
+9. **What this cannot tell you** (docs/11 section 4.3, section 6): posting time, hashtag or posting advice, paid
+   promotion, the platform's own distribution, Instagram reach (no reliable views, docs/06), sales; a typical
+   result for an account, not a forecast for this video.
+10. **The release checks** in one line under the result, from the model card: G1-G3 failed with the fallbacks
+    named, G4 pending until task 12.8 changes it.
+11. Missing caption, collaboration or speech - already in "what the tool did not have" (D-059).
+
+**Never:** hiding a warning when it applies, or softening one because the result looks good.
+
+**Note 2026-10-17 - built and checked.** At schema build: the served model's coefficients for hashtags, talking
+and faces all have the stable sign (all three explained); SHAP values of the served model equal the linear formula
+on the 120 (largest gap 0.0); the 120 x 21 background is stored. On the Instagram test clip (no caption): talking
+89% of the video against an average of 29% - with the average, the score would sit higher than 78% of the 120
+instead of 89%; faces 0% of frames against 47% - with the average, 96%; hashtags not known (no caption). The
+other 18 inputs together moved its score more than these three, and the page says so. **Warnings seen on the
+running page:** "not Zero Sugar" and "not sure" answers, followers below the training range (1,000), a measure
+above every one of the 192 (on-screen text blocks); certainty "low" on every result (ratio of the range's top to
+bottom about 8,000); YouTube's too-narrow range; no YouTube explanation and why; "what this cannot tell you"; the
+release-check line. Changed after reading the pages: "about 0" instead of "fewer than 1" likes; the certainty level
+no longer printed twice; the with-average sentence shortened; hashtags "not known (no caption was given)"; tables
+kept inside their boxes on a narrow window. `python -m src.serve.app --check`: 6 pages, no forbidden wording.
+
+---
+
 ## Open decisions
 
 ---

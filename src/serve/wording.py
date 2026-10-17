@@ -90,7 +90,7 @@ def rate_text(r: float) -> str:
 
 
 def count_text(n: float) -> str:
-    return f"{n:,.0f}" if n >= 1 else "fewer than 1"
+    return f"{n:,.0f}"
 
 
 TEXT = {
@@ -133,6 +133,121 @@ def base_sentence(b: dict, platform: str) -> list[str]:
 def ig_sentence(s: dict) -> str:
     return (f"This video scores higher than {s['higher_than_pct_of_120']:.0f}% of the 120 Instagram Zero Sugar "
             "videos, scored by the same model.")
+
+
+# ------------------------------------------------------------------------------------------ 12.6 explanations
+DRIVER_TEXT = {
+    "hashtag_count": {"name": "Hashtags", "more": "more hashtags", "unit": lambda v: f"{v:.0f}",
+                      "caution": "In this study hashtags went with engagement only between accounts - accounts that use "
+                                 "more hashtags - not as something shown to help a single video."},
+    "talk_dur_frac": {"name": "Talking", "more": "more talking", "unit": lambda v: f"{v:.0%} of the video",
+                      "caution": "Found on Instagram only. Among the 72 YouTube Shorts the pattern ran the other way "
+                                 "(described, not tested)."},
+    "face_present_frac": {"name": "Frames showing a face", "more": "more frames showing a face",
+                          "unit": lambda v: f"{v:.0%} of frames",
+                          "caution": "Found on Instagram only. Among the 72 YouTube Shorts the pattern ran the other "
+                                     "way (described, not tested)."},
+}
+DRIVER_HEAD = "What the Instagram score leaned on"
+DRIVER_LEAD = ("Only the three measures the model used consistently were explained (hashtags, talking, faces). These "
+               "describe the model's score, not what will raise engagement.")
+NO_DRIVERS_YOUTUBE = ("No explanation is given for YouTube videos: with 72 videos from 5 channels (58 from one), no "
+                      "YouTube model could be tested.")
+
+
+def where_text(p: float) -> str:
+    return "above all" if p >= 100 else (f"higher than {p:.0f}%" if p > 0 else "below all")
+
+
+def driver_lines(e: dict) -> list[dict]:
+    out = []
+    for d in e["drivers"]:
+        t = DRIVER_TEXT[d["feature"]]
+        if d["status"] == "not known":
+            why = "no caption was given" if d["feature"] == "hashtag_count" else "it could not be measured"
+            out.append({"name": t["name"], "line": f"Not known for this video ({why}), so not explained.",
+                        "caution": ""})
+            continue
+        if d["status"] != "explained":
+            out.append({"name": t["name"], "line": "Not explained: " + d["status"].split(": ", 1)[-1] + ".",
+                        "caution": ""})
+            continue
+        v, avg = d["value"], d["average_of_120"]
+        more_or_less = "more" if v > avg else ("less" if v < avg else "the same")
+        line = (f"This video: {t['unit'](v)}; average of the 120: {t['unit'](avg)}. The model scores videos with "
+                f"{t['more']} higher. ")
+        if more_or_less == "the same":
+            line += "This video sits at the average, so this measure does not move its position."
+        else:
+            line += (f"With the average instead, it would score {where_text(d['position_at_average'])} of the 120, "
+                     f"not {where_text(d['position_with'])}.")
+        out.append({"name": t["name"], "line": line, "caution": t["caution"]})
+    return out
+
+
+def others_line(e: dict) -> str:
+    three = sum(abs(d.get("shap_log_odds", 0.0)) for d in e["drivers"])
+    rest = abs(e["other_18_log_odds"])
+    comp = "more" if rest > three else "less"
+    return (f"The model also uses 18 other measures, none consistent enough to explain. Together they moved this "
+            f"video's score {comp} than these three did.")
+
+
+# ------------------------------------------------------------------------------------------ 12.7 warnings
+CANNOT = ["The best time to post, or which hashtags to use - neither was modelled.",
+          "Paid promotion, and how Instagram's or YouTube's own systems spread a video.",
+          "Reach: Instagram does not publish reliable view counts, so no Instagram reach is shown.",
+          "Sales, or anything beyond likes and comments.",
+          "A forecast for this particular video: the range is for a typical video from an account of this size."]
+
+
+def certainty(b: dict) -> dict:
+    lo, hi = b["rate_80"]
+    ratio = hi / lo if lo > 0 else float("inf")
+    level = "high" if ratio <= 3 else ("moderate" if ratio <= 10 else "low")
+    return {"level": level, "text": f"The top of the range is about {ratio:,.0f} times the bottom - that is how "
+                                    "much typical videos from new accounts differ, and the tool cannot narrow it."}
+
+
+def youtube_range_note(b: dict) -> str:
+    return (f"On YouTube this range is too narrow: on accounts the model had not seen, it held "
+            f"{b['interval_coverage_on_held_out_accounts']:.0%} of videos, not the 80% it should.")
+
+
+def top_notices(r: dict, zero_sugar: str | None, schema: dict) -> list[str]:
+    out = []
+    if zero_sugar in ("no", "unsure"):
+        said = "does not show Coca-Cola Zero Sugar" if zero_sugar == "no" else "may not show Coca-Cola Zero Sugar"
+        out.append(f"You said the video {said}. The tool learned only from Zero Sugar videos, so this result "
+                   "describes a kind of video it has not seen. (The tool cannot check this itself.)")
+    b = r.get("base_rate")
+    lo_f, hi_f = schema["ranges"]["followers"]
+    if b and b["followers_outside_training"]:
+        out.append(f"The follower count ({b['followers']:,.0f}) is outside the accounts the tool learned from "
+                   f"({lo_f:,.0f} to {hi_f / 1e6:.1f} million), so the typical range reaches beyond what the data covers.")
+    v = r["video"]
+    if v.get("shorter_than_training"):
+        out.append(f"The video is shorter than any of the 192 ({schema['ranges']['duration_sec'][0]:.1f} seconds).")
+    if v.get("shape_outside_training"):
+        lo_a, hi_a = schema["ranges"]["aspect_ratio"]
+        out.append(f"The video's shape (width to height {v['aspect_ratio']:.2f}) is unlike the 192 ({lo_a:.2f} to {hi_a:.2f}).")
+    beyond = [FEATURES[k][0].lower() for k, d in r["diagnostics"].items()
+              if (d.get("among_192") or {}).get("beyond") and k in FEATURES]
+    if beyond:
+        out.append("On " + ", ".join(beyond) + ", this video is outside the range of the 192.")
+    s = r.get("instagram_score")
+    if s and s.get("outside_the_120"):
+        out.append(f"Its Instagram score is {s['outside_the_120']} every one of the 120 training videos.")
+    return out
+
+
+def checks_line(gates: dict) -> str:
+    g4 = gates.get("G4", "")
+    g4_text = ("the check that the tool measures exactly as the study did is still pending" if g4.startswith("pending")
+               else f"the check that the tool measures exactly as the study did: {g4}")
+    return ("Release checks: the video's content did not beat follower count (so a typical result is shown); the "
+            "Instagram score cannot be read as a chance (shown as a position); the ranges were too narrow and were "
+            f"widened (YouTube's still is); {g4_text}.")
 
 
 ABOUT_LIMITS = [

@@ -80,6 +80,17 @@ def build_schema() -> dict:
     if list(model.feature_names_in_) != order:
         raise SystemExit("the saved Instagram model's inputs differ from the model card's feature order")
     base = json.loads((config.MODELS / "base_rate.json").read_text(encoding="utf-8"))
+    # Explanations (12.6, D-060): the 120 Instagram training videos as the model sees them, the SHAP background
+    from src.models.train import build as train_build
+    from src.serve.explain_video import DRIVERS, STABLE_SIGN, linear_check
+    ig = train_build()
+    ig = ig[ig["platform"] == "instagram"]
+    bg = model[:-1].transform(ig[order])
+    coef = model.named_steps["m"].coef_[0]
+    signs = {f: bool(np.sign(coef[order.index(f)]) == STABLE_SIGN[f]) for f in DRIVERS}
+    worst = linear_check(model, bg)
+    if worst > 1e-6:
+        raise SystemExit(f"SHAP values of the served model differ from the linear formula ({worst}) - stopped (D-060)")
     focus["creator_collab_f"] = derived.flag01(focus["creator_collab"])
     flag_shares = {c: {grp: round(float(g[c].dropna().mean()), 4)
                        for grp, g in [("all", focus), *focus.groupby("platform")]}
@@ -88,6 +99,7 @@ def build_schema() -> dict:
         "decision": "D-055", "built": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "content_features": list(RAW.values()), "feature_order": order,
         "caplen_reference": ref, "step_params": step_params, "flag_shares": flag_shares,
+        "ig_background_z": np.round(bg, 12).tolist(), "driver_sign_agrees": signs, "shap_linear_check": worst,
         "ranges": {"duration_sec": [float(feats["duration_sec"].min()), float(feats["duration_sec"].max())],
                    "aspect_ratio": [float(feats["aspect_ratio"].min()), float(feats["aspect_ratio"].max())],
                    "followers": base["followers_range"], "max_sec": MAX_SEC},
@@ -201,12 +213,18 @@ def base_rate(art: dict, platform: str, followers: float | None) -> dict | None:
             "widened_by": b["widen"]}
 
 
-def instagram_position(art: dict, X: pd.DataFrame) -> dict:
-    """D-054: the score only as a position - the share of the 120 training scores strictly below it."""
-    s = float(art["model"].predict_proba(X[art["schema"]["feature_order"]])[:, 1][0])
+def position_of(art: dict, score: float) -> float:
+    """D-054: the share of the 120 training scores strictly below a score (stored rounded to 6 places)."""
     ref = np.asarray(art["card"]["outputs"]["instagram_content_score"]["training_scores_sorted"], float)
-    s6 = round(s, 6)                                   # the stored scores are rounded to 6 places
-    return {"higher_than_pct_of_120": round(100.0 * float((ref < s6).mean()), 1), "score": s6,
+    return round(100.0 * float((ref < round(score, 6)).mean()), 1)
+
+
+def instagram_position(art: dict, X: pd.DataFrame) -> dict:
+    """D-054: the score only as a position among the 120 training videos, never a probability."""
+    s = float(art["model"].predict_proba(X[art["schema"]["feature_order"]])[:, 1][0])
+    ref = art["card"]["outputs"]["instagram_content_score"]["training_scores_sorted"]
+    return {"higher_than_pct_of_120": position_of(art, s), "score": round(s, 6),
+            "outside_the_120": "above" if round(s, 6) > ref[-1] else ("below" if round(s, 6) < ref[0] else None),
             "label": art["card"]["outputs"]["instagram_content_score"]["label"], "probability_shown": False}
 
 

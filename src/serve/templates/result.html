@@ -4,12 +4,21 @@
 <p class="lead">{{ v.platform }}{% if job.inputs.upload_name %} · {{ job.inputs.upload_name }}{% elif job.inputs.link %} · {{ job.inputs.link }}{% endif %}
   · {% if v.reused %}same video and details as an earlier check, so its saved measurement was used{% else %}measured in {{ '%.0f'|format(v.seconds) }} s{% endif %}</p>
 
+{% if v.notices %}
+<section class="note" role="alert">
+  <h2 style="margin-top:0">Unlike the videos the tool learned from</h2>
+  <ul>{% for n in v.notices %}<li>{{ n }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
 <section>
   <h2 style="margin-top:0">{{ T.base_head }}</h2>
   <p class="muted">{{ T.base_lead }}</p>
   {% if v.base %}
     {% for line in v.base %}<p{% if loop.first %} class="big"{% endif %}>{{ line }}</p>{% endfor %}
     {% if v.followers_from_link %}<p class="tag">follower count from the link</p>{% endif %}
+    <p><span class="tag">certainty: {{ v.certainty.level }}</span> {{ v.certainty.text }}</p>
+    {% if v.youtube_range %}<p class="note">{{ v.youtube_range }}</p>{% endif %}
   {% else %}<p>{{ T.base_no_followers }}</p>{% endif %}
 </section>
 
@@ -18,7 +27,15 @@
   <h2 style="margin-top:0">{{ T.ig_head }} <span class="tag">exploratory</span></h2>
   <p class="big">{{ v.ig }}</p>
   <p class="muted">{{ T.ig_lead }}</p>
+  {% if v.drivers %}
+  <h2>{{ W.DRIVER_HEAD }}</h2>
+  <p class="muted">{{ W.DRIVER_LEAD }}</p>
+  <table>{% for d in v.drivers %}<tr><td><strong>{{ d.name }}</strong></td><td>{{ d.line }}{% if d.caution %}<br><span class="muted">{{ d.caution }}</span>{% endif %}</td></tr>{% endfor %}</table>
+  <p class="muted">{{ v.others }}</p>
+  {% endif %}
 </section>
+{% elif v.no_drivers %}
+<section><p class="muted">{{ v.no_drivers }}</p></section>
 {% endif %}
 
 <section>
@@ -43,5 +60,11 @@
   <h2 style="margin-top:0">{{ T.missing_head }}</h2>
   <ul>{% for m in v.missing %}<li>{{ m }}</li>{% endfor %}</ul>
 </section>
+
+<section>
+  <h2 style="margin-top:0">What this cannot tell you</h2>
+  <ul>{% for c in v.cannot %}<li>{{ c }}</li>{% endfor %}</ul>
+</section>
+<p class="muted">{{ v.checks }}</p>
 <p><a href="{{ url_for('about') }}">{{ T.about_link }}</a> · <a href="{{ url_for('index') }}">Check another video</a></p>
 {% endblock %}
