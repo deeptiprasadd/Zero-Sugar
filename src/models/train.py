@@ -42,6 +42,7 @@ from xgboost import XGBClassifier  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src import config  # noqa: E402
+from src.features import derived  # noqa: E402
 from src.stats.hypotheses import RAW, load  # noqa: E402
 
 OUT = config.REPORTS / "model_comparison.md"
@@ -93,7 +94,7 @@ def build() -> pd.DataFrame:
     h = f["posting_hour_utc"].astype(float)
     f["hour_sin"], f["hour_cos"] = np.sin(2 * np.pi * h / 24), np.cos(2 * np.pi * h / 24)
     f["weekend"] = f["is_weekend_utc"].astype(float)
-    f["creator_collab_f"] = f["creator_collab"].map({True: 1.0, False: 0.0})
+    f["creator_collab_f"] = derived.flag01(f["creator_collab"])
     f["y"] = f["engagement_high"].astype(int)
     return f.reset_index(drop=True)
 

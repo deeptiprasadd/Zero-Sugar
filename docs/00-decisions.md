@@ -2807,6 +2807,275 @@ No calibrator is saved (G2 failed with it).
 
 ---
 
+## D-055 - Specification of the inference pipeline (task 12.3) and of the parity check G4 (task 12.8), written before either was built or run
+
+**Date:** 2026-10-17
+**Status:** Accepted - **written before any pipeline code existed and before any video was measured by it**
+(researcher, 17 October: "complete the 6th week work"). Three choices put to the researcher on 11 October
+are taken as recommended then - how strict G4 is (section 6), how a missing caption or collaboration answer
+is treated (section 1), and moving the derived inputs into shared functions (section 4); stated plainly, the
+researcher did not answer them one by one, and may change any of them before G4 runs. Implements docs/11
+section 3 under D-046, D-053 and D-054. Code: `src/serve/measure.py` (runs the feature steps on one video),
+`src/serve/pipeline.py` (model inputs and outputs), `src/serve/parity.py` (G4); artefact
+`models/serving_schema.json`.
+
+**Superseded wording, recorded so it is not followed by mistake:** the docs/11 section 3 diagram (CLIP,
+"~30 pruned features", M2 per platform, TreeSHAP) predates D-030, D-036 and D-046; the original task wording
+for 12.3 ("incl. the annotation step") predates D-038. Neither applies.
+
+**1. What goes in.** A video file on this computer (task 12.4 adds links and uploads); the platform it is
+meant for (Instagram or YouTube); its caption (for YouTube the title and description, joined as in training:
+title, a line break, description); the account's follower count; and, for Instagram, whether the post is a
+collaboration with a creator. **Caption and collaboration are optional and, when not given, are missing -
+never zero and never "no"** (hidden is not zero, D-005). A caption given as empty is a real empty caption and
+is measured as one, as in training. When the caption is missing, every input built from it (caption length,
+hashtags, emoji, caption sentiment) is missing, and each keyword flag is "yes" only if the speech hits a
+keyword and otherwise missing - a hit is certain, a miss is not. The hand-coded questions (D-049) may be
+answered by the user; the answers are passed through to the diagnostics and **never enter a model** (D-051).
+
+**2. Refused, with the reason in plain words:** a file that does not open as a video; a video with no sound
+track (all 300 training videos had one); a video longer than 180 seconds (short-form scope, D-001; the corpus
+maximum is 177.8 s). **Measured but flagged as unlike the training data** (wording in task 12.7): shorter than
+3.9 s, a shape outside the corpus's width-to-height range 0.45-0.80, followers outside 7,594 to 17.1 million.
+
+**3. How the video is measured - the training code, unchanged.** The video goes through the Phase 5 steps in
+training order, calling the same per-video functions with the same settings: preparation (5.1), cuts (5.2),
+frames and motion (5.3), speech-to-text (5.6), audio signal and sound events (5.8), sentiment (5.9), faces,
+on-screen text and colour (5.5), caption language (5.7), keywords (5.16) and the caption counts of 5.15.
+**Not run:** the automated labels (5.12; none passed its check, D-038), music genre (D-033), product
+detection (D-037) and CLIP (D-029).
+- **Its own folder.** Everything the pipeline writes - audio, frames, the per-video record - goes under
+  `data/interim/serve/<run>/`, never into the training folders (`data/interim/features/`, `audio/`,
+  `frames/`). So it can never overwrite a training measurement, and a check cannot pass by reading a training
+  value back. The three folder locations in `src/features/common.py` are pointed at the run folder inside the
+  pipeline's own processes; the feature modules are not edited.
+- **Separate processes, as in training.** Speech-to-text runs in its own process with the CUDA 12 libraries
+  loaded first (D-027: no PyTorch in that process); the other graphics-card steps run in a second process.
+  Every model is read from disk; nothing is downloaded.
+- **Settings guard.** `models/serving_schema.json` stores the settings each step recorded for the 192
+  training videos. Checked on 17 October before anything was built: each step has one setting across all 192,
+  equal to today's code (13 blocks). The pipeline refuses to run if a step's settings in the code differ from
+  the stored ones.
+- **Glue only.** Where a training script wrote a step's result into the record from its main loop
+  (preparation, sound events, sentiment, faces, text, colour, language, keywords, caption counts), the
+  pipeline writes the same result under the same block name. The measuring functions are called, not copied.
+
+**4. From measurements to model inputs - one implementation.** The derived inputs - the log cut rate, face
+size (0 when no face), caption length within its language, the keyword groups and collaboration as 0/1 - are
+computed today inside `src/features/assemble.py`, `src/stats/hypotheses.py` and `src/models/train.py`. They
+are moved into one shared module (`src/features/derived.py`) that those scripts call, and the pipeline calls
+the same functions. **Before and after the move, the feature table (built in memory from the records), the
+statistics table and the model table are compared value by value; they must be identical, or the move is
+undone.** `data/processed/features.parquet` is not rewritten. For a new video, caption length within language
+uses the means and standard deviations of the 192 (per caption language with at least 5 of the 192, otherwise
+the whole 192), computed by the same function training uses and stored in the schema. The result is the 20
+content features plus collaboration in the trained order (`feature_order` in `models/model_card.json`),
+checked against the saved model's own column names when it is loaded.
+
+**5. What comes out** (values only; the page and its wording are tasks 12.5-12.7):
+- **Base rate** per platform (D-053, D-054): the typical engagement rate and its 80% interval for a new
+  account of that size, widened x1.257, YouTube marked as under-covered (69%); a likes + comments range from
+  the follower count. No follower count, no base rate.
+- **Instagram content score**, Instagram only: the saved model's score shown only as a **position - the
+  share of the 120 training scores strictly below it** (D-054), labelled exploratory; no probability.
+- **Diagnostics:** each of the 20 measures as a percentile among the 192 and among that platform's videos,
+  by straight-line interpolation between the 5% steps in `models/reference_quantiles.json`; no claim about
+  engagement (D-046 item 2).
+- **What was missing and why** (no caption, no speech, collaboration unknown), so task 12.7 can say which
+  inputs the score lacked. A missing model input is filled by the saved model's own imputer (the training
+  median), exactly as in training - nothing is chosen here.
+- No YouTube score and no platform verdict (D-046).
+
+**6. G4 - training/serving parity** (registered in docs/11 section 5; run in task 12.8). Fixed now:
+- **Sample, drawn now, before any pipeline run:** 10 of the 192 - per platform 3 with speech and 2 without
+  (speech status from 5.6, which does not involve engagement), seed 20261017, written to
+  `reports/serving_parity_sample.csv`. **These 10 are not used while the pipeline is built**; development
+  checks use corpus videos outside the 192 only.
+- **Run:** each video is measured from its file, with the caption the corpus holds for it and its recorded
+  collaboration flag, in a fresh empty folder - **twice**, in two folders.
+- **Compared:** the model inputs (21 for the Instagram videos, the 20 content features for YouTube videos)
+  against the values the models were trained on (`build()` in `src/models/train.py`), and for the 5 Instagram
+  videos the score position. No engagement value is read out or shown.
+- **Primary rule (docs/11 wording, "bit-for-bit"):** every input identical, missing equal to missing, in both
+  runs -> G4 passes.
+- **Secondary, reported beside it:** counts and flags identical, continuous inputs within 1e-6 (absolute or
+  relative). Run 1 against run 2 shows whether a difference is run-to-run variation on the graphics card or a
+  lasting difference from training.
+- **If G4 fails:** the cause is found and recorded. A pipeline fault is fixed and the same 10 are re-run,
+  every run kept. A difference that cannot be removed by 1 November is shipped as a failed gate - named on the
+  model card and the tool's about page with the input and the size of the difference - as G1-G3 were.
+  **Never:** re-measuring or editing training values to match, or drawing a new sample.
+- Time per video is reported.
+
+**What does not change:** the 20 features, the saved models, every reported result, the hand codes, and the
+rule that no automated label is used.
+
+**Note 2026-10-17 - built; first checks (not G4).**
+- **Section 4's move:** the feature table built in memory (300 x 96), the statistics tables (290 x 125 and
+  192 x 126) and the model table (192 x 134) are identical value by value before and after;
+  `features.parquet` was not rewritten (SHA-256 unchanged, `83fab00b...`).
+- **Schema:** the 21 inputs in the model card's order equal the saved model's own column names; 12 steps'
+  settings (preparation records none) shared by all 192 records and equal to the code; caption-length
+  reference for en, es, ko, pt, th, tr and vi.
+- **G4 sample** (drawn before any run): Instagram Da4ZFCUssvp, DTAgD-IExL-, Da8In57ug3r (speech in Swahili,
+  Hindi, Turkish), DcGF4VEIxbT (no speech), Cd5oWJNsfI0 (silent audio); YouTube Uf__4_hjwoM, YEo8ShllJ1g,
+  vFrcDKzucBI (English), 7P6P4bSZr5g, Fi3fytTXkoA (no speech). Not yet run.
+- **Development check** on two corpus videos outside the 192, both with English speech (Instagram
+  DaKsr6OzHqf, YouTube nUsWSsbWwYg): all **73 flattened features identical** to `features.parquet` on both
+  (automated-label columns not compared). 258 s and 193 s a video, most of it starting the processes and
+  loading the models. This is not G4: the videos are outside the 192, and model inputs were not compared.
+- **Refusals** checked on test files: not a video, no sound track, 181 s - each refused before anything was
+  written.
+- **A guard added during the build:** the process that compares keeps reading training values from the
+  training folders (asserted), and reads the run's record from its own file - otherwise a check could
+  compare the run with itself.
+- **Display detail, in code:** a value equal to several of the stored 5% steps (many videos share it, e.g.
+  0) is placed at the middle of their range.
+- **End to end as a new video** (a copy of the development Instagram clip from outside the project folder, no
+  caption, collaboration not given, 500,000 followers): measured in 163 s; seven inputs reported missing
+  (the four caption inputs, both keyword flags - the speech hit neither - and collaboration); base rate 0.26%
+  with an 80% range of 0.004% to 18%, as D-054 reported; Instagram score shown as a position only. A test on
+  a record measured *with* its caption showed that the keyword rule of section 1 should not depend on how the
+  record was made: each flag is now "yes" only if that group's recorded source includes the speech. The run
+  above is unchanged by this.
+
+---
+
+## D-056 - Specification of P20: speech rate, brand and product mentions, and YouTube views, a declared addition written before any test
+
+**Date:** 2026-10-17
+**Status:** Accepted - **written before any of these measures was set against engagement.** Source: the
+13 October check against the proposal (measured but not tested: Block B speech rate, Block C brand/product
+mentions, Block E platform-specific engagement indicators); the researcher approved testing them on 13 October.
+Only counts were looked at to write this (no engagement value): speech rate exists for 112 of the 192 (121 have
+speech; the rate is left empty under 2 seconds of speech, docs/05), Zero Sugar named 53 / not named 120 / not
+searched 19, the brand named in 166 (all 72 YouTube videos and 94 of 120 Reels), a view-based rate for all 72
+YouTube videos. Like D-050, everything here is a **declared addition**: the registered results (D-043, D-045,
+D-048) and the 9 October addition (D-051) stay exactly as reported. Code `src/stats/hypotheses_p20.py`; output
+`reports/statistical_results_p20.md`, `reports/statistical_family_p20.csv`.
+
+**The measures.**
+- **Speech rate** - `words_per_min` from speech-to-text (5.6): words per minute of speech, counted on the
+  native-language transcript; empty when a video has under 2 s of speech. Sung lyrics are transcribed as
+  speech (stated limitation, D-028). z-scored on the rows used.
+- **Product named** - `kw_zero_sugar` (5.16, vocabulary fixed 24 September, docs/04 section 5.1: zero sugar,
+  no sugar, sugar free, zero, in seven languages) in the caption (in its own language) or in the English
+  translation of the speech. "Not searched" is missing, never "no".
+- **Brand named** - **measured here for the first time, fixed now:** the Coca-Cola name in the caption or in
+  the English translation of the speech. Terms: `coca-cola`, `coca cola`, `cocacola`, `coke`, and in the
+  corpus's other scripts `كوكاكولا`, `كوكا كولا`, `โค้ก`, `코카콜라`, `코크`, `कोका-कोला`, `कोका कोला`.
+  Matched as text after Unicode normalisation and case folding (so hashtags and account tags count: a
+  caption tagging the brand names it). Every YouTube video names the brand, so its estimate rests on the 26
+  Reels that do not.
+- **View-based engagement (YouTube only)** - `engagement_rate_view` = (likes + comments) / views (docs/06
+  section 2), as `log10`; a zero rate would be replaced by half the smallest positive one before the log, as
+  in D-042. Instagram publishes no reliable views (docs/06), so it has no counterpart. Per docs/06 it is a
+  within-YouTube robustness measure: **no finding from it is carried into a platform comparison.**
+
+**The tests - one Benjamini-Hochberg family of ten (q = 0.05), separate from the D-042 and D-050 families.**
+
+| # | Outcome | Measure | Test 1 | Test 2 |
+|---|---|---|---|---|
+| 1-2 | percentile (pooled, 192) | speech rate (n 112) | LR test, 1 df, added to the D-042 controls | Spearman |
+| 3-4 | percentile (pooled) | product named (n 173) | LR test, 1 df | Mann-Whitney U, rank-biserial r |
+| 5-6 | percentile (pooled) | brand named (n 192) | LR test, 1 df | Mann-Whitney U |
+| 7-8 | view-based rate (YouTube, 72) | hashtags (the one registered association, D-043) | LR test, 1 df, controls log followers + log video age | Spearman |
+| 9-10 | view-based rate (YouTube) | call to action, hand-coded (the most robust addition, D-051; alpha 0.50) | LR test, 1 df | Mann-Whitney U |
+
+- Mixed model with an account intercept, fitted with `fit()` of `src/stats/hypotheses.py` (five
+  optimisers); LR tests from ML fits on the same rows; complete cases per test. Pooled controls as D-042
+  (platform, log followers, log video age). On YouTube the account intercept rests on 5 channels, 58 videos
+  from one - stated with every YouTube result.
+- **Beside the family, never in it:** each test without the 15 AI-character Shorts (D-049; all 15 are YouTube);
+  for any detected test, the within-account Spearman of D-043 (describes, changes no verdict); each null with
+  its minimum detectable effect (two-sample or correlation, 80% power, alpha 0.05, no clustering - a lower bound).
+- **Description only, no test:** Spearman between the view-based rate and the follower-based percentile on the 72
+  YouTube videos - do the two measures rank YouTube videos alike?
+- Every result carries: the Zero Sugar label's repeat reliability (YouTube alpha 0.25, Instagram -0.10); for call
+  to action, the hand-coding caveats (one coder, 110 minutes for 100 minutes of video, alpha 0.50).
+
+**Wording, fixed now:** "associated with", never "causes"; a test not detected is "not detected at this sample
+size" with its minimum detectable effect. P20 does not change the 20 model features, the models or the tool.
+
+---
+
+## D-057 - Results of P20: no association detected for speech rate, brand or product mentions, or with YouTube views
+
+**Date:** 2026-10-17
+**Status:** Accepted - results of D-056, a declared addition; every earlier result is unchanged.
+**Output:** `reports/statistical_results_p20.md`, `reports/statistical_family_p20.csv`
+(`python -m src.stats.hypotheses_p20`; all 20 fits converged).
+
+| # | Outcome | Measure (n, accounts) | Effect (95% CI) | BH p (test 1; test 2) | Without the 15 AI-character Shorts |
+|---|---|---|---|---|---|
+| 1-2 | percentile | speech rate (112, 16) | -1.4 points per SD (-8.6 to +5.8); Spearman rho -0.19 | 0.925; 0.344 | +0.5 points; rho -0.13 |
+| 3-4 | percentile | product named - Zero Sugar (173, 20) | +2.0 points (-6.9 to +11.0); medians 0.58 vs 0.51 | 0.818; 0.818 | -2.4 points |
+| 5-6 | percentile | brand named - Coca-Cola (192, 22; 26 not naming it, all Reels) | -1.7 points (-15.2 to +11.8); medians 0.56 vs 0.40 | 0.925; 0.344 | -1.5 points; rank test raw p 0.038 |
+| 7-8 | YouTube per-view rate | hashtags (72, 5) | x1.18 per SD (0.97 to 1.44); rho +0.13 | 0.344; 0.594 | x1.31, raw p 0.024 |
+| 9-10 | YouTube per-view rate | call to action (72, 5) | x0.71 (0.45 to 1.13); medians 1.1% vs 1.4% per view | 0.344; 0.818 | x0.70 |
+
+**All ten not detected at this sample size** (minimum detectable effects: speech rate r 0.26; product named
+d 0.46; brand named d 0.59; YouTube r 0.33 and d 0.67 - lower bounds). The without-series values are reported
+beside the family and change no verdict.
+
+**Description (no test): the two YouTube engagement measures do not rank videos alike** - Spearman between
+the per-view rate and the follower-based percentile -0.05 over the 72 Shorts (-0.11 without the AI-character
+series). Engagement per view and engagement per follower measure different things here, so the YouTube
+results of this study are specific to the follower-based measure that D-005 chose for the platform
+comparison. The call-to-action association of D-051 (follower-based) does not carry to the per-view rate,
+where its estimate points the other way (not detected).
+
+**Together with D-043 and D-051:** no further content measure is associated with engagement in this sample;
+every proposal item is now measured or tested (P20 closes the last three).
+
+---
+
+## D-058 - Specification of the tool's video intake (task 12.4): uploads and links, cached by file fingerprint
+
+**Date:** 2026-10-17
+**Status:** Accepted - written before the intake code. Code `src/serve/intake.py`; it hands a file and its
+details to the pipeline of D-055.
+
+**Uploads.** A video file (mp4, mov, m4v, webm, mkv; at most 200 MB). It is stored once under
+`data/interim/serve/media/<first 16 characters of its SHA-256>.<ext>`; the same file uploaded again is not
+stored twice. Whether it is usable (opens as a video, has sound, at most 180 s) is decided by the pipeline's
+checks (D-055 section 2), not by the file name.
+
+**Links.** Only Instagram Reel or post links (`instagram.com/reel/...`, `/p/...`) and YouTube Shorts or video
+links (`youtube.com/shorts/...`, `youtube.com/watch?v=...`, `youtu.be/...`); anything else is refused before
+any request. The details are read first without downloading (yt-dlp, as `src/collect/instagram_links.py` does,
+comments stripped - third-party personal data is not kept, D-018); a video longer than 180 s is refused
+there, before the download. The file is then downloaded with **the same yt-dlp settings as the corpus**
+(`fetch()` of `src/collect/download_media.py`: best video and audio up to 720p, merged to mp4), so a linked
+video reaches the measurements in the same form the 300 did. **Always logged out: no cookies, no login, no
+account** (D-020's spare-account cookies were deleted and are not used again). YouTube refused logged-out
+downloads during collection (D-020); if it does so here, the tool says so in plain words and asks for the
+file to be uploaded instead - it does not work around the check.
+- **Taken from the link, shown to the user and editable:** the caption (Instagram: the post's text; YouTube:
+  title, a line break, description - as in training) and the title. A follower count is taken only if the
+  platform's public data gives one (YouTube channels usually do; logged-out Instagram usually does not), and
+  is shown as "from the link" for the user to confirm; the tool still asks for it (TODO rule 7).
+- Kept per link: platform, video id, account handle, caption, title, duration, follower count if given, and
+  when it was fetched - nothing else.
+
+**Cache.** A result is kept under `data/interim/serve/videos/<file fingerprint>/<inputs fingerprint>/`, where
+the inputs fingerprint covers the platform, caption, title and collaboration answer. The same video with the
+same inputs returns the saved result without measuring again; any changed input measures again. Every
+folder is under `data/interim/` (never published, gitignored).
+
+**Not done:** no batch or playlist downloads (one video per request), no private or login-only posts, no
+storage of anything about the people who commented.
+
+**Note 2026-10-17 - built and tested without network.** Nine link forms checked (Instagram reel, reels, p,
+with an account path or tracking text; YouTube shorts, watch, youtu.be): the accepted ones resolve to the
+video id and keep their kind; other sites and profile pages are refused. Uploads: a non-video, a video without
+sound and a text file are refused, now *before* anything is stored (a first version stored a non-video before
+the pipeline refused it; fixed, the file removed). The same clip uploaded twice: measured once (170 s, the
+same score position as the 12.3 run), then reused in 15 s with the base rate recomputed for a new follower
+count. **Not yet tested: a live link** - that downloads a video, and waits for the researcher's approval.
+
+---
+
 ## Open decisions
 
 | ID | Question | Blocking | Needed by |

@@ -1,6 +1,6 @@
 # 11 — Prediction Service (Flask UI)
 
-**Status:** Planned; **re-scoped 2026-10-02 by D-046** - gate G1 failed (D-045), so the tool follows section 5's pre-registered fallback: an honest base-rate prediction, video diagnostics, and an Instagram content score labelled exploratory; no platform recommendation. Where this document and D-046 differ, D-046 wins. This is the project's final deliverable and its stated purpose: a tool
+**Status:** In progress - tool models built 2026-10-09 (D-053/D-054), inference pipeline built 2026-10-17 (D-055); **re-scoped 2026-10-02 by D-046** - gate G1 failed (D-045), so the tool follows section 5's pre-registered fallback: an honest base-rate prediction, video diagnostics, and an Instagram content score labelled exploratory; no platform recommendation. Where this document and D-046 differ, D-046 wins. This is the project's final deliverable and its stated purpose: a tool
 where someone supplies a video (file or link), and gets back a prediction of how it would
 perform **on YouTube Shorts and on Instagram Reels**, so they can decide what to post and
 where.
@@ -137,6 +137,18 @@ Flask app  (src/serve/app.py)
    └─ TreeSHAP  ──►  top drivers + per-platform comparison
 ```
 
+> **As built, 2026-10-17 (D-055, task 12.3).** The diagram above predates D-030, D-036 and D-046. The
+> pipeline as specified and built: `src/serve/measure.py` runs the Phase 5 per-video functions unchanged, in
+> training order, in the video's own folder under `data/interim/serve/` (never the training folders), in
+> five separate processes (speech-to-text alone, D-027); no CLIP, no automated labels (D-038).
+> `src/serve/pipeline.py` turns the record into the **21 inputs of the Instagram content model in the trained
+> order** using the same derivation functions as training (`src/features/derived.py`, moved there with the
+> training tables checked identical before and after), and computes the outputs D-046/D-054 allow: base rate
+> with its widened interval, the Instagram score as a position among the 120 (no probability), and each
+> measure as a percentile among the 192. `models/serving_schema.json` holds the step settings, the
+> caption-length reference, the input order and the model fingerprints; the pipeline refuses to run if any
+> of them has changed.
+
 **Reuse, do not rewrite.** The inference path must call the *same* extraction code as
 training. A second implementation would drift from the first, and the model would be
 served features that differ subtly from the ones it learned — the classic
@@ -227,4 +239,6 @@ _Append dated entries as the service is built._
 | 2026-09-12 | Deliverable added to scope (D-017); this document written | Method specified; build begins after Phase 10 |
 | 2026-10-02 | G1 failed (D-045); tool re-scoped to the pre-registered fallback (D-046) | Base rate + diagnostics + exploratory Instagram content score; no platform recommendation. Pooled models saved in `models/` stay for comparison, not for serving |
 | 2026-10-09 | 12.1-12.2 done (D-053 spec, D-054 results) | Base rate fitted; G3 failed (67%; YouTube 49%) -> interval widened x1.26, YouTube still warned (69%). Instagram score: G2 failed as fitted and after Platt -> shown only as a position among the 120 videos, no probability. G4 pending (12.8). `reports/serving_models.md` |
+| 2026-10-17 | 12.4 intake (D-058 spec first) | `src/serve/intake.py`: uploads checked before they are stored and kept once by fingerprint; Instagram and YouTube links read logged out (comments stripped), over-length videos refused before download, files fetched with the corpus's own download settings; results reused for the same video and inputs. Link forms and refusals tested offline; a live link test is pending |
+| 2026-10-17 | 12.3 inference pipeline (D-055 spec first) | `src/serve/measure.py`, `pipeline.py`, `parity.py`, `src/features/derived.py`, `models/serving_schema.json`. Training tables identical before/after moving the derived inputs. G4 sample drawn before any run (`reports/serving_parity_sample.csv`). Development check on 2 corpus videos outside the 192: 73/73 features identical; 3-4 min a video. G4 itself in 12.8 |
 | 2026-10-02 | SHAP done (D-047 spec, D-048 results) | The tool's "drivers" may name only three features, from the Instagram logistic model: hashtags, share with talking, share of frames with a face. That model's probabilities barely move (80% of videos 0.45-0.56), so G2 (task 12.2) decides whether the Instagram score is shown as a probability at all |

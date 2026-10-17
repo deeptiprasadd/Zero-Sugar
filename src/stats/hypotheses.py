@@ -24,6 +24,7 @@ from statsmodels.stats.multitest import multipletests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src import config  # noqa: E402
+from src.features import derived  # noqa: E402  (derived inputs, shared with the tool - D-055)
 
 OUT = config.REPORTS / "statistical_results.md"
 SEED = 20261001
@@ -74,21 +75,16 @@ def load() -> tuple[pd.DataFrame, pd.DataFrame]:
     d["log_followers"] = np.log10(d["followers"].astype(float))
     d["log_age"] = np.log10(d["video_age_days"].astype(float))
     d["tier2"] = np.where(d["account_size_tier"] == "large", "large", "small_medium")
-    d["cuts_log1p"] = np.log1p(d["cuts_per_sec"].astype(float))
-    d["face_area0"] = d["mean_face_area"].astype(float).where(d["face_present_frac"] > 0, 0.0)
+    d = derived.video_measures(d)
     # caption length: log1p, z within caption language where that language has 5+ focus videos
-    d["caplen_log"] = np.log1p(d["caption_char_len"].astype(float))
     focus = d[d["in_focus"]].copy()
-    big = focus["lang_caption"].value_counts()
-    big = set(big[big >= 5].index)
-    allz = (focus["caplen_log"] - focus["caplen_log"].mean()) / focus["caplen_log"].std()
-    within = focus.groupby("lang_caption")["caplen_log"].transform(lambda s: (s - s.mean()) / s.std())
-    focus["caplen_lang"] = np.where(focus["lang_caption"].isin(big), within, allz)
-    focus["kw_event"] = focus["kw_event"].map({True: 1.0, False: 0.0})
-    focus["kw_promotional"] = focus["kw_promotional"].map({True: 1.0, False: 0.0})
+    ref = derived.caplen_reference(focus)
+    focus["caplen_lang"] = derived.caplen_lang(focus, ref)
+    focus["kw_event"] = derived.flag01(focus["kw_event"])
+    focus["kw_promotional"] = derived.flag01(focus["kw_promotional"])
     NOTES.append(f"Zero engagement rates replaced before the log: {zeros}.")
-    NOTES.append(f"Caption length standardised within language for: {sorted(big)}; other languages "
-                 "and unknown against the whole focus set.")
+    NOTES.append(f"Caption length standardised within language for: {sorted(ref['by_language'])}; other "
+                 "languages and unknown against the whole focus set.")
     return d, focus
 
 

@@ -1,0 +1,11 @@
+test_no,outcome,measure,n,accounts,test,p,conv,effect,mde,p_bh,verdict
+1,percentile (pooled),speech rate (words per minute),112,16,"LR test (mixed model), 1 df",0.9248871377291181,True,-1.4 pct points per SD (-8.6 to +5.8),r 0.26,0.9248871377291181,not detected at this sample size
+2,percentile (pooled),speech rate (words per minute),112,16,Spearman,0.04837603777738561,True,rho -0.187,r 0.26,0.3444803194875777,not detected at this sample size
+3,percentile (pooled),product named (Zero Sugar),173,20,"LR test (mixed model), 1 df",0.6543148286371696,True,+2.0 pct points yes vs no (-6.9 to +11.0),d 0.46 (53 yes / 120 no),0.8180233401287227,not detected at this sample size
+4,percentile (pooled),product named (Zero Sugar),173,20,Mann-Whitney U,0.6063038705593315,True,r_rb +0.049; medians 0.578 vs 0.513,d 0.46 (53 yes / 120 no),0.8180233401287227,not detected at this sample size
+5,percentile (pooled),brand named (Coca-Cola),192,22,"LR test (mixed model), 1 df",0.8502672918453006,True,-1.7 pct points yes vs no (-15.2 to +11.8),d 0.59 (166 yes / 26 no),0.9248871377291181,not detected at this sample size
+6,percentile (pooled),brand named (Coca-Cola),192,22,Mann-Whitney U,0.13779212779503108,True,r_rb +0.181; medians 0.556 vs 0.403,d 0.59 (166 yes / 26 no),0.3444803194875777,not detected at this sample size
+7,view-based rate (YouTube),hashtags,72,5,"LR test (mixed model), 1 df",0.0959027931830353,True,x1.18 per-view rate per SD (0.97 to 1.44),r 0.33,0.3444803194875777,not detected at this sample size
+8,view-based rate (YouTube),hashtags,72,5,Spearman,0.2971838254079431,True,rho +0.125,r 0.33,0.5943676508158862,not detected at this sample size
+9,view-based rate (YouTube),call to action (hand-coded),72,5,"LR test (mixed model), 1 df",0.11853325823243877,True,x0.71 per-view rate yes vs no (0.45 to 1.13),d 0.67 (32 yes / 40 no),0.3444803194875777,not detected at this sample size
+10,view-based rate (YouTube),call to action (hand-coded),72,5,Mann-Whitney U,0.6544186721029782,True,r_rb -0.062; medians -1.942 vs -1.867,d 0.67 (32 yes / 40 no),0.8180233401287227,not detected at this sample size

@@ -35,12 +35,11 @@ import argparse
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src import config  # noqa: E402
-from src.features import common  # noqa: E402
+from src.features import common, derived  # noqa: E402
 
 OUT = config.PROCESSED / "features.parquet"
 SUMMARY = config.INTERIM / "features_summary.csv"
@@ -117,20 +116,26 @@ def dig(doc: dict, block: str, path: tuple):
     return node
 
 
+def flatten(doc: dict) -> dict:
+    """One video's cache record -> its candidate feature columns. Also used by the prediction tool
+    (src/serve), so a new video is flattened exactly as the corpus was (D-055)."""
+    row = {}
+    for block, keys in CANDIDATES.items():
+        src = doc.get(block) or {}
+        for key, col in keys.items():
+            row[col] = src.get(key)
+    for col, (block, path) in NESTED.items():
+        row[col] = dig(doc, block, path)
+    row["blocks_present"] = sum(bool(doc.get(b)) for b in CANDIDATES)
+    return row
+
+
 def build() -> pd.DataFrame:
     idx = common.video_index()
     rows = []
     for _, r in idx.iterrows():
         doc = common.read_cache(r["platform"], r["media_id"])
-        row = {"platform": r["platform"], "media_id": r["media_id"]}
-        for block, keys in CANDIDATES.items():
-            src = doc.get(block) or {}
-            for key, col in keys.items():
-                row[col] = src.get(key)
-        for col, (block, path) in NESTED.items():
-            row[col] = dig(doc, block, path)
-        row["blocks_present"] = sum(bool(doc.get(b)) for b in CANDIDATES)
-        rows.append(row)
+        rows.append({"platform": r["platform"], "media_id": r["media_id"], **flatten(doc)})
     feats = pd.DataFrame(rows)
 
     # Identity, grouping and exposure from the analysis table - **no engagement column**.
@@ -148,16 +153,8 @@ def build() -> pd.DataFrame:
     out["is_weekend_utc"] = ts.dt.dayofweek >= 5
 
     # Two keyword composites, so Block C's keywords fit the 18-20 budget without being cut
-    # entirely (5.11, D-036). Null-safe: True if either group hit, False only if both were
-    # searched and neither hit, null if neither was searched - a gap is never a "no".
-    def any_of(a: str, b: str) -> pd.Series:
-        va, vb = out[a], out[b]
-        hit = (va == True) | (vb == True)                       # noqa: E712
-        searched = va.notna() | vb.notna()
-        return pd.Series(np.where(hit, True, np.where(searched, False, None)), index=out.index)
-
-    out["kw_promotional"] = any_of("kw_offer", "kw_new")
-    out["kw_experience"] = any_of("kw_taste", "kw_together")
+    # entirely (5.11, D-036). Null-safe - a gap is never a "no" (derived.either).
+    out = derived.keyword_composites(out)
 
     # Automated labels: yes/no -> True/False; "unsure" and failed answers -> null (D-038).
     for c in YES_NO:

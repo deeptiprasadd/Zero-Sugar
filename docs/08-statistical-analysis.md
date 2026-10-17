@@ -178,6 +178,22 @@ H2 and H4 rest on one 15-video AI-character series and are not robust; H4 is mai
 H5 holds within accounts and in the rank test without the series. All three measures are weakly reliable
 (repeat alpha 0.38-0.52) and were coded at about one video per 30 seconds.
 
+### Declared addition, 2026-10-17 - P20: speech rate, mentions, YouTube views (D-056 spec, D-057 results)
+
+Ten tests in their own Benjamini-Hochberg family, same mixed model; the families above are unchanged. Output
+`reports/statistical_results_p20.md`.
+
+| Outcome | Measure | Effect (95% CI) | BH p (model; rank test) |
+|---|---|---|---|
+| percentile | speech rate, words per minute (112 videos) | -1.4 points per SD (-8.6 to +5.8) | 0.925; 0.344 |
+| percentile | Zero Sugar named in caption or speech (173) | +2.0 points (-6.9 to +11.0) | 0.818; 0.818 |
+| percentile | Coca-Cola named in caption or speech (192; 26 not, all Reels) | -1.7 points (-15.2 to +11.8) | 0.925; 0.344 |
+| YouTube per-view rate | hashtags (72, 5 channels) | x1.18 per SD (0.97 to 1.44) | 0.344; 0.594 |
+| YouTube per-view rate | call to action, hand-coded (72) | x0.71 (0.45 to 1.13) | 0.344; 0.818 |
+
+None detected. On YouTube the per-view rate and the follower-based percentile do not rank videos alike
+(Spearman -0.05, description only), so YouTube results here are specific to the follower-based measure (D-005).
+
 ### Paired sub-analysis
 
 | Metric | Value |
