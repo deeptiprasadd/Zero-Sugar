@@ -258,6 +258,18 @@ def hand_code_answers(art: dict, answers: dict | None, platform: str) -> dict | 
                 f"share_among_{platform}": hc[h][platform]} for h in answers if h in hc}
 
 
+def speech_unclear(doc: dict) -> bool:
+    """True when the transcript may change from run to run (G4, D-062): the study's own low-confidence flag of 5.6
+    (D-027: words or language uncertain), or a passage below the speech engine's retry limits (average log-probability
+    under -1.0 or compression above 2.4, where faster-whisper re-reads at random). Cautious by design: it fired on 3
+    of the 10 G4 videos, of which one changed. A retry that succeeded leaves no trace, so the limits alone miss cases."""
+    from src.features.asr import SUSPECT_COMPRESSION, SUSPECT_LOGPROB
+    a = doc.get("asr") or {}
+    segs = (a.get("segments_native") or []) + (a.get("segments_en") or [])
+    return bool(a.get("transcript_low_confidence")) or any(
+        x["avg_logprob"] < SUSPECT_LOGPROB or x["compression_ratio"] > SUSPECT_COMPRESSION for x in segs)
+
+
 # ------------------------------------------------------------------------------------------ one video
 def predict(video_path: Path, platform: str, caption: str | None = None, followers: float | None = None,
             creator_collab: bool | None = None, title: str | None = None, answers: dict | None = None,
@@ -293,6 +305,7 @@ def predict(video_path: Path, platform: str, caption: str | None = None, followe
         "instagram_score": instagram_position(art, X) if platform == "instagram" else None,
         "diagnostics": diagnostics(art, row, X, platform),
         "missing": missing_inputs(X, doc, caption is not None, creator_collab is not None),
+        "speech_unclear": speech_unclear(doc),
         "hand_codes": hand_code_answers(art, answers, platform),
         "model_inputs": {c: (None if pd.isna(v) else float(v)) for c, v in X.iloc[0].items()},
         "timing": {"total_sec": measured["total_sec"], "steps": measured["steps"]},

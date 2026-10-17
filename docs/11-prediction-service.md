@@ -224,6 +224,13 @@ exploratory) shown with its accuracy. G2-G4 still gate whatever the tool display
 not a probability; G3 failed -> the base-rate interval is widened x1.26 and YouTube's carries a warning; G4
 pending (12.8).
 
+**Outcome, 2026-10-17 (D-062):** G4 failed as registered, for one reason. On 10 of the 192 videos, each measured
+twice in fresh folders, 417 of 420 model-input and output comparisons are identical and nine videos match exactly.
+The tenth has unclear speech, which the speech engine re-reads at random (its default retry with sampling), so its
+transcript - and its share of talking - differs from run to run, as it would have in the study. Not a pipeline fault;
+it cannot be removed without re-measuring the study. The model card and About page say so, and the result page now
+warns when a video's speech is unclear. All four gates have now run: G1-G4 failed, each with its fallback.
+
 ---
 
 ## 6. Scope boundary
@@ -246,6 +253,7 @@ _Append dated entries as the service is built._
 | 2026-09-12 | Deliverable added to scope (D-017); this document written | Method specified; build begins after Phase 10 |
 | 2026-10-02 | G1 failed (D-045); tool re-scoped to the pre-registered fallback (D-046) | Base rate + diagnostics + exploratory Instagram content score; no platform recommendation. Pooled models saved in `models/` stay for comparison, not for serving |
 | 2026-10-09 | 12.1-12.2 done (D-053 spec, D-054 results) | Base rate fitted; G3 failed (67%; YouTube 49%) -> interval widened x1.26, YouTube still warned (69%). Instagram score: G2 failed as fitted and after Platt -> shown only as a position among the 120 videos, no probability. G4 pending (12.8). `reports/serving_models.md` |
+| 2026-10-17 | 12.8 release checks: G4 run (D-055 spec, D-062 results) | `python -m src.serve.parity --run` (85 min): 417 of 420 identical, 9 of 10 videos exact; the tenth's unclear speech is re-read at random. Model card and About page updated (`--record`); unclear-speech warning added. `reports/serving_parity.md` |
 | 2026-10-17 | 12.6 explanations and 12.7 warnings (D-060 spec first) | `src/serve/explain_video.py`: the Instagram model's three stable features only, same SHAP method and background as D-047 (signs agree with D-048; SHAP equals the linear formula). Warnings: not Zero Sugar, out-of-range followers, duration, shape and measures, certainty from the range width, YouTube's too-narrow range, what the tool cannot tell, the release checks. Wording check passed on 6 pages |
 | 2026-10-17 | 12.5 web page (D-059 spec first) | `src/serve/app.py`, `wording.py`, `templates/`. Tested with an upload (saved measurement reused), a YouTube link (cached, no new download), a non-video (refused in plain words) and an invalid form; wording check passed |
 | 2026-10-17 | 12.4 intake (D-058 spec first) | `src/serve/intake.py`: uploads checked before they are stored and kept once by fingerprint; Instagram and YouTube links read logged out (comments stripped), over-length videos refused before download, files fetched with the corpus's own download settings; results reused for the same video and inputs. Link forms and refusals tested offline; a live link test is pending |

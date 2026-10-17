@@ -60,6 +60,10 @@ internal/
 # weekly progress reports. Kept on this computer only, never on GitHub.
 /*.docx
 
+# Writing - the research paper, the progress reports and the project documents (2026-10-17).
+# Kept on this computer only, never on GitHub: only code, data and method notes are published.
+writing/
+
 # The main README is being rewritten - kept on this computer only for now (2026-09-24).
 # Only the root file: reports/README.md and reports/shared/README.md stay published.
 /README.md

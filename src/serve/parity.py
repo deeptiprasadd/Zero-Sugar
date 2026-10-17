@@ -7,8 +7,8 @@ in fresh folders, and their inputs are compared with the values the models were 
     python -m src.serve.parity --draw      # draw the 10 (done once, before any pipeline run - D-055)
     python -m src.serve.parity --dev       # development check on 2 corpus videos outside the 192
 
-G4 itself (task 12.8) measures the 10 twice, each time in a fresh folder, with `check(..., with_inputs=True)`;
-its run mode and report (`reports/serving_parity.md`) are added in 12.8.
+    python -m src.serve.parity --run       # G4 itself (task 12.8): the 10, twice, each time in a fresh folder
+    python -m src.serve.parity --record    # write the outcome on models/model_card.json (and rebuild the schema)
 
 The sample is drawn once and never redrawn: per platform 3 videos with speech and 2 without (speech status
 from 5.6), seed 20261017. These 10 are kept out of development; development checks use corpus videos
@@ -154,10 +154,20 @@ def compare_candidates(platform: str, media_id: str, served: pd.DataFrame) -> li
     return rows
 
 
+_TRAINED: list[pd.DataFrame] = []
+
+
+def trained() -> pd.DataFrame:
+    """The model table the models were trained on (`src.models.train.build()`), built once per run."""
+    if not _TRAINED:
+        from src.models.train import build
+        _TRAINED.append(build())
+    return _TRAINED[0]
+
+
 def compare_inputs(platform: str, media_id: str, X: pd.DataFrame, art: dict) -> list[dict]:
     """The model inputs against the values the models were trained on (focus videos only)."""
-    from src.models.train import build
-    tr = build()
+    tr = trained()
     t = tr[(tr["platform"] == platform) & (tr["media_id"] == media_id)].iloc[0]
     cols = art["schema"]["feature_order"] if platform == "instagram" else art["schema"]["content_features"]
     rows = []
@@ -210,11 +220,103 @@ def summarise(df: pd.DataFrame) -> str:
     return "\n".join(lines)
 
 
+RESULT = config.INTERIM / "serve" / "g4_result.json"
+
+
+def run_g4() -> dict:
+    """G4 exactly as D-055 section 6 fixed it: the 10 drawn videos, twice, each time in a fresh folder."""
+    import time
+    s = pd.read_csv(SAMPLE, dtype={"media_id": str})
+    vids = list(zip(s["platform"], s["media_id"]))
+    speech = dict(zip(vids, s["speech"]))
+    runs = []
+    for k in (1, 2):
+        t0 = time.time()
+        df = check(vids, config.INTERIM / "serve" / f"g4_run{k}", with_inputs=True)
+        df["run"] = k
+        df.to_csv(config.INTERIM / "serve" / f"g4_run{k}.csv", index=False)
+        runs.append(df)
+        print(f"run {k}: {(time.time() - t0) / 60:.1f} min")
+    both = pd.concat(runs, ignore_index=True)
+    gate = both[both["level"].isin(["model input", "output"])]
+    primary = bool(gate["identical"].all())
+    secondary = bool(gate["within_tolerance"].all())
+    key = ["platform", "media_id", "level", "column"]
+    r1, r2 = (runs[0].set_index(key)["served"], runs[1].set_index(key)["served"])
+    run_to_run = [i for i in r1.index if not same(i[3], py(r1[i]), py(r2[i]))[0]]
+    res = {"decision": "D-055", "videos": len(vids), "primary_bit_for_bit": primary, "secondary_tolerance": secondary,
+           "gate_rows": int(len(gate)), "gate_rows_identical": int(gate["identical"].sum()),
+           "feature_rows": int((both["level"] == "feature").sum()),
+           "feature_rows_identical": int(both.loc[both["level"] == "feature", "identical"].sum()),
+           "run1_vs_run2_differences": [list(i) for i in run_to_run],
+           "seconds_per_video": round(float(both.groupby(["run", "platform", "media_id"])["sec"].first().mean()), 1),
+           "verdict": "pass" if primary else ("pass within tolerance" if secondary else "fail")}
+    RESULT.write_text(json.dumps(res, indent=1), encoding="utf-8")
+    write_report(both, res, speech)
+    return res
+
+
+def write_report(both: pd.DataFrame, res: dict, speech: dict) -> None:
+    L = ["# G4 - does the tool measure exactly as the study did? (task 12.8, rules fixed in D-055 section 6)", "",
+         f"The 10 videos drawn on 17 October before any pipeline run ({SAMPLE.name}), each measured from its file with "
+         "the caption the corpus holds and its recorded collaboration flag, in a fresh empty folder, **twice**. "
+         "Compared: the inputs of the models (21 for Instagram, the 20 content features for YouTube) against the "
+         "values the models were trained on, and for Instagram the score position. Primary rule: every input "
+         "identical, missing equal to missing, in both runs. Secondary: counts and flags identical, continuous "
+         "values within 1e-6. No engagement value is read out.", "",
+         f"**Verdict: {res['verdict'].upper()}** - model inputs and outputs identical in {res['gate_rows_identical']} "
+         f"of {res['gate_rows']} comparisons (both runs); the flattened features behind them identical in "
+         f"{res['feature_rows_identical']} of {res['feature_rows']}; run 1 against run 2: "
+         f"{len(res['run1_vs_run2_differences'])} differences. About {res['seconds_per_video']:.0f} s per video.", "",
+         "| Video | Speech | Run | Model inputs identical | Features identical | Seconds |",
+         "|---|---|---|---|---|---|"]
+    for (run, p, m), g in both.groupby(["run", "platform", "media_id"], sort=False):
+        gi = g[g["level"].isin(["model input", "output"])]
+        gf = g[g["level"] == "feature"]
+        L.append(f"| {p} {m} | {'yes' if speech[(p, m)] else 'no'} | {run} | {int(gi['identical'].sum())}/{len(gi)} | "
+                 f"{int(gf['identical'].sum())}/{len(gf)} | {g['sec'].iloc[0]:.0f} |")
+    diff = both[~both["identical"]]
+    L += ["", "## Every difference" if len(diff) else "## Differences", ""]
+    if len(diff):
+        L += ["| Run | Video | Level | Measure | Tool | Study | Within 1e-6 |", "|---|---|---|---|---|---|---|"]
+        for _, x in diff.iterrows():
+            L.append(f"| {x['run']} | {x['platform']} {x['media_id']} | {x['level']} | {x['column']} | {x['served']!r} | "
+                     f"{x['trained']!r} | {'yes' if x['within_tolerance'] else 'no'} |")
+    else:
+        L.append("None: every compared value is identical in both runs.")
+    L += ["", "Code: `python -m src.serve.parity --run`. Automated-label columns are not compared (the tool does not "
+          "run them, D-038)."]
+    REPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+
+
+def record_on_card(note: str | None = None) -> None:
+    """Write the G4 outcome into models/model_card.json, then rebuild the serving schema (it fingerprints the card).
+    `note`: the outcome in plain words for the tool's pages (the cause of any difference, as recorded in the decision log)."""
+    res = json.loads(RESULT.read_text(encoding="utf-8"))
+    card_path = config.MODELS / "model_card.json"
+    card = json.loads(card_path.read_text(encoding="utf-8"))
+    card["gates"]["G4"] = (f"{res['verdict']} (D-055): on 10 of the 192 videos, measured twice, the tool's model "
+                           f"inputs equal the study's in {res['gate_rows_identical']} of {res['gate_rows']} comparisons")
+    if note:
+        card.setdefault("gates_plain", {})["G4"] = note
+    card_path.write_text(json.dumps(card, indent=2, default=float), encoding="utf-8")
+    from src.serve.pipeline import build_schema
+    build_schema()
+    print("model card G4:", card["gates"]["G4"])
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="G4 - training/serving parity (D-055).")
     ap.add_argument("--draw", action="store_true", help="draw the 10 G4 videos (once)")
     ap.add_argument("--dev", action="store_true", help="development check on 2 videos outside the 192")
+    ap.add_argument("--run", action="store_true", help="G4: the 10 drawn videos, twice, fresh folders (task 12.8)")
+    ap.add_argument("--record", action="store_true", help="write the G4 outcome on the model card")
+    ap.add_argument("--note", help="with --record: the outcome in plain words for the tool's pages")
     args = ap.parse_args()
+    if args.run:
+        print(json.dumps(run_g4(), indent=1))
+    if args.record:
+        record_on_card(args.note)
     if args.draw:
         s = draw()
         print(f"-> {SAMPLE.relative_to(config.ROOT)}")

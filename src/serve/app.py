@@ -139,12 +139,17 @@ def result_view(job: dict) -> dict:
         X = pd.DataFrame([{k: (np.nan if x is None else x) for k, x in r["model_inputs"].items()}])
         e = explain(X, art)
         drivers, others = W.driver_lines(e), W.others_line(e)
+    if "speech_unclear" not in r:                                  # results saved before this flag existed
+        import json as _json
+        from src.serve.pipeline import speech_unclear
+        recs = list(Path(r["video"]["work"]).glob("features/*.json"))
+        r["speech_unclear"] = bool(recs) and speech_unclear(_json.loads(recs[0].read_text(encoding="utf-8")))
     b = r.get("base_rate")
     return {"notices": W.top_notices(r, job["inputs"].get("zero_sugar"), art["schema"]),   # 12.7
             "certainty": W.certainty(b) if b else None,
             "youtube_range": W.youtube_range_note(b) if (b and platform == "youtube") else None,
             "drivers": drivers, "others": others, "no_drivers": W.NO_DRIVERS_YOUTUBE if platform == "youtube" else None,
-            "cannot": W.CANNOT, "checks": W.checks_line(art["card"]["gates"]),
+            "cannot": W.CANNOT, "checks": W.checks_line(art["card"]["gates"], art["card"].get("gates_plain")),
             "platform": W.PLATFORM[platform], "platform_key": platform,
             "base": W.base_sentence(r["base_rate"], platform) if r.get("base_rate") else None,
             "followers_from_link": job.get("followers_from_link", False),
@@ -231,7 +236,8 @@ def about():
             b = base_rate(art, p, n)
             cells.append(f"{W.rate_text(b['rate_typical'])} ({W.rate_text(b['rate_80'][0])} to {W.rate_text(b['rate_80'][1])})")
         table.append({"followers": f"{n:,}", "instagram": cells[0], "youtube": cells[1]})
-    return render_template("about.html", T=W.TEXT, card=art["card"], table=table, limits=W.ABOUT_LIMITS)
+    return render_template("about.html", T=W.TEXT, card=art["card"], table=table, limits=W.ABOUT_LIMITS,
+                           g4=W.g4_text(art["card"]["gates"], art["card"].get("gates_plain")))
 
 
 # ------------------------------------------------------------------------------------------ checks

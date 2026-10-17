@@ -3207,6 +3207,68 @@ Always shown, in their sections:
 
 **Never:** hiding a warning when it applies, or softening one because the result looks good.
 
+---
+
+## D-061 - Writing is kept off the repository: a separate `writing/` folder
+
+**Date:** 2026-10-17
+**Status:** Accepted - the researcher's decision (chat, 17 October: only the coding and data part should be on the
+repository, not the reports or papers; then, of the options put to her, "only papers/reports" and "move them all").
+
+**What changes.** A new folder `writing/`, listed in `.gitignore`, holds everything written for people rather than
+produced by the code: `writing/paper/` (the journal template, the paper's facts sheet and template, and exports of the
+paper draft), `writing/progress-reports/` (the weekly reports) and `writing/project/` (proposal, literature survey,
+meeting handout, reference guide). The 14 Word files that sat at the project root were moved there unchanged.
+
+**What does not change.** The repository keeps the code (`src/`), the locked hand codes (`data/coding/`), the method
+notes and this decision log (`docs/`) and the analysis results (`reports/`, including `reports/shared/`), so nothing
+the supervisor can read today disappears. The root `/*.docx` rule stays as a second guard.
+
+---
+
+## D-062 - Results of G4 (task 12.8): nine of ten videos match exactly; the tenth shows that unclear speech is re-read at random
+
+**Date:** 2026-10-17
+**Status:** Accepted - results of D-055 section 6, run as fixed there (researcher: "go, run 12.8"). Output
+`reports/serving_parity.md` (`python -m src.serve.parity --run`, run 1 47.5 min, run 2 37.8 min, about 4 minutes a
+video).
+
+**Result - the gate fails as registered.** Of 420 comparisons of model inputs and outputs (10 videos, both runs), 417
+are identical; of 1,460 comparisons of the measures behind them, 1,439. **Nine of the ten videos match the study
+exactly in both runs** - every model input, the Instagram score position and all 73 measures - including Hindi and
+Turkish speech that is translated, a Reel with silent audio and four videos without speech. The tenth, Instagram
+`Da4ZFCUssvp` (132 s, Swahili speech the engine read with low confidence), differs in its speech-derived measures: the
+share of talking (a model input) was 0.382 in the study, 0.420 in run 1 and 0.372 in run 2; its Instagram score
+position 92.5% in the study, 93.3% in run 1 and 92.5% in run 2. Primary (bit for bit) and secondary (within 1e-6) rules
+both fail on this video.
+
+**Cause, found before anything was changed.** The two records agree in everything before the words: the audio (same
+samples, peak and loudness), the speech regions found, the detected language (Swahili, probability 0.5596) and every
+recorded setting. Only the decoded text differs, and its confidence is very low (average log-probability -2.67 in
+the study, -0.72 and -2.83 in the tool's runs). faster-whisper 1.2.1, used unchanged with its default settings,
+re-decodes a passage at rising temperatures (0.2 to 1.0, with random sampling) whenever its log-probability falls
+below -1.0 or its compression ratio above 2.4; no random seed was set in the study. **So the transcript of unclear
+speech is a random draw - in the study as in the tool - and the tool's two runs differ from each other as much as
+from the study.** It is not a fault of the pipeline (D-055 section 3 holds: the same code, the same settings), and it
+cannot be removed without re-measuring the study's videos, which is not allowed after the results; fixing a seed in
+the tool would make the tool repeatable but still could not reproduce the study's draw.
+
+**How far it reaches in the study:** at least 5 of the 124 analysis-set videos with transcribed speech have a passage
+below those limits (3 Instagram, 2 YouTube) - a lower bound, because a passage that passed after a retry is not
+recorded as such. For them, the speech-derived measures (share of talking, words per minute, voice pitch, speech
+sentiment and emotion, the keyword flags from speech) carry run-to-run noise. Share of talking is one of the three
+features the Instagram model relies on (D-048); the analysis results are not re-run (no rule allows it), and the
+noise is stated as a limitation.
+
+**What follows, as D-055 fixed it:** the tool is released with G4 marked failed - on its model card and About page,
+naming the measure and the size of the difference. **Added after the result, as a warning, not a rule change:** the
+tool now tells the user when a video's speech is unclear, that its transcript and the talking and keyword measures
+can change from run to run (`speech_unclear` in `src/serve/pipeline.py`). Trigger: the study's own low-confidence
+flag of 5.6 (D-027), or a passage below the engine's retry limits (the study's `SUSPECT_LOGPROB` and
+`SUSPECT_COMPRESSION`). The limits alone missed the Swahili video in run 1, whose random retry happened to succeed and
+left no trace; the low-confidence flag caught it in both runs. Cautious by design: it fires on 3 of the 10 G4 videos
+(one changed) and on 30 of the 121 analysis-set videos with speech, so the page says "can change", not "will".
+
 **Note 2026-10-17 - built and checked.** At schema build: the served model's coefficients for hashtags, talking
 and faces all have the stable sign (all three explained); SHAP values of the served model equal the linear formula
 on the 120 (largest gap 0.0); the 120 x 21 background is stored. On the Instagram test clip (no caption): talking

@@ -238,16 +238,34 @@ def top_notices(r: dict, zero_sugar: str | None, schema: dict) -> list[str]:
     s = r.get("instagram_score")
     if s and s.get("outside_the_120"):
         out.append(f"Its Instagram score is {s['outside_the_120']} every one of the 120 training videos.")
+    if r.get("speech_unclear"):
+        out.append("The speech in this video is unclear (the speech engine was unsure of the words or the language). "
+                   "Its reading of unclear speech can change from one run to the next - in the study too - so the share "
+                   "of talking and the keyword measures are less certain.")
     return out
 
 
-def checks_line(gates: dict) -> str:
+def g4_text(gates: dict, plain: dict | None = None) -> str:
+    """The parity check (G4) in plain words, from the model card (its plain note when one was recorded)."""
+    if plain and plain.get("G4"):
+        return plain["G4"]
     g4 = gates.get("G4", "")
-    g4_text = ("the check that the tool measures exactly as the study did is still pending" if g4.startswith("pending")
-               else f"the check that the tool measures exactly as the study did: {g4}")
+    if g4.startswith("pending"):
+        return "the check that the tool measures exactly as the study did is still pending"
+    if g4.startswith("pass within tolerance"):
+        return ("on 10 of the 192 videos, measured twice, the tool's measurements matched the study's to within "
+                "a millionth (not every last digit)")
+    if g4.startswith("pass"):
+        return "on 10 of the 192 videos, measured twice, the tool's measurements matched the study's exactly"
+    return "on 10 of the 192 videos the tool's measurements did not all match the study's - see the About page"
+
+
+def checks_line(gates: dict, plain: dict | None = None) -> str:
+    g4_text_ = g4_text(gates, plain)
     return ("Release checks: the video's content did not beat follower count (so a typical result is shown); the "
             "Instagram score cannot be read as a chance (shown as a position); the ranges were too narrow and were "
-            f"widened (YouTube's still is); {g4_text}.")
+            "widened (YouTube's still is). Does the tool measure exactly as the study did? "
+            f"{g4_text_[:1].upper()}{g4_text_[1:]}.")
 
 
 ABOUT_LIMITS = [
