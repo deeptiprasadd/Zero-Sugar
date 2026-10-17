@@ -10,14 +10,15 @@ or a dated snapshot, kept as a record of how the corpus was built.
 
 | File | What it is |
 |---|---|
-| `shared/youtube_corpus.csv` | The 150 YouTube Shorts. **74 Zero Sugar**, all 74 in the analysis set (`in_analysis_set`) |
-| `shared/instagram_corpus.csv` | The 150 Instagram Reels. **112 Zero Sugar**, all 112 in the analysis set |
+| `shared/youtube_corpus.csv` | The 150 YouTube Shorts. **74 Zero Sugar**, all 74 flagged `in_analysis_set` |
+| `shared/instagram_corpus.csv` | The 150 Instagram Reels. **124 Zero Sugar** (12 added by the by-eye check of 29 Sep), all 124 flagged `in_analysis_set` |
 | `shared/README.md` | How the data was obtained and what is analysed |
 | `shared/data_dictionary.csv`, `shared/codebook.md` | Column definitions; the manual coding definitions |
 
-The analysis set is the Zero Sugar videos with a usable engagement figure: **183** (Instagram 111,
-YouTube 72). The YouTube Zero Sugar label is weakly reliable: the same coder's two looks at 25
-Shorts agreed on 16 (Krippendorff's alpha 0.25). See `shared/README.md`.
+The analysis set is the Zero Sugar videos with a usable engagement figure: **192** (Instagram 120,
+YouTube 72). The Zero Sugar label is weakly reliable: the same coder's two looks agreed on 16 of 25
+YouTube Shorts (Krippendorff's alpha 0.25) and on 4 of 9 Instagram Reels (alpha -0.10). See
+`shared/README.md`. *Counts corrected 2026-10-17: this note still gave the 23 September figures.*
 
 ## Out of date — do not use for counts
 

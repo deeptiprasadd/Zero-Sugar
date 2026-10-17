@@ -1,6 +1,6 @@
 # 11 — Prediction Service (Flask UI)
 
-**Status:** In progress - tool models built 2026-10-09 (D-053/D-054), inference pipeline built 2026-10-17 (D-055); **re-scoped 2026-10-02 by D-046** - gate G1 failed (D-045), so the tool follows section 5's pre-registered fallback: an honest base-rate prediction, video diagnostics, and an Instagram content score labelled exploratory; no platform recommendation. Where this document and D-046 differ, D-046 wins. This is the project's final deliverable and its stated purpose: a tool
+**Status:** Done 2026-10-17 - tool models built 2026-10-09 (D-053/D-054); inference pipeline, intake, web page, explanations and warnings built 2026-10-17 (D-055, D-058-D-060); all four release gates run, G4 last (D-062, section 5); **re-scoped 2026-10-02 by D-046** - gate G1 failed (D-045), so the tool follows section 5's pre-registered fallback: an honest base-rate prediction, video diagnostics, and an Instagram content score labelled exploratory; no platform recommendation. Where this document and D-046 differ, D-046 wins. This is the project's final deliverable and its stated purpose: a tool
 where someone supplies a video (file or link), and gets back a prediction of how it would
 perform **on YouTube Shorts and on Instagram Reels**, so they can decide what to post and
 where.

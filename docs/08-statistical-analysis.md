@@ -194,6 +194,18 @@ Ten tests in their own Benjamini-Hochberg family, same mixed model; the families
 None detected. On YouTube the per-view rate and the follower-based percentile do not rank videos alike
 (Spearman -0.05, description only), so YouTube results here are specific to the follower-based measure (D-005).
 
+### Declared addition, 2026-10-17 - P21: background music behind talking (D-063 spec, D-064 results)
+
+Two tests in their own Benjamini-Hochberg family, same mixed model; the families above are unchanged. Output
+`reports/statistical_results_p21.md`.
+
+| Outcome | Measure | Effect (95% CI) | BH p (model; Spearman) |
+|---|---|---|---|
+| percentile | share of talking time with music behind it (106 videos with talk, 15 accounts) | -1.5 points per SD (-7.0 to +4.0); rho +0.000 | 0.997; 0.997 |
+
+Not detected (minimum detectable r 0.27). The same report completes EDA 6 and fills the proposal's EDA 8 table
+(description only, docs/07 section 7); every proposal item is mapped in [16](16-proposal-coverage.md).
+
 ### Paired sub-analysis
 
 | Metric | Value |

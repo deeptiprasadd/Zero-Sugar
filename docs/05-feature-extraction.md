@@ -65,6 +65,7 @@ feature carries no information.
 | `speech_dur_frac` | Whisper timestamps | ✅ |
 | `words_per_min` | native transcript | ✅ Compute on native, not translated |
 | `music_present` | YAMNet | ✅ |
+| `talk_music_frac` | 5.8's sound windows over its talk segments | ➕ **Added 2026-10-17 (D-063):** background music behind talking - analysis only, not a model feature; not detected (D-064) |
 | `is_original_audio` | Instagram metadata | ✅ **High priority** — strongest single effect in the brand-TikTok study |
 | `rms_energy_mean` | librosa | ✅ |
 | `spectral_centroid_mean` | librosa | ⚠️ |

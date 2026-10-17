@@ -3207,6 +3207,19 @@ Always shown, in their sections:
 
 **Never:** hiding a warning when it applies, or softening one because the result looks good.
 
+**Note 2026-10-17 - built and checked.** At schema build: the served model's coefficients for hashtags, talking
+and faces all have the stable sign (all three explained); SHAP values of the served model equal the linear formula
+on the 120 (largest gap 0.0); the 120 x 21 background is stored. On the Instagram test clip (no caption): talking
+89% of the video against an average of 29% - with the average, the score would sit higher than 78% of the 120
+instead of 89%; faces 0% of frames against 47% - with the average, 96%; hashtags not known (no caption). The
+other 18 inputs together moved its score more than these three, and the page says so. **Warnings seen on the
+running page:** "not Zero Sugar" and "not sure" answers, followers below the training range (1,000), a measure
+above every one of the 192 (on-screen text blocks); certainty "low" on every result (ratio of the range's top to
+bottom about 8,000); YouTube's too-narrow range; no YouTube explanation and why; "what this cannot tell you"; the
+release-check line. Changed after reading the pages: "about 0" instead of "fewer than 1" likes; the certainty level
+no longer printed twice; the with-average sentence shortened; hashtags "not known (no caption was given)"; tables
+kept inside their boxes on a narrow window. `python -m src.serve.app --check`: 6 pages, no forbidden wording.
+
 ---
 
 ## D-061 - Writing is kept off the repository: a separate `writing/` folder
@@ -3269,22 +3282,129 @@ flag of 5.6 (D-027), or a passage below the engine's retry limits (the study's `
 left no trace; the low-confidence flag caught it in both runs. Cautious by design: it fires on 3 of the 10 G4 videos
 (one changed) and on 30 of the 121 analysis-set videos with speech, so the page says "can change", not "will".
 
-**Note 2026-10-17 - built and checked.** At schema build: the served model's coefficients for hashtags, talking
-and faces all have the stable sign (all three explained); SHAP values of the served model equal the linear formula
-on the 120 (largest gap 0.0); the 120 x 21 background is stored. On the Instagram test clip (no caption): talking
-89% of the video against an average of 29% - with the average, the score would sit higher than 78% of the 120
-instead of 89%; faces 0% of frames against 47% - with the average, 96%; hashtags not known (no caption). The
-other 18 inputs together moved its score more than these three, and the page says so. **Warnings seen on the
-running page:** "not Zero Sugar" and "not sure" answers, followers below the training range (1,000), a measure
-above every one of the 192 (on-screen text blocks); certainty "low" on every result (ratio of the range's top to
-bottom about 8,000); YouTube's too-narrow range; no YouTube explanation and why; "what this cannot tell you"; the
-release-check line. Changed after reading the pages: "about 0" instead of "fewer than 1" likes; the certainty level
-no longer printed twice; the with-average sentence shortened; hashtags "not known (no caption was given)"; tables
-kept inside their boxes on a narrow window. `python -m src.serve.app --check`: 6 pages, no forbidden wording.
+---
+
+## D-063 - Specification of P21: the last proposal items (background music, the full EDA 6 table, the proposal's platform table) and a coverage map, written before any of them was set against engagement
+
+**Date:** 2026-10-17
+**Status:** Accepted - **written before any measure below was set against engagement.** Source: the researcher's
+request (chat, 17 October: "compare the coco-cola-proposal.docx with current work and something is missing add
+that"). Like D-050 and D-056, everything here is a **declared addition**: the registered results (D-043, D-045,
+D-048) and the additions of D-051 and D-057 stay exactly as reported. Code `src/stats/hypotheses_p21.py`; output
+`reports/statistical_results_p21.md`, `reports/statistical_family_p21.csv`; coverage map
+`docs/16-proposal-coverage.md`.
+
+**The comparison (17 October, every heading of the proposal read again).** Every predictor, the outcome, the 15
+specific objectives, the nine research questions, the collection and processing lists of Milestones 1-3, EDA 1-9,
+H1-H10, the five models, the seven metrics, the validation list and the SHAP questions are measured, tested,
+explained, or changed with a recorded reason (docs/15) - **except three items**:
+1. **Block B "Background music."** Measured only as music anywhere in the video (`music_present`, `music_frac`).
+   Music *behind someone talking* - what separates "background music" from the separate item "music presence" -
+   was never measured.
+2. **EDA 6 lists seven kinds of emotional content** (positive, neutral, negative, excitement, humour, surprise,
+   happiness) and asks to "then compare engagement". Sentiment was described only as a correlation (Spearman 0.06,
+   docs/07 row 6), never as the three groups, and the seven were never set side by side.
+3. **The proposal's EDA 8 table** (feature x YouTube x Instagram: duration, engagement, caption length, product
+   visibility, creator involvement, emotional content) was never filled as one table; its parts are spread over
+   `reports/eda_numbers.md` and `reports/eda_codes.md`, and its question "does the same marketing strategy work
+   equally well on both platforms?" is answered only inside the profile (D-052).
+
+Checked and already covered, recorded so they are not reopened: thumbnails (YouTube `thumbnail_url` collected;
+the proposal asks to collect them, not to analyse them); "transcript where available" (5.6's own transcripts for
+every video); posting date (video age in every model, the weekend flag, year in EDA 1); class weighting (`balanced`
+in the forest and XGBoost, docs/09); the minority-class rule (the split is 100 / 92, not a minority).
+
+**Only counts were looked at to write this** (no engagement value): the training records hold, per video, 5.8's
+4-second sound windows with a "Music" score and its transcript segments marked talk or sung. Of the 192, **106 have
+talk** (Instagram 60, YouTube 46); the other 86 have no speech, silent audio, unintelligible or only sung speech.
+On those 106 the share defined below has median 0.76, is exactly 0 for 13 and exactly 1 for 22, and is at least 0.5
+for 75. Caption sentiment labels: positive 101, neutral 78, negative 6, missing 7; speech sentiment: positive 45,
+neutral 44, negative 30, missing 73.
+
+**Part A - background music behind talking (a new measure from the existing 5.8 records; nothing re-measured).**
+- `talk_music_frac`: the share of the video's talking time (5.8's transcript segments labelled "talk") during which
+  music is detected. Each 0.1 s of talk takes the music decision of the 4 s window whose centre is nearest - "Music"
+  at least 0.5, 5.8's own threshold. Missing when the video has no talk (never 0).
+- `background_music` (yes/no, for description only): music behind at least half of the talking - 75 yes / 31 no,
+  fixed now from the counts.
+- **Tests - their own Benjamini-Hochberg family of two (q = 0.05):** (1) likelihood-ratio test, 1 df, the z-scored
+  share added to the D-042 controls (platform, log followers, log video age), engagement percentile, mixed model
+  with an account intercept, `fit()` of `src/stats/hypotheses.py`; (2) Spearman with the percentile. Beside the
+  family, never in it: both tests without the 15 AI-character Shorts (D-049); for a detected test the within-account
+  Spearman of D-043; the minimum detectable effect (80% power, alpha 0.05, no clustering - a lower bound).
+- Stated with it: the music score is generic "Music" (genre is not measurable, D-033); talk comes from the
+  speech-to-text segments, so the videos with unclear speech carry run-to-run noise (D-062).
+
+**Part B - EDA 6 completed (description only; no test, no p-value).** One table, the proposal's seven kinds in its
+order: caption sentiment by the sentiment model's own label (positive / neutral / negative - the label it gives,
+5.9; no threshold is chosen here), speech sentiment the same way (videos with English speech), excitement and
+humour (hand codes, D-049), surprise and happiness (the speech emotion labels "surprise" and "joy", 5.9). Per row:
+videos, accounts, Instagram / YouTube, median percentile, and the median without the AI-character Shorts. Cells under
+10 videos are marked thin and not merged (negative captions, 6).
+
+**Part C - the proposal's EDA 8 table, filled (description only, composition first).** Columns Instagram (120) and
+YouTube (72). Rows as the proposal lists them: duration (median seconds); engagement (median likes + comments per
+follower, and for YouTube per view); caption length (median characters); product visibility (share coded
+prominent); creator involvement (share coded creator or celebrity among coded videos; Instagram creator
+collaborations); emotional content (share of positive captions, of joy in speech, of humour, of excitement). For its
+question "does the same strategy work equally well on both platforms?", each row's measure gets a **Spearman with the
+percentile within each platform - description only, no test** - with the standing caveats: platform, selection
+route and account size cannot be separated (docs/08 section 7.9.3(c)); 58 of the 72 YouTube videos come from one
+channel; the Zero Sugar label's repeat reliability (YouTube alpha 0.25, Instagram -0.10).
+
+**Part D - coverage map.** `docs/16-proposal-coverage.md`: every proposal item, in the proposal's order, with its
+status (done / changed / not measurable), where it is answered and the decision behind it. Facts only, for the
+thesis and the supervisor; no new analysis.
+
+**Wording, fixed now:** "associated with", never "causes"; a test not detected is "not detected at this sample
+size" with its minimum detectable effect; Parts B and C are description. **What does not change:** the 20 model
+features, the models, the tool, the hand codes and every result already reported.
 
 ---
 
-## Open decisions
+## D-064 - Results of P21: background music not detected; the full EDA 6 table and the proposal's platform table filled
+
+**Date:** 2026-10-17
+**Status:** Accepted - results of D-063, a declared addition; every earlier result is unchanged.
+**Output:** `reports/statistical_results_p21.md`, `reports/statistical_family_p21.csv`
+(`python -m src.stats.hypotheses_p21`; both fits converged); coverage map `docs/16-proposal-coverage.md`.
+
+**Part A - background music behind talking: not detected.** The measure reproduced the counts D-063 recorded
+before the test (106 videos with talk, 13 at 0, 22 at 1, 75 with music behind at least half of the talking). Share of
+talking time with music behind it: median 0.76 (Instagram 0.66, YouTube 0.84).
+
+| # | Test (106 videos, 15 accounts) | Effect (95% CI) | Raw p | BH p | Without the 15 AI-character Shorts (91) |
+|---|---|---|---|---|---|
+| 1 | LR test, mixed model, 1 df | -1.5 percentile points per SD (-7.0 to +4.0) | 0.636 | 0.997 | -0.5 points, p 0.90 |
+| 2 | Spearman | rho +0.000 | 0.997 | 0.997 | rho +0.075, p 0.48 |
+
+Minimum detectable effect r 0.27 (a lower bound). Described: videos with music behind at least half of the talking
+and those without have the same median percentile (0.556, 75 and 31 videos).
+
+**Part B - EDA 6, the seven kinds side by side (description).** Median percentile: positive captions 0.545 (101),
+neutral 0.546 (78), negative 0.478 (6, thin); positive speech 0.573 (45), neutral 0.565 (44), negative 0.461 (30 -
+0.593 without the AI-character Shorts); excitement 0.522 (84); humour 0.564 (56); surprise in speech 0.538 (15);
+happiness ("joy") in speech 0.683 (25, against 0.542 for other speech emotions; 21 of the 25 are Reels). No pattern
+beyond what H3 already tested (not detected); the joy difference is the largest and rests on 25 videos from 9
+accounts.
+
+**Part C - the proposal's EDA 8 table (description).** Instagram against YouTube: duration median 18.9 s / 20.5 s;
+likes + comments per follower 0.280% / 0.0048% (YouTube per view 1.22%); caption 142.5 / 128.5 characters; product
+prominent 78% / 60%; creator or celebrity 45% / 12% of coded videos; positive captions 64% / 40%; joy in speech
+31% / 8%; humour 34% / 26%; excitement 47% / 44%. **Within each platform the measures point the same way for
+product prominence and joy, and opposite ways for duration (Instagram +0.09, YouTube -0.35), caption length,
+creator or celebrity (+0.35 / -0.10), positive captions (-0.04 / +0.35), humour (+0.25 / -0.35) and excitement**
+(Spearman with the percentile, description only). Read with the standing caveats: YouTube is 72 videos, 58 from one
+channel, and includes the 15 AI-character Shorts; platform, selection route and account size cannot be separated.
+It agrees with the profile (D-052), where talking and faces also point opposite ways on the two platforms - a
+description of these videos, not a tested platform difference (H9 exploratory, D-043).
+
+**Not added after the result:** Part C has no "without the AI-character Shorts" column, because D-063 did not
+specify one; adding it after seeing the table would be a rule chosen by result. The caveat sentence above stands in
+for it.
+
+**Together:** with P21 every item of the proposal is measured, tested or described, or changed with a recorded
+reason - item by item in `docs/16-proposal-coverage.md`. No further content measure is associated with engagement.
 
 ---
 

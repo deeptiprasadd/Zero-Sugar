@@ -173,3 +173,19 @@ descriptive only. Output `reports/eda_codes.md` and four figures (`eda4_product_
   action, and pull several group medians down; every table is also given without them.
 - The codes are weakly reliable where checked (`reports/repeat_check.md`): read every difference as
   tentative.
+
+## 7. Addition, 2026-10-17 - EDA 6 completed and the proposal's EDA 8 table (D-063, D-064)
+
+Description only, on the 192; output `reports/statistical_results_p21.md` (Parts B and C).
+
+- **EDA 6, the proposal's seven kinds side by side.** Median percentile: positive captions 0.545 (101), neutral
+  0.546 (78), negative 0.478 (6, thin); positive speech 0.573 (45), neutral 0.565 (44), negative 0.461 (30);
+  excitement 0.522 (84); humour 0.564 (56); surprise in speech 0.538 (15); happiness ("joy") in speech 0.683 (25,
+  21 of them Reels). Nothing beyond H3 (not detected).
+- **The proposal's table, Instagram / YouTube:** duration 18.9 / 20.5 s; likes + comments per follower 0.280% /
+  0.0048% (YouTube per view 1.22%); caption 142.5 / 128.5 characters; product prominent 78% / 60%; creator or
+  celebrity 45% / 12% of coded videos; positive captions 64% / 40%; joy in speech 31% / 8%; humour 34% / 26%;
+  excitement 47% / 44%. Within each platform, product prominence and joy point the same way; duration, caption
+  length, creator or celebrity, positive captions, humour and excitement point opposite ways (Spearman with the
+  percentile, description). YouTube is 72 videos, 58 from one channel, including the 15 AI-character Shorts;
+  platform, selection route and account size cannot be separated (docs/08 section 7.9.3(c)).

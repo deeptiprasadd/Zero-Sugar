@@ -1,0 +1,3 @@
+test_no,outcome,measure,n,accounts,test,p,conv,effect,mde,p_bh,verdict
+1,percentile (pooled),background music (share of talking time with music behind it),106,15,"LR test (mixed model), 1 df",0.6359714852334916,True,-1.5 pct points per SD (-7.0 to +4.0),r 0.27,0.9967104832337863,not detected at this sample size
+2,percentile (pooled),background music (share of talking time with music behind it),106,15,Spearman,0.9967104832337863,True,rho +0.000,r 0.27,0.9967104832337863,not detected at this sample size
