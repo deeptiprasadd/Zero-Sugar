@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ T.title }}{% endblock %}</title>
+{% block head %}{% endblock %}
+<style>
+  :root { --bg:#fbfaf7; --panel:#ffffff; --ink:#1d1d1b; --ink2:#55534e; --line:#e3e0d8; --accent:#b3121b;
+          --soft:#f3f1ec; --note:#fff7e0; --noteline:#e8cf80; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161615; --panel:#1f1f1d; --ink:#ecebe7; --ink2:#a9a69e; --line:#36352f; --accent:#ff6b6b;
+            --soft:#262623; --note:#2c2717; --noteline:#6b5a22; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { border-bottom:1px solid var(--line); background:var(--panel); }
+  header .in, main { max-width:880px; margin:0 auto; padding:16px; }
+  header a { color:var(--ink); text-decoration:none; font-weight:650; }
+  header nav { float:right; } header nav a { font-weight:400; color:var(--ink2); margin-left:16px; }
+  h1 { font-size:1.6rem; margin:.4em 0 .2em; } h2 { font-size:1.15rem; margin:1.6em 0 .4em; }
+  p.lead, .muted { color:var(--ink2); }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:16px 0; }
+  .note { background:var(--note); border:1px solid var(--noteline); border-radius:8px; padding:10px 14px; }
+  table { width:100%; border-collapse:collapse; font-size:.95rem; }
+  th, td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--ink2); font-weight:600; } td.num, th.num { text-align:right; white-space:nowrap; }
+  label { display:block; font-weight:600; margin:14px 0 4px; } .hint { font-weight:400; color:var(--ink2); font-size:.9rem; }
+  input[type=text], input[type=url], input[type=number], textarea, select { width:100%; padding:9px 10px; border:1px solid var(--line);
+       border-radius:7px; background:var(--soft); color:var(--ink); font:inherit; }
+  textarea { min-height:90px; } .row { display:flex; gap:16px; flex-wrap:wrap; } .row > div { flex:1 1 240px; }
+  .inline label { display:inline; font-weight:400; margin-right:14px; }
+  button { margin-top:18px; padding:11px 20px; background:var(--accent); color:#fff; border:0; border-radius:8px; font:inherit; font-weight:650; cursor:pointer; }
+  details summary { cursor:pointer; font-weight:600; } .err { color:var(--accent); font-weight:600; }
+  .big { font-size:1.15rem; } .tag { display:inline-block; font-size:.8rem; padding:2px 8px; border-radius:999px; background:var(--soft); border:1px solid var(--line); color:var(--ink2); }
+  ol.steps li { margin:4px 0; }
+</style>
+</head>
+<body>
+<header><div class="in"><a href="{{ url_for('index') }}">{{ T.title }}</a>
+  <nav><a href="{{ url_for('index') }}">New video</a><a href="{{ url_for('about') }}">About this tool</a></nav></div></header>
+<main>{% block body %}{% endblock %}</main>
+</body>
+</html>

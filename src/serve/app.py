@@ -1,0 +1,258 @@
+"""Task 12.5 - the tool's web page (D-059): a form, a background job, a result screen and an about page.
+
+    python -m src.serve.app            # http://127.0.0.1:5055 - this computer only
+    python -m src.serve.app --check    # render every saved result and refuse words the wording rules forbid
+
+One video is measured at a time (the graphics card); each job is saved under data/interim/serve/jobs/ so a
+finished result survives a restart. The page shows only what D-046, D-054 and D-059 allow; every sentence comes
+from `src/serve/wording.py`.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import queue
+import sys
+import threading
+import traceback
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+
+from flask import Flask, abort, redirect, render_template, request, url_for
+from werkzeug.utils import secure_filename
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from src import config  # noqa: E402
+from src.serve import wording as W  # noqa: E402
+from src.serve.measure import SERVE, StepFailed  # noqa: E402
+
+HOST, PORT = "127.0.0.1", 5055
+JOBS = SERVE / "jobs"
+UPLOADS = SERVE / "uploads"
+
+app = Flask(__name__, template_folder=str(Path(__file__).parent / "templates"))
+app.config["MAX_CONTENT_LENGTH"] = 210 * 1024 ** 2
+QUEUE: "queue.Queue[str]" = queue.Queue()
+LOCK = threading.Lock()
+
+
+# ------------------------------------------------------------------------------------------ jobs
+def job_file(jid: str) -> Path:
+    return JOBS / f"{jid}.json"
+
+
+def load_job(jid: str) -> dict | None:
+    if not jid.replace("-", "").isalnum():
+        return None
+    p = job_file(jid)
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
+
+def save_job(job: dict) -> None:
+    JOBS.mkdir(parents=True, exist_ok=True)
+    with LOCK:
+        job_file(job["id"]).write_text(json.dumps(job, ensure_ascii=False, indent=1, default=float), encoding="utf-8")
+
+
+def hand_code_questions() -> list[tuple[str, str]]:
+    from src.coding.focus_codes import H, LABEL
+    return [(h, LABEL[h]) for h in H]
+
+
+def run_job(jid: str) -> None:
+    from src.serve import intake
+    job = load_job(jid)
+    job["status"], job["started"] = "running", datetime.now(timezone.utc).isoformat(timespec="seconds")
+    save_job(job)
+    inp = job["inputs"]
+
+    def progress(line: str) -> None:
+        parts = line.split()
+        name = W.GROUP_NAMES.get(parts[0], parts[0]) if parts else line
+        job["progress"].append(f"{name} - done ({parts[1]} s)" if len(parts) > 1 else name)
+        save_job(job)
+
+    try:
+        if inp["link"]:
+            video, d = intake.fetch_link(inp["link"])
+            platform, title = d["platform"], d["title"]
+            caption = "" if inp["no_caption"] else (inp["caption"] if inp["caption"] else d["caption"])
+            followers = inp["followers"]
+            if followers is None and d.get("followers_from_link"):
+                followers, job["followers_from_link"] = float(d["followers_from_link"]), True
+            job["link_details"] = {k: d.get(k) for k in ("platform", "video_id", "account", "duration_sec")}
+        else:
+            video = intake.store_upload(Path(inp["upload_path"]))
+            platform, title = inp["platform"], None
+            caption = "" if inp["no_caption"] else (inp["caption"] or None)
+            followers = inp["followers"]
+        job["platform"], job["caption_used"] = platform, caption
+        collab = inp["collab"] if platform == "instagram" else None
+        r = intake.evaluate(video, platform, caption, title, followers, collab, inp["answers"] or None, log=progress)
+        job["result"], job["status"] = r, "done"
+    except StepFailed as exc:
+        job["status"], job["message"] = "refused", str(exc)
+    except Exception as exc:                                   # recorded for the person, then logged
+        traceback.print_exc()
+        job["status"], job["message"] = "error", f"Something went wrong while measuring ({type(exc).__name__})."
+    job["finished"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    save_job(job)
+
+
+def worker() -> None:
+    while True:
+        jid = QUEUE.get()
+        try:
+            run_job(jid)
+        finally:
+            QUEUE.task_done()
+
+
+# ------------------------------------------------------------------------------------------ views
+def result_view(job: dict) -> dict:
+    """Everything the result page shows, as text, from the saved result (no measuring here)."""
+    from src.serve.pipeline import artefacts
+    art = artefacts()
+    r, platform = job["result"], job["platform"]
+    shares = art["schema"]["flag_shares"]
+    caption = job.get("caption_used")
+    rows = []
+    for key, (name, kind) in W.FEATURES.items():
+        dg = r["diagnostics"].get(key, {})
+        v = dg.get("value")
+        if kind == "yesno":
+            low_all, low_plat = f"{shares[key]['all']:.0%} yes", f"{shares[key][platform]:.0%} yes"
+        else:
+            low_all, low_plat = W.pct_text(dg.get("among_192")), W.pct_text(dg.get(f"among_{platform}"))
+        rows.append({"name": name, "value": W.value_text(key, v, len(caption) if caption is not None else None),
+                     "all": low_all, "platform": low_plat})
+    hand = []
+    for h, d in (r.get("hand_codes") or {}).items():
+        hand.append({"label": d["label"][:1].upper() + d["label"][1:], "answer": "yes" if d["answer"] else "no",
+                     "all": f"{d['share_among_192']:.0%}", "platform": f"{d[f'share_among_{platform}']:.0%}"})
+    return {"platform": W.PLATFORM[platform], "platform_key": platform,
+            "base": W.base_sentence(r["base_rate"], platform) if r.get("base_rate") else None,
+            "followers_from_link": job.get("followers_from_link", False),
+            "ig": W.ig_sentence(r["instagram_score"]) if r.get("instagram_score") else None,
+            "rows": rows, "hand": hand, "missing": W.missing_lines(r["missing"], platform),
+            "seconds": r["timing"]["total_sec"], "reused": r.get("reused_saved_measurement", False)}
+
+
+@app.get("/")
+def index():
+    return render_template("index.html", T=W.TEXT, questions=hand_code_questions())
+
+
+@app.post("/submit")
+def submit():
+    f = request.form
+    link = (f.get("link") or "").strip()
+    upload = request.files.get("video")
+    errors = []
+    if not link and not (upload and upload.filename):
+        errors.append("Choose a video file or paste a link.")
+    if link and upload and upload.filename:
+        errors.append("Choose a video file or a link, not both.")
+    followers = None
+    if (f.get("followers") or "").strip():
+        try:
+            followers = float(f["followers"].replace(",", "").strip())
+            if followers <= 0:
+                raise ValueError
+        except ValueError:
+            errors.append("The follower count must be a positive number.")
+    if not link and f.get("platform") not in ("instagram", "youtube"):
+        errors.append("Choose the platform the video is for.")
+    if link:
+        from src.serve.intake import IntakeRefused, parse_link
+        try:
+            parse_link(link)
+        except IntakeRefused as exc:
+            errors.append(str(exc)[:1].upper() + str(exc)[1:] + ".")
+    if errors:
+        return render_template("index.html", T=W.TEXT, questions=hand_code_questions(), errors=errors, form=f), 400
+    jid = uuid.uuid4().hex[:12]
+    upload_path = None
+    if not link:
+        d = UPLOADS / jid
+        d.mkdir(parents=True, exist_ok=True)
+        upload_path = d / (secure_filename(upload.filename) or "video.mp4")
+        upload.save(upload_path)
+    answers = {h: (1.0 if f.get(h) == "yes" else 0.0) for h, _ in hand_code_questions() if f.get(h) in ("yes", "no")}
+    job = {"id": jid, "created": datetime.now(timezone.utc).isoformat(timespec="seconds"), "status": "queued",
+           "progress": [], "inputs": {
+               "link": link or None, "upload_path": str(upload_path) if upload_path else None,
+               "upload_name": upload.filename if upload_path else None, "platform": f.get("platform"),
+               "followers": followers, "caption": f.get("caption") or "", "no_caption": f.get("no_caption") == "on",
+               "collab": {"yes": True, "no": False}.get(f.get("collab")), "zero_sugar": f.get("zero_sugar"),
+               "answers": answers}}
+    save_job(job)
+    QUEUE.put(jid)
+    return redirect(url_for("job_page", jid=jid))
+
+
+@app.get("/job/<jid>")
+def job_page(jid: str):
+    job = load_job(jid)
+    if job is None:
+        abort(404)
+    if job["status"] == "done":
+        return render_template("result.html", T=W.TEXT, job=job, v=result_view(job))
+    others = [json.loads(p.read_text(encoding="utf-8")) for p in JOBS.glob("*.json")]
+    ahead = sum(1 for j in others if j["id"] != jid and (j["status"] == "running" or
+                                                         (j["status"] == "queued" and j["created"] < job["created"])))
+    return render_template("job.html", T=W.TEXT, job=job, ahead=ahead)
+
+
+@app.get("/about")
+def about():
+    from src.serve.pipeline import artefacts, base_rate
+    art = artefacts()
+    sizes = [50_000, 500_000, 5_000_000]
+    table = []
+    for n in sizes:
+        cells = []
+        for p in ("instagram", "youtube"):
+            b = base_rate(art, p, n)
+            cells.append(f"{W.rate_text(b['rate_typical'])} ({W.rate_text(b['rate_80'][0])} to {W.rate_text(b['rate_80'][1])})")
+        table.append({"followers": f"{n:,}", "instagram": cells[0], "youtube": cells[1]})
+    return render_template("about.html", T=W.TEXT, card=art["card"], table=table, limits=W.ABOUT_LIMITS)
+
+
+# ------------------------------------------------------------------------------------------ checks
+def check_pages() -> int:
+    """Render the about page and every finished job; fail if a forbidden phrase appears."""
+    bad = 0
+    with app.test_client() as c:
+        pages = [("/about", c.get("/about")), ("/", c.get("/"))]
+        for p in sorted(JOBS.glob("*.json")):
+            j = json.loads(p.read_text(encoding="utf-8"))
+            pages.append((f"/job/{j['id']}", c.get(f"/job/{j['id']}")))
+        for url, resp in pages:
+            html = resp.get_data(as_text=True).lower()
+            hits = [w for w in W.FORBIDDEN if w in html]
+            print(f"{resp.status_code} {url}: {'forbidden words ' + str(hits) if hits else 'wording ok'}")
+            bad += bool(hits) or resp.status_code >= 500
+    return bad
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="12.5 - the tool's web page (D-059).")
+    ap.add_argument("--check", action="store_true")
+    args = ap.parse_args()
+    if args.check:
+        sys.exit(1 if check_pages() else 0)
+    restart = sorted((json.loads(p.read_text(encoding="utf-8")) for p in JOBS.glob("*.json")), key=lambda j: j["created"])
+    for j in restart:                                   # a job interrupted by a restart is queued again, in order
+        if j["status"] in ("queued", "running"):
+            j["status"], j["progress"] = "queued", []
+            save_job(j)
+            QUEUE.put(j["id"])
+    threading.Thread(target=worker, daemon=True).start()
+    print(f"Open http://{HOST}:{PORT} - this computer only. Stop with Ctrl+C.")
+    app.run(host=HOST, port=PORT, debug=False, threaded=True, load_dotenv=False)
+
+
+if __name__ == "__main__":
+    main()

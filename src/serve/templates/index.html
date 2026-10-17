@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Check a short video</h1>
+<p class="lead">{{ T.intro }}</p>
+{% if errors %}<div class="note">{% for e in errors %}<p class="err">{{ e }}</p>{% endfor %}</div>{% endif %}
+<form method="post" action="{{ url_for('submit') }}" enctype="multipart/form-data">
+<section>
+  <h2 style="margin-top:0">The video</h2>
+  <div class="row">
+    <div><label for="video">Upload a video file <span class="hint">(mp4, mov, m4v, webm or mkv; up to 3 minutes)</span></label>
+         <input id="video" name="video" type="file" accept=".mp4,.mov,.m4v,.webm,.mkv,video/*"></div>
+    <div><label for="link">or paste a link <span class="hint">(an Instagram Reel or a YouTube Short)</span></label>
+         <input id="link" name="link" type="url" placeholder="https://www.instagram.com/reel/..." value="{{ form.link if form else '' }}"></div>
+  </div>
+  <label for="platform">Platform <span class="hint">(with a link, the link decides)</span></label>
+  <select id="platform" name="platform">
+    <option value="instagram" {% if form and form.platform == 'instagram' %}selected{% endif %}>Instagram Reels</option>
+    <option value="youtube" {% if form and form.platform == 'youtube' %}selected{% endif %}>YouTube Shorts</option>
+  </select>
+  <label for="followers">Followers of the account <span class="hint">(needed for "what a typical video gets"; with a YouTube link, leave empty to use the channel's count)</span></label>
+  <input id="followers" name="followers" type="text" inputmode="numeric" placeholder="e.g. 500000" value="{{ form.followers if form else '' }}">
+  <label for="caption">Caption <span class="hint">(YouTube: the title on the first line, then the description. With a link, leave empty to use the post's own caption. Empty means "not known".)</span></label>
+  <textarea id="caption" name="caption">{{ form.caption if form else '' }}</textarea>
+  <div class="inline"><label><input type="checkbox" name="no_caption"> This post has no caption</label></div>
+</section>
+<section>
+  <h2 style="margin-top:0">Two questions</h2>
+  <label>Does the video show Coca-Cola Zero Sugar? <span class="hint">(the tool learned only from Zero Sugar videos)</span></label>
+  <div class="inline"><label><input type="radio" name="zero_sugar" value="yes" checked> Yes</label>
+    <label><input type="radio" name="zero_sugar" value="no"> No</label>
+    <label><input type="radio" name="zero_sugar" value="unsure"> Not sure</label></div>
+  <label>Instagram only: is the post a collaboration with a creator?</label>
+  <div class="inline"><label><input type="radio" name="collab" value="yes"> Yes</label>
+    <label><input type="radio" name="collab" value="no"> No</label>
+    <label><input type="radio" name="collab" value="unknown" checked> Don't know</label></div>
+</section>
+<section>
+  <details><summary>Optional: describe the video in your own words (11 yes/no questions)</summary>
+  <p class="muted">{{ T.hand_lead }}</p>
+  <table><tr><th>Does the video have ...</th><th>Yes</th><th>No</th><th>Skip</th></tr>
+  {% for key, label in questions %}
+    <tr><td>{{ label }}</td>
+      <td><input type="radio" name="{{ key }}" value="yes" aria-label="{{ label }}: yes"></td>
+      <td><input type="radio" name="{{ key }}" value="no" aria-label="{{ label }}: no"></td>
+      <td><input type="radio" name="{{ key }}" value="skip" checked aria-label="{{ label }}: skip"></td></tr>
+  {% endfor %}</table>
+  </details>
+</section>
+<button type="submit">Measure the video</button>
+<p class="muted">Measuring takes about 3 minutes. Everything stays on this computer, except the request a link needs to reach Instagram or YouTube.</p>
+</form>
+{% endblock %}

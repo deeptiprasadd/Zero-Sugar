@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}About this tool{% endblock %}
+{% block body %}
+<h1>About this tool</h1>
+<section>
+  <h2 style="margin-top:0">What it learned from</h2>
+  <p>{{ card.training_set }}. Engagement means likes plus comments per follower, read at least 7 days after posting.
+     Only Coca-Cola's own accounts and their creator collaborations, so other brands and very small or very large
+     accounts are outside what it has seen (followers {{ '{:,.0f}'.format(card.followers_range[0]) }} to {{ '{:,.0f}'.format(card.followers_range[1]) }}).</p>
+  <ul>{% for l in limits %}<li>{{ l }}</li>{% endfor %}</ul>
+</section>
+<section>
+  <h2 style="margin-top:0">The four checks, and how each came out</h2>
+  <table>
+    <tr><td><strong>1. Does the video's content beat follower count alone?</strong></td>
+        <td>No. For accounts the models had not seen, no model predicted better than chance, and content added nothing to reach. So the tool shows what a typical video gets, not a forecast.</td></tr>
+    <tr><td><strong>2. Can the Instagram score be read as a chance?</strong></td>
+        <td>No. Its level shifts each time the model is refitted, so it is shown only as a position among the 120 Instagram videos, labelled exploratory.</td></tr>
+    <tr><td><strong>3. Do the ranges hold as often as they claim?</strong></td>
+        {% set g3 = card.outputs.base_rate.g3_interval_coverage %}
+        <td>Not at first ({{ '%.0f'|format(100 * g3.overall) }}% instead of 80%), so they were widened by {{ '%.2f'|format(g3.widen) }} times.
+            Instagram's then hold {{ '%.0f'|format(100 * g3.after_widening.instagram) }}% of the time; YouTube's still only
+            {{ '%.0f'|format(100 * g3.after_widening.youtube) }}%, so they are too narrow for YouTube.</td></tr>
+    <tr><td><strong>4. Does the tool measure exactly as the study did?</strong></td>
+        <td>Pending: the final check on 10 of the 192 videos is still to run. On two test videos outside the 192, all 73 measures matched exactly.</td></tr>
+  </table>
+</section>
+<section>
+  <h2 style="margin-top:0">Instagram and YouTube, described - not a recommendation</h2>
+  <p>Typical engagement for a new account, with the 80% range, from the same model the result page uses:</p>
+  <table><tr><th>Followers</th><th>Instagram Reels</th><th>YouTube Shorts</th></tr>
+  {% for r in table %}<tr><td>{{ r.followers }}</td><td>{{ r.instagram }}</td><td>{{ r.youtube }}</td></tr>{% endfor %}</table>
+  <p class="muted">The study found no difference between the platforms that it could rely on (about 3 times higher on Instagram, but anywhere from 0.5 to 17 times). The two platforms' videos were also chosen differently - most Instagram videos were picked by hand, and 58 of the 72 YouTube videos come from one global channel - so the platforms cannot be separated from how their videos were chosen.</p>
+</section>
+<section>
+  <h2 style="margin-top:0">What it cannot tell you</h2>
+  <p>Posting time, paid promotion, how the platform's own systems spread a video, and anything about sales or reach beyond likes and comments are not measured. Instagram does not publish reliable view counts, so no Instagram reach is shown.</p>
+</section>
+{% endblock %}

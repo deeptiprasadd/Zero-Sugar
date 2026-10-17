@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Result</h1>
+<p class="lead">{{ v.platform }}{% if job.inputs.upload_name %} · {{ job.inputs.upload_name }}{% elif job.inputs.link %} · {{ job.inputs.link }}{% endif %}
+  · {% if v.reused %}same video and details as an earlier check, so its saved measurement was used{% else %}measured in {{ '%.0f'|format(v.seconds) }} s{% endif %}</p>
+
+<section>
+  <h2 style="margin-top:0">{{ T.base_head }}</h2>
+  <p class="muted">{{ T.base_lead }}</p>
+  {% if v.base %}
+    {% for line in v.base %}<p{% if loop.first %} class="big"{% endif %}>{{ line }}</p>{% endfor %}
+    {% if v.followers_from_link %}<p class="tag">follower count from the link</p>{% endif %}
+  {% else %}<p>{{ T.base_no_followers }}</p>{% endif %}
+</section>
+
+{% if v.ig %}
+<section>
+  <h2 style="margin-top:0">{{ T.ig_head }} <span class="tag">exploratory</span></h2>
+  <p class="big">{{ v.ig }}</p>
+  <p class="muted">{{ T.ig_lead }}</p>
+</section>
+{% endif %}
+
+<section>
+  <h2 style="margin-top:0">{{ T.diag_head }}</h2>
+  <p class="muted">{{ T.diag_lead }}</p>
+  <table>
+    <tr><th>Measure</th><th>This video</th><th class="num">Of the 192</th><th class="num">Of {{ v.platform }}</th></tr>
+    {% for r in v.rows %}<tr><td>{{ r.name }}</td><td>{{ r.value }}</td><td class="num">{{ r.all }}</td><td class="num">{{ r.platform }}</td></tr>{% endfor %}
+  </table>
+</section>
+
+{% if v.hand %}
+<section>
+  <h2 style="margin-top:0">{{ T.hand_head }}</h2>
+  <p class="muted">{{ T.hand_lead }}</p>
+  <table><tr><th>Measure</th><th>Your answer</th><th class="num">"Yes" in the 192</th><th class="num">"Yes" in {{ v.platform }}</th></tr>
+  {% for h in v.hand %}<tr><td>{{ h.label }}</td><td>{{ h.answer }}</td><td class="num">{{ h.all }}</td><td class="num">{{ h.platform }}</td></tr>{% endfor %}</table>
+</section>
+{% endif %}
+
+<section>
+  <h2 style="margin-top:0">{{ T.missing_head }}</h2>
+  <ul>{% for m in v.missing %}<li>{{ m }}</li>{% endfor %}</ul>
+</section>
+<p><a href="{{ url_for('about') }}">{{ T.about_link }}</a> · <a href="{{ url_for('index') }}">Check another video</a></p>
+{% endblock %}

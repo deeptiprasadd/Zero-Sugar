@@ -170,6 +170,13 @@ re-submitted must not be re-extracted.
 
 Three screens. Keep it plain; the audience is a marketer, not a data scientist.
 
+> **As built, 2026-10-17 (D-059, task 12.5).** Run `python -m src.serve.app` and open
+> `http://127.0.0.1:5055` (this computer only). Screens: the form, a progress page (one video at a time), the
+> result, and "About this tool". Where this section and D-046/D-054/D-059 differ, the decisions win: no platform
+> recommendation, no probability, no single predicted number, no SHAP drivers beyond the three of D-047 rule 9
+> (task 12.6). Every sentence is in `src/serve/wording.py`; `python -m src.serve.app --check` renders every page
+> and refuses forbidden wording.
+
 ### 4.1 Input
 Drag-and-drop or paste a link. Platform toggle (YouTube / Instagram / both). Follower count
 field, with a visible note that the prediction is substantially weaker without it.
@@ -239,6 +246,7 @@ _Append dated entries as the service is built._
 | 2026-09-12 | Deliverable added to scope (D-017); this document written | Method specified; build begins after Phase 10 |
 | 2026-10-02 | G1 failed (D-045); tool re-scoped to the pre-registered fallback (D-046) | Base rate + diagnostics + exploratory Instagram content score; no platform recommendation. Pooled models saved in `models/` stay for comparison, not for serving |
 | 2026-10-09 | 12.1-12.2 done (D-053 spec, D-054 results) | Base rate fitted; G3 failed (67%; YouTube 49%) -> interval widened x1.26, YouTube still warned (69%). Instagram score: G2 failed as fitted and after Platt -> shown only as a position among the 120 videos, no probability. G4 pending (12.8). `reports/serving_models.md` |
+| 2026-10-17 | 12.5 web page (D-059 spec first) | `src/serve/app.py`, `wording.py`, `templates/`. Tested with an upload (saved measurement reused), a YouTube link (cached, no new download), a non-video (refused in plain words) and an invalid form; wording check passed |
 | 2026-10-17 | 12.4 intake (D-058 spec first) | `src/serve/intake.py`: uploads checked before they are stored and kept once by fingerprint; Instagram and YouTube links read logged out (comments stripped), over-length videos refused before download, files fetched with the corpus's own download settings; results reused for the same video and inputs. Link forms and refusals tested offline; a live link test is pending |
 | 2026-10-17 | 12.3 inference pipeline (D-055 spec first) | `src/serve/measure.py`, `pipeline.py`, `parity.py`, `src/features/derived.py`, `models/serving_schema.json`. Training tables identical before/after moving the derived inputs. G4 sample drawn before any run (`reports/serving_parity_sample.csv`). Development check on 2 corpus videos outside the 192: 73/73 features identical; 3-4 min a video. G4 itself in 12.8 |
 | 2026-10-02 | SHAP done (D-047 spec, D-048 results) | The tool's "drivers" may name only three features, from the Instagram logistic model: hashtags, share with talking, share of frames with a face. That model's probabilities barely move (80% of videos 0.45-0.56), so G2 (task 12.2) decides whether the Instagram score is shown as a probability at all |

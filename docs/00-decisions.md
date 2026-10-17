@@ -3074,6 +3074,80 @@ the pipeline refused it; fixed, the file removed). The same clip uploaded twice:
 same score position as the 12.3 run), then reused in 15 s with the base rate recomputed for a new follower
 count. **Not yet tested: a live link** - that downloads a video, and waits for the researcher's approval.
 
+**Note 2026-10-17, later - live links tested (researcher's approval, chat 17 Oct: "yes test the links").** One
+Instagram Reel (DaKsr6OzHqf, 1.8 MB, 10 s) and one YouTube Short (nUsWSsbWwYg, 5.3 MB, 7 s), both corpus videos
+outside the 192, fetched logged out: **each downloaded file is byte-for-byte identical to the corpus file**
+(same SHA-256), and each caption equals the corpus caption, so the measurements are those already checked
+(73/73, D-055 note). YouTube did not ask for a sign-in this time and gave the channel's follower count (4.82
+million); Instagram gave none. The Instagram handle was read from the wrong field (a number); fixed to the field
+the collection code uses, and the one stored record corrected from the corpus.
+
+---
+
+## D-059 - Specification of the tool's web page (task 12.5), written before it was built
+
+**Date:** 2026-10-17
+**Status:** Accepted - written before the page code. Code `src/serve/app.py` (Flask), `src/serve/wording.py`
+(every sentence the page shows), `src/serve/templates/`. Drivers (12.6) and warnings (12.7) are added to the same
+page in their own tasks; this entry fixes the page and what it may say.
+
+**Where it runs.** On this computer only: `python -m src.serve.app` serves `http://127.0.0.1:5055`, bound to
+127.0.0.1 so no other machine can reach it. No accounts, no sign-in. Uploaded files, link downloads and results
+stay under `data/interim/serve/` (gitignored). Nothing is sent anywhere except the platform request a link needs
+(D-058).
+
+**What it asks** (one screen):
+- a video file **or** a link (D-058);
+- the platform (Instagram or YouTube; with a link, the link decides);
+- the account's follower count - asked every time (rule 7 of the task list); with a YouTube link that gives one,
+  an empty field uses it and the page says "from the link";
+- the caption: empty means **not known** (missing), unless the box "this post has no caption" is ticked (then a
+  real empty caption); with a link, an empty field uses the link's caption;
+- Instagram: "Is this post a collaboration with a creator?" yes / no / don't know (don't know = missing);
+- "Does the video show Coca-Cola Zero Sugar?" yes / no / not sure - the models were fitted on Zero Sugar
+  videos only (D-030); the answer feeds task 12.7's notice and changes no number;
+- optional, folded away: the 11 hand-coded yes/no measures of D-050 (product prominent, logo prominent, a person,
+  creator or celebrity, humour, excitement, excited voice, call to action, sponsored, lifestyle, homemade look),
+  each "yes / no / skip" - shown beside the share among the 192, **never used in any number** (D-051).
+
+**While it works.** One video at a time (the graphics card); the page shows the queue position and each of the
+five measuring groups as it finishes, refreshing every few seconds; a refusal (D-055 section 2, D-058) is shown in
+its plain words.
+
+**What it shows**, in this order, worded as fixed in `wording.py`:
+1. **What a typical video gets** (D-053/D-054): the typical engagement rate for a new account of that size and
+   its 80% range, with the likes + comments range those give - labelled "the models could not predict better than
+   this for an account they have not seen". Never a single predicted number, never "this video will get".
+2. **Instagram only - the exploratory score** (D-054): "higher than X% of the 120 Instagram Zero Sugar videos,
+   scored by the same model", labelled exploratory, with its measured accuracy (0.70 on unseen accounts) and that
+   its scores barely move; **no probability**.
+3. **The video's measures beside the 192**: each of the 20 in plain units, and the share of the 192 (and of that
+   platform's videos) with a lower value; yes/no measures as "yes / no" beside the share of the 192 with "yes".
+   Headed "a description, not advice: none of these was shown to raise engagement" (D-043, D-046 item 2).
+4. **Your descriptions beside the 192** (if answered).
+5. **What the tool did not have** - the missing inputs and how they were filled (D-055 section 5).
+6. A link to **"About this tool"**: what it was trained on, the four checks and how each came out (G1 failed, G2
+   failed, G3 failed and widened, G4 pending - in plain words), and how Zero Sugar videos fared on each platform
+   described only, with the selection caveat (D-046 item 4).
+
+**Never on the page:** a platform recommendation (D-046), a probability, "causes", "drives", "will get", or any
+number from the pooled models or from the automated labels.
+
+**Note 2026-10-17 - built and tested.** Four submissions to the running page: an upload with two optional
+answers (the saved measurement reused; the page says so), a YouTube link (from the cached link record - no new
+download; follower count 4.82 million taken from the link and marked so; caption from the link), a file that is
+not a video (refused: "This file could not be opened as a video"), and an invalid form (two plain errors, nothing
+queued). `python -m src.serve.app --check` rendered the form, the About page and the three jobs: no forbidden
+wording. Changed after the first look: the waiting page now counts the video being measured; on a reused result
+the page says the saved measurement was used instead of an old timing; the table heading says that videos with
+the same value count half; the About page shows the limitations in plain words rather than the model card's
+technical lines. Not on the page yet, by design: the three Instagram drivers (12.6) and the warnings, including
+YouTube's too-narrow range and the Zero Sugar answer (12.7).
+
+---
+
+## Open decisions
+
 ---
 
 ## Open decisions

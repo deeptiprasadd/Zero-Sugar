@@ -105,7 +105,9 @@ def link_details(url: str) -> dict:
         caption = ((info.get("title") or "") + "\n" + (info.get("description") or "")).strip()
     else:
         caption = info.get("description") or ""
-    d = {"platform": platform, "video_id": vid, "link": canon, "account": info.get("uploader_id") or info.get("channel"),
+    # Instagram's handle is yt-dlp's `channel` (its `uploader_id` is a number), as src/collect/instagram_links.py reads it
+    account = info.get("channel") if platform == "instagram" else (info.get("uploader_id") or info.get("channel"))
+    d = {"platform": platform, "video_id": vid, "link": canon, "account": account,
          "caption": caption, "title": title, "duration_sec": info.get("duration"),
          "followers_from_link": info.get("channel_follower_count"),
          "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

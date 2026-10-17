@@ -80,10 +80,14 @@ def build_schema() -> dict:
     if list(model.feature_names_in_) != order:
         raise SystemExit("the saved Instagram model's inputs differ from the model card's feature order")
     base = json.loads((config.MODELS / "base_rate.json").read_text(encoding="utf-8"))
+    focus["creator_collab_f"] = derived.flag01(focus["creator_collab"])
+    flag_shares = {c: {grp: round(float(g[c].dropna().mean()), 4)
+                       for grp, g in [("all", focus), *focus.groupby("platform")]}
+                   for c in ("kw_event", "kw_promotional", "creator_collab_f")}   # share with "yes", for the page
     schema = {
         "decision": "D-055", "built": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "content_features": list(RAW.values()), "feature_order": order,
-        "caplen_reference": ref, "step_params": step_params,
+        "caplen_reference": ref, "step_params": step_params, "flag_shares": flag_shares,
         "ranges": {"duration_sec": [float(feats["duration_sec"].min()), float(feats["duration_sec"].max())],
                    "aspect_ratio": [float(feats["aspect_ratio"].min()), float(feats["aspect_ratio"].max())],
                    "followers": base["followers_range"], "max_sec": MAX_SEC},

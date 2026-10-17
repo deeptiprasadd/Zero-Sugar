@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block head %}{% if job.status in ('queued', 'running') %}<meta http-equiv="refresh" content="4">{% endif %}{% endblock %}
+{% block body %}
+{% if job.status == 'refused' %}
+  <h1>The video could not be measured</h1>
+  <section class="note"><p class="big">{{ job.message[:1]|upper }}{{ job.message[1:] }}.</p></section>
+  <p><a href="{{ url_for('index') }}">Try another video</a></p>
+{% elif job.status == 'error' %}
+  <h1>Something went wrong</h1>
+  <section class="note"><p>{{ job.message }} The details are in the tool's log window.</p></section>
+  <p><a href="{{ url_for('index') }}">Try again</a></p>
+{% else %}
+  <h1>Measuring the video</h1>
+  <section>
+    {% if job.status == 'queued' %}
+      <p class="big">Waiting{% if ahead %} - {{ ahead }} video{{ 's' if ahead > 1 }} ahead{% endif %}. One video is measured at a time.</p>
+    {% else %}
+      <p class="big">Working - this takes about 3 minutes. The page refreshes by itself.</p>
+    {% endif %}
+    <ol class="steps">{% for p in job.progress %}<li>{{ p }}</li>{% endfor %}</ol>
+  </section>
+{% endif %}
+{% endblock %}
