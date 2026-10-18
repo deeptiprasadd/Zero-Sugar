@@ -103,6 +103,7 @@ TEXT = {
                   "typical result for a Zero Sugar video from an account of this size, not a forecast for this video."),
     "base_no_followers": "Enter the account's follower count to see what a typical video gets.",
     "ig_head": "Instagram content score (exploratory)",
+    "ig_head_short": "Instagram content score",
     "ig_lead": ("Found in a secondary analysis, not confirmed. On accounts it had not seen, the model ranked "
                 "videos better than chance (0.70 on a scale where 0.5 is chance), but its scores barely move and "
                 "cannot be read as a chance of high engagement, so no probability is shown."),
@@ -116,6 +117,34 @@ TEXT = {
                   "They are not used in any number above."),
     "missing_head": "What the tool did not have",
     "about_link": "About this tool: what it learned from and how well it works",
+    # D-065: the redesigned pages and the examples box
+    "tagline": "Measures a short video the way the study measured 192 Coca-Cola Zero Sugar videos.",
+    "footer": ("Runs on this computer only. Nothing is sent anywhere, except the request a link needs to reach "
+               "Instagram or YouTube."),
+    "examples_head": "Try an example",
+    "examples_lead": ("Six videos from the study's collection that no model was fitted on: five Zero Sugar videos "
+                      "(likes hidden or comments off) and one regular Reel that shows the warning. Click one to fill "
+                      "the form with its real details."),
+    "examples_ready": "ready",
+    "examples_not_ready": "~3 min",
+    "example_chosen": "Example from the study's collection",
+    "example_clear": "Use my own video instead",
+    "step_video": "The video",
+    "step_account": "The account and the caption",
+    "step_questions": "Two questions",
+    "step_hand": "Optional: describe the video yourself",
+    "drop_title": "Drop a video file here, or click to choose one",
+    "drop_hint": "mp4, mov, m4v, webm or mkv - up to 3 minutes",
+    "or_link": "or paste an Instagram Reel or YouTube Short link",
+    "submit": "Measure the video",
+    "submit_note": "Measuring takes about 3 minutes; a video measured before with the same details opens at once.",
+    "progress_head": "Measuring the video",
+    "progress_lead": "This takes about 3 minutes. The page updates by itself.",
+    "kpi_rate_label": "of followers like or comment, typically",
+    "kpi_range_label": "Eight in ten such videos fall between",
+    "kpi_ig_label": "higher than this share of the 120 Instagram Zero Sugar videos, scored by the same model",
+    "kpi_no_ig": "No content score for YouTube",
+    "bar_note": "The bar shows where this video sits among the 192: left = lower than all of them, right = higher.",
 }
 
 
@@ -178,6 +207,9 @@ def driver_lines(e: dict) -> list[dict]:
                 f"{t['more']} higher. ")
         if more_or_less == "the same":
             line += "This video sits at the average, so this measure does not move its position."
+        elif round(d["position_at_average"]) == round(d["position_with"]):     # D-065: no "62%, not 62%"
+            line += (f"With the average instead, its position would barely change "
+                     f"({where_text(d['position_with'])} of the 120).")
         else:
             line += (f"With the average instead, it would score {where_text(d['position_at_average'])} of the 120, "
                      f"not {where_text(d['position_with'])}.")

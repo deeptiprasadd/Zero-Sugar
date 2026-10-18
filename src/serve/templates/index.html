@@ -1,52 +1,211 @@
 {% extends "base.html" %}
+{% block style %}
+  .layout { display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:22px; align-items:start; }
+  .layout aside { position:sticky; top:16px; order:2; }
+  @media (max-width:900px) { .layout { grid-template-columns:1fr; } .layout aside { position:static; order:0; } }
+  .step { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .step .n { width:26px; height:26px; border-radius:50%; background:var(--head); color:#fff; display:grid; place-items:center;
+             font-size:.82rem; font-weight:700; flex:none; }
+  @media (prefers-color-scheme: dark) { .step .n { background:var(--soft); border:1px solid var(--line); } }
+  .step h2 { margin:0; }
+  label.f { display:block; font-weight:620; margin:14px 0 6px; } label.f .hint, .hint { font-weight:400; color:var(--ink2); font-size:.88rem; }
+  input[type=text], input[type=url], textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:9px;
+       background:var(--soft); color:var(--ink); font:inherit; }
+  input[type=text]:focus, input[type=url]:focus, textarea:focus { outline:2px solid var(--accent); outline-offset:0; background:var(--panel); }
+  textarea { min-height:96px; resize:vertical; }
+  .drop { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:4px;
+          border:2px dashed var(--line); border-radius:12px; padding:22px 14px; cursor:pointer; background:var(--soft); }
+  .drop:hover, .drop.over { border-color:var(--accent); background:var(--accent-soft); }
+  .drop strong { font-weight:650; } .drop .file { font-weight:650; color:var(--accent); }
+  .drop input { position:absolute; width:1px; height:1px; opacity:0; }
+  .chosen { display:none; align-items:center; gap:12px; flex-wrap:wrap; justify-content:space-between; border:1px solid var(--line);
+            border-left:4px solid var(--accent); border-radius:10px; padding:12px 14px; background:var(--soft); }
+  .chosen.on { display:flex; } .hide { display:none !important; }
+  .pills { display:flex; flex-wrap:wrap; gap:8px; }
+  .pill { position:relative; } .pill input { position:absolute; opacity:0; width:1px; height:1px; }
+  .pill span { display:inline-block; padding:7px 14px; border:1px solid var(--line); border-radius:999px; cursor:pointer;
+               background:var(--panel); font-size:.95rem; }
+  .pill input:checked + span { background:var(--head); color:#fff; border-color:var(--head); }
+  @media (prefers-color-scheme: dark) { .pill input:checked + span { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); } }
+  .pill input:focus-visible + span { outline:3px solid var(--accent); outline-offset:2px; }
+  .pill input:disabled + span { opacity:.55; cursor:not-allowed; }
+  .check { display:flex; gap:8px; align-items:center; margin-top:8px; font-size:.95rem; }
+  .qrow { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; padding:8px 0; border-bottom:1px solid var(--line); }
+  .qrow:last-child { border-bottom:0; } .qrow .pill span { padding:4px 11px; font-size:.88rem; }
+  .exlist { display:flex; flex-direction:column; gap:6px; max-height:430px; overflow-y:auto; margin-top:10px; }
+  button.exrow { display:grid; grid-template-columns:1fr auto; gap:2px 10px; align-items:center; width:100%; text-align:left;
+                 font:inherit; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:9px;
+                 padding:8px 10px; cursor:pointer; }
+  button.exrow:hover { border-color:var(--accent); }
+  button.exrow.sel { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft); }
+  .exrow .acc { font-weight:650; font-size:.93rem; } .exrow .sub { grid-column:1; font-size:.8rem; color:var(--ink2); }
+  .exrow .go { grid-row:1 / span 2; grid-column:2; font-size:.82rem; font-weight:700; color:var(--accent); }
+  .exrow .st { font-size:.72rem; font-weight:650; } .exrow .st.ok { color:var(--okink); } .exrow .st.wait { color:var(--ink3); }
+  .errs { background:var(--accent-soft); color:var(--accent); border-radius:12px; padding:12px 16px; margin:0 0 16px; font-weight:600; }
+  .errs p { margin:.2em 0; }
+  .submitbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  @media (max-width:560px) { .submitbar .btn { width:100%; } }
+  @media (max-width:900px) { .exlist { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); max-height:none; } }
+  @media (max-width:560px) { .exlist { max-height:290px; overflow-y:auto; } }
+{% endblock %}
 {% block body %}
 <h1>Check a short video</h1>
 <p class="lead">{{ T.intro }}</p>
-{% if errors %}<div class="note">{% for e in errors %}<p class="err">{{ e }}</p>{% endfor %}</div>{% endif %}
-<form method="post" action="{{ url_for('submit') }}" enctype="multipart/form-data">
-<section>
-  <h2 style="margin-top:0">The video</h2>
-  <div class="row">
-    <div><label for="video">Upload a video file <span class="hint">(mp4, mov, m4v, webm or mkv; up to 3 minutes)</span></label>
-         <input id="video" name="video" type="file" accept=".mp4,.mov,.m4v,.webm,.mkv,video/*"></div>
-    <div><label for="link">or paste a link <span class="hint">(an Instagram Reel or a YouTube Short)</span></label>
-         <input id="link" name="link" type="url" placeholder="https://www.instagram.com/reel/..." value="{{ form.link if form else '' }}"></div>
+{% if errors %}<div class="errs" role="alert">{% for e in errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+<div class="layout">
+<aside aria-labelledby="ex-head">
+  <div class="card">
+    <h2 id="ex-head">{{ T.examples_head }}</h2>
+    <p class="small muted">{{ T.examples_lead }}</p>
+    <div class="exlist">
+    {% for e in examples %}
+      <button type="button" class="exrow" id="ex-{{ e.key }}" data-example="{{ e.key }}" aria-label="Use the example {{ e.label }}">
+        <span><span class="acc">{{ e.account }}</span> <span class="tiny">{{ 'Instagram' if e.platform == 'instagram' else 'YouTube' }} · {{ '%.0f'|format(e.duration) }} s</span></span>
+        <span class="go">Use &rarr;</span>
+        <span class="sub">{{ e.notes|join(' · ') }} · {{ e.why }} · <span class="st {{ 'ok' if e.ready else 'wait' }}">{{ T.examples_ready if e.ready else T.examples_not_ready }}</span></span>
+      </button>
+    {% endfor %}
+    </div>
   </div>
-  <label for="platform">Platform <span class="hint">(with a link, the link decides)</span></label>
-  <select id="platform" name="platform">
-    <option value="instagram" {% if form and form.platform == 'instagram' %}selected{% endif %}>Instagram Reels</option>
-    <option value="youtube" {% if form and form.platform == 'youtube' %}selected{% endif %}>YouTube Shorts</option>
-  </select>
-  <label for="followers">Followers of the account <span class="hint">(needed for "what a typical video gets"; with a YouTube link, leave empty to use the channel's count)</span></label>
+</aside>
+
+<form method="post" action="{{ url_for('submit') }}" enctype="multipart/form-data" id="form">
+<input type="hidden" name="example" id="example" value="{{ form.example if form else '' }}">
+<div class="card">
+  <div class="step"><span class="n">1</span><h2>{{ T.step_video }}</h2></div>
+  <div class="chosen" id="chosen" aria-live="polite">
+    <div><div class="tiny">{{ T.example_chosen }}</div><div id="chosen-name" style="font-weight:650"></div></div>
+    <button type="button" class="btn ghost" id="clear-ex">{{ T.example_clear }}</button>
+  </div>
+  <div id="own">
+    <label class="drop" id="drop" for="video">
+      <input id="video" name="video" type="file" accept=".mp4,.mov,.m4v,.webm,.mkv,video/*">
+      <strong>{{ T.drop_title }}</strong>
+      <span class="hint">{{ T.drop_hint }}</span>
+      <span class="file" id="file-name"></span>
+    </label>
+    <label class="f" for="link">{{ T.or_link }}</label>
+    <input id="link" name="link" type="url" placeholder="https://www.instagram.com/reel/..." value="{{ form.link if form else '' }}">
+  </div>
+  <label class="f">Platform <span class="hint">(with a link, the link decides)</span></label>
+  <div class="pills" role="radiogroup" aria-label="Platform">
+    <label class="pill"><input type="radio" name="platform" value="instagram" {% if not form or form.platform != 'youtube' %}checked{% endif %}><span>Instagram Reels</span></label>
+    <label class="pill"><input type="radio" name="platform" value="youtube" {% if form and form.platform == 'youtube' %}checked{% endif %}><span>YouTube Shorts</span></label>
+  </div>
+</div>
+
+<div class="card">
+  <div class="step"><span class="n">2</span><h2>{{ T.step_account }}</h2></div>
+  <label class="f" for="followers">Followers of the account <span class="hint">(needed for "what a typical video gets"; with a YouTube link, leave empty to use the channel's count)</span></label>
   <input id="followers" name="followers" type="text" inputmode="numeric" placeholder="e.g. 500000" value="{{ form.followers if form else '' }}">
-  <label for="caption">Caption <span class="hint">(YouTube: the title on the first line, then the description. With a link, leave empty to use the post's own caption. Empty means "not known".)</span></label>
+  <label class="f" for="caption">Caption <span class="hint">(YouTube: the title on the first line, then the description. With a link, leave empty to use the post's own caption. Empty means "not known".)</span></label>
   <textarea id="caption" name="caption">{{ form.caption if form else '' }}</textarea>
-  <div class="inline"><label><input type="checkbox" name="no_caption"> This post has no caption</label></div>
-</section>
-<section>
-  <h2 style="margin-top:0">Two questions</h2>
-  <label>Does the video show Coca-Cola Zero Sugar? <span class="hint">(the tool learned only from Zero Sugar videos)</span></label>
-  <div class="inline"><label><input type="radio" name="zero_sugar" value="yes" checked> Yes</label>
-    <label><input type="radio" name="zero_sugar" value="no"> No</label>
-    <label><input type="radio" name="zero_sugar" value="unsure"> Not sure</label></div>
-  <label>Instagram only: is the post a collaboration with a creator?</label>
-  <div class="inline"><label><input type="radio" name="collab" value="yes"> Yes</label>
-    <label><input type="radio" name="collab" value="no"> No</label>
-    <label><input type="radio" name="collab" value="unknown" checked> Don't know</label></div>
-</section>
-<section>
-  <details><summary>Optional: describe the video in your own words (11 yes/no questions)</summary>
-  <p class="muted">{{ T.hand_lead }}</p>
-  <table><tr><th>Does the video have ...</th><th>Yes</th><th>No</th><th>Skip</th></tr>
-  {% for key, label in questions %}
-    <tr><td>{{ label }}</td>
-      <td><input type="radio" name="{{ key }}" value="yes" aria-label="{{ label }}: yes"></td>
-      <td><input type="radio" name="{{ key }}" value="no" aria-label="{{ label }}: no"></td>
-      <td><input type="radio" name="{{ key }}" value="skip" checked aria-label="{{ label }}: skip"></td></tr>
-  {% endfor %}</table>
+  <label class="check"><input type="checkbox" name="no_caption" id="no_caption" {% if form and form.no_caption %}checked{% endif %}> This post has no caption</label>
+</div>
+
+<div class="card">
+  <div class="step"><span class="n">3</span><h2>{{ T.step_questions }}</h2></div>
+  <label class="f">Does the video show Coca-Cola Zero Sugar? <span class="hint">(the tool learned only from Zero Sugar videos)</span></label>
+  <div class="pills" role="radiogroup" aria-label="Does the video show Coca-Cola Zero Sugar?">
+    {% set zs = form.zero_sugar if form else 'yes' %}
+    <label class="pill"><input type="radio" name="zero_sugar" value="yes" {% if zs == 'yes' %}checked{% endif %}><span>Yes</span></label>
+    <label class="pill"><input type="radio" name="zero_sugar" value="no" {% if zs == 'no' %}checked{% endif %}><span>No</span></label>
+    <label class="pill"><input type="radio" name="zero_sugar" value="unsure" {% if zs == 'unsure' %}checked{% endif %}><span>Not sure</span></label>
+  </div>
+  <div id="collab-q">
+    <label class="f">Instagram only: is the post a collaboration with a creator?</label>
+    <div class="pills" role="radiogroup" aria-label="Is the post a collaboration with a creator?">
+      {% set cb = form.collab if form else 'unknown' %}
+      <label class="pill"><input type="radio" name="collab" value="yes" {% if cb == 'yes' %}checked{% endif %}><span>Yes</span></label>
+      <label class="pill"><input type="radio" name="collab" value="no" {% if cb == 'no' %}checked{% endif %}><span>No</span></label>
+      <label class="pill"><input type="radio" name="collab" value="unknown" {% if cb not in ('yes', 'no') %}checked{% endif %}><span>Don't know</span></label>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <details>
+    <summary><span class="step" style="display:inline-flex;margin:0"><span class="n">4</span><span>{{ T.step_hand }} (11 yes/no questions)</span></span></summary>
+    <p class="small muted" style="margin-top:10px">{{ T.hand_lead }}</p>
+    {% for key, label in questions %}
+    <div class="qrow"><span>{{ label[:1]|upper }}{{ label[1:] }}</span>
+      <span class="pills">
+        <label class="pill"><input type="radio" name="{{ key }}" value="yes" aria-label="{{ label }}: yes"><span>Yes</span></label>
+        <label class="pill"><input type="radio" name="{{ key }}" value="no" aria-label="{{ label }}: no"><span>No</span></label>
+        <label class="pill"><input type="radio" name="{{ key }}" value="skip" checked aria-label="{{ label }}: skip"><span>Skip</span></label>
+      </span></div>
+    {% endfor %}
   </details>
-</section>
-<button type="submit">Measure the video</button>
-<p class="muted">Measuring takes about 3 minutes. Everything stays on this computer, except the request a link needs to reach Instagram or YouTube.</p>
+</div>
+
+<div class="submitbar">
+  <button type="submit" class="btn">{{ T.submit }}</button>
+  <span class="small muted">{{ T.submit_note }}</span>
+</div>
 </form>
+</div>
+<script type="application/json" id="examples-data">{{ examples_json|safe }}</script>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById('examples-data').textContent || '[]');
+  var byKey = {}; data.forEach(function (e) { byKey[e.key] = e; });
+  var $ = function (id) { return document.getElementById(id); };
+  var exInput = $('example'), chosen = $('chosen'), own = $('own'), fileIn = $('video'), drop = $('drop');
+
+  function setRadio(name, value) {
+    var r = document.querySelector('input[name="' + name + '"][value="' + value + '"]'); if (r) r.checked = true;
+  }
+  function platformRadios(disabled) {
+    document.querySelectorAll('input[name="platform"]').forEach(function (r) { r.disabled = disabled; });
+  }
+  function collabVisibility() {
+    var p = document.querySelector('input[name="platform"]:checked');
+    $('collab-q').classList.toggle('hide', !!p && p.value === 'youtube');
+  }
+  function useExample(key) {
+    var e = byKey[key]; if (!e) return;
+    exInput.value = key;
+    setRadio('platform', e.platform); platformRadios(true);
+    $('followers').value = Math.round(e.followers);
+    $('caption').value = e.caption || '';
+    $('no_caption').checked = (e.caption === '');      // a real empty caption, as in the collection
+
+    setRadio('zero_sugar', e.zero_sugar);
+    setRadio('collab', e.collab === true ? 'yes' : (e.collab === false ? 'no' : 'unknown'));
+    fileIn.value = ''; $('file-name').textContent = ''; $('link').value = '';
+    $('chosen-name').textContent = e.label;
+    chosen.classList.add('on'); own.classList.add('hide');
+    document.querySelectorAll('.exrow').forEach(function (d) { d.classList.toggle('sel', d.id === 'ex-' + key); });
+    collabVisibility();
+    chosen.scrollIntoView({behavior: 'smooth', block: 'center'});
+  }
+  function clearExample() {
+    exInput.value = ''; platformRadios(false);
+    chosen.classList.remove('on'); own.classList.remove('hide');
+    document.querySelectorAll('.exrow').forEach(function (d) { d.classList.remove('sel'); });
+  }
+  document.querySelectorAll('[data-example]').forEach(function (b) {
+    b.addEventListener('click', function () { useExample(b.getAttribute('data-example')); });
+  });
+  $('clear-ex').addEventListener('click', clearExample);
+  document.querySelectorAll('input[name="platform"]').forEach(function (r) { r.addEventListener('change', collabVisibility); });
+  fileIn.addEventListener('change', function () { $('file-name').textContent = fileIn.files.length ? fileIn.files[0].name : ''; });
+  ['dragenter', 'dragover'].forEach(function (t) { drop.addEventListener(t, function (ev) { ev.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function (t) { drop.addEventListener(t, function () { drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function (ev) {
+    ev.preventDefault();
+    if (ev.dataTransfer && ev.dataTransfer.files.length) { fileIn.files = ev.dataTransfer.files; fileIn.dispatchEvent(new Event('change')); }
+  });
+  // platform radios are disabled for an example; enable them just before sending so the value is posted
+  $('form').addEventListener('submit', function () { platformRadios(false); });
+  if (exInput.value && byKey[exInput.value]) {           // a form sent back with errors keeps its example
+    var keep = {f: $('followers').value, c: $('caption').value};
+    useExample(exInput.value); $('followers').value = keep.f; $('caption').value = keep.c;
+  }
+  collabVisibility();
+})();
+</script>
 {% endblock %}

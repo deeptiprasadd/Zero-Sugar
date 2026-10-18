@@ -1,23 +1,42 @@
 {% extends "base.html" %}
 {% block head %}{% if job.status in ('queued', 'running') %}<meta http-equiv="refresh" content="4">{% endif %}{% endblock %}
+{% block style %}
+  .progress { height:10px; border-radius:999px; background:var(--bar); overflow:hidden; margin:14px 0 18px; }
+  .progress span { display:block; height:100%; background:var(--accent); border-radius:999px; transition:width .4s; }
+  ol.stepper { list-style:none; padding:0; margin:0; }
+  ol.stepper li { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); }
+  ol.stepper li:last-child { border-bottom:0; }
+  ol.stepper .ic { width:24px; height:24px; border-radius:50%; display:grid; place-items:center; font-size:.8rem; font-weight:800;
+                   border:2px solid var(--line); color:var(--ink3); flex:none; }
+  ol.stepper li.done .ic { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  ol.stepper li.now .ic { border-color:var(--accent); color:var(--accent); }
+  ol.stepper li.done .t { color:var(--ink); } ol.stepper .t { color:var(--ink2); }
+  ol.stepper li.now .t { color:var(--ink); font-weight:650; }
+{% endblock %}
 {% block body %}
 {% if job.status == 'refused' %}
   <h1>The video could not be measured</h1>
-  <section class="note"><p class="big">{{ job.message[:1]|upper }}{{ job.message[1:] }}.</p></section>
-  <p><a href="{{ url_for('index') }}">Try another video</a></p>
+  <div class="callout"><p style="font-size:1.1rem">{{ job.message[:1]|upper }}{{ job.message[1:] }}.</p></div>
+  <p><a class="btn" href="{{ url_for('index') }}">Try another video</a></p>
 {% elif job.status == 'error' %}
   <h1>Something went wrong</h1>
-  <section class="note"><p>{{ job.message }} The details are in the tool's log window.</p></section>
-  <p><a href="{{ url_for('index') }}">Try again</a></p>
+  <div class="callout"><p>{{ job.message }} The details are in the tool's log window.</p></div>
+  <p><a class="btn" href="{{ url_for('index') }}">Try again</a></p>
 {% else %}
-  <h1>Measuring the video</h1>
-  <section>
-    {% if job.status == 'queued' %}
-      <p class="big">Waiting{% if ahead %} - {{ ahead }} video{{ 's' if ahead > 1 }} ahead{% endif %}. One video is measured at a time.</p>
-    {% else %}
-      <p class="big">Working - this takes about 3 minutes. The page refreshes by itself.</p>
-    {% endif %}
-    <ol class="steps">{% for p in job.progress %}<li>{{ p }}</li>{% endfor %}</ol>
-  </section>
+  <h1>{{ T.progress_head }}</h1>
+  <p class="lead">{% if job.status == 'queued' %}Waiting{% if ahead %} - {{ ahead }} video{{ 's' if ahead > 1 }} ahead{% endif %}. One video is measured at a time.{% else %}{{ T.progress_lead }}{% endif %}</p>
+  <div class="card" style="max-width:640px">
+    {% if job.inputs.upload_name %}<p class="small muted" style="margin-top:0">{{ job.inputs.upload_name }}</p>{% endif %}
+    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="{{ steps|length }}" aria-valuenow="{{ done }}">
+      <span style="width:{{ (100 * done / steps|length)|round(0) }}%"></span></div>
+    <ol class="stepper">
+      {% set ns = namespace(now=false) %}
+      {% for name, is_done in steps %}
+        {% set cls = 'done' if is_done else ('now' if (job.status == 'running' and not ns.now) else '') %}
+        {% if cls == 'now' %}{% set ns.now = true %}{% endif %}
+        <li class="{{ cls }}"><span class="ic" aria-hidden="true">{{ '&#10003;'|safe if is_done else loop.index }}</span><span class="t">{{ name }}</span></li>
+      {% endfor %}
+    </ol>
+  </div>
 {% endif %}
 {% endblock %}

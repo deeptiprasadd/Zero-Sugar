@@ -3408,6 +3408,62 @@ reason - item by item in `docs/16-proposal-coverage.md`. No further content meas
 
 ---
 
+## D-065 - The tool's pages redesigned, with a box of example videos for testing, written before either was built
+
+**Date:** 2026-10-18
+**Status:** Accepted - written before the page code changed (researcher, chat, 18 October: "i want a better ui and i
+want examples to use for better test in a small box for better experience"). Code `src/serve/templates/`,
+`src/serve/app.py`, `src/serve/wording.py`, new `src/serve/examples.py`.
+
+**What changes - presentation only.** The four pages of D-059 (form, progress, result, About) get a new layout:
+the form in numbered steps with a drop area for the file and pill-style choices; a progress page that shows the five
+measuring groups as steps; a result page that opens with summary cards (typical engagement and its range, the
+Instagram position, how sure) and draws each "share of the 192" as a small position bar; an About page with one card
+per release check. It stays one self-contained page per view (no outside fonts, scripts or styles - nothing is sent
+anywhere, D-059), keeps light and dark modes, and works on a narrow window.
+
+**The examples box.** A small box beside the form (above it on a narrow window) lists **six videos from the study's
+own collection that no model was fitted on**, each with a "use this example" button that fills the form with its real
+details (platform, the account's follower count at collection, the caption the corpus holds, the recorded
+collaboration flag, and the Zero Sugar answer from its label). The person can change any field before measuring.
+- **Five Zero Sugar videos outside the analysis set** - the six Zero Sugar videos left out of the 192 only because
+  their likes were hidden or comments switched off (dv_status), so their engagement was never read and no model saw
+  them: Instagram `C4-MHHxqE2M` (cocacola_kenya, 66 s, talking, a creator collaboration), `DATm42ctA-V` (cocacola_az,
+  no speech), `DD9hPkAobol` (cocacola_kyrgyzstan, a small account); YouTube `fkQUn9CHreE` and `fT1LhQTSawE` (Coca-Cola,
+  with talking). `DD9pZI4INSu` (the second Kyrgyzstan Reel, much like `DD9hPkAobol`) is left out to keep the box small.
+- **One regular Coca-Cola Reel**, Instagram `DaKsr6OzHqf` (cocacola_india; not Zero Sugar, outside the 192), answered
+  "no" to the Zero Sugar question, to show the warning.
+- The file is taken from the collection's own copy (`data/media/`), only for these six, through the same upload
+  checks and cache as any upload (D-058); the page says each is from the study's collection and was not used to fit a
+  model. No example is one of the 192 - a training video would score itself.
+- **Measured once in advance** with exactly those details, so each opens at once; a changed caption or collaboration
+  answer measures again (about 3-4 minutes), a changed follower count does not (D-058).
+
+**What does not change:** every number, every sentence rule of D-059/D-060 (`FORBIDDEN`, checked by `--check`), the
+models, the pipeline, the measurements, the release checks and G4. New sentences go into `wording.py` like the rest.
+
+**Note 2026-10-18 - built and checked.**
+- **The six examples were measured once** (`python -m src.serve.examples --prepare`, 3-6 minutes each) and **every one
+  equals the study's own measurement of that video**: 73 of 73 flattened features on the four Instagram videos, 72 of 73
+  on the two YouTube videos - the one difference is the collaboration field, which the tool leaves empty for YouTube by
+  design (D-055 section 1) while training set it to "no" by construction. Six more videos, all outside the 192, on which
+  the tool reproduces the study exactly; none of them has unclear speech. The measuring run was interrupted near the end
+  and resumed; one YouTube example reused finished steps from its own folder, and its result still equals the study's.
+- **Found while building:** both YouTube examples (`fkQUn9CHreE`, `fT1LhQTSawE`) belong to the *José vs Mourinho* series
+  with AI-generated characters (D-049) - they are the only Zero Sugar Shorts outside the 192. Kept, as specified; the box
+  labels them "AI-character series".
+- **Two small additions to the form's handling, both presentation:** a browser sends a caption's line breaks as CR LF,
+  so the form now turns them into the study's LF before measuring (otherwise an unchanged example caption would not match
+  its saved measurement); an example with an empty caption ticks "this post has no caption", because in the collection it
+  is a real empty caption, not an unknown one.
+- **One sentence reworded:** when a driver does not move the rounded position, the page now says its position "would
+  barely change (higher than 62% of the 120)" instead of "higher than 62% ..., not higher than 62%". No number changed.
+- **Checked on the running page:** an example chosen, the form filled, submitted, the saved result opened at once; the
+  result, progress and About pages in light and dark mode and at phone width (375 px), with no sideways scrolling;
+  `python -m src.serve.app --check`: 7 pages, wording ok.
+
+---
+
 ## Open decisions
 
 | ID | Question | Blocking | Needed by |

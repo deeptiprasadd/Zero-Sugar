@@ -5,7 +5,7 @@
 
 One video is measured at a time (the graphics card); each job is saved under data/interim/serve/jobs/ so a
 finished result survives a restart. The page shows only what D-046, D-054 and D-059 allow; every sentence comes
-from `src/serve/wording.py`.
+from `src/serve/wording.py`. The pages were redesigned with a box of example videos in D-065 (`src/serve/examples.py`).
 """
 from __future__ import annotations
 
@@ -28,6 +28,7 @@ from src.serve import wording as W  # noqa: E402
 from src.serve.measure import SERVE, StepFailed  # noqa: E402
 
 HOST, PORT = "127.0.0.1", 5055
+CRLF, LF = chr(13) + chr(10), chr(10)
 JOBS = SERVE / "jobs"
 UPLOADS = SERVE / "uploads"
 
@@ -82,6 +83,15 @@ def run_job(jid: str) -> None:
             if followers is None and d.get("followers_from_link"):
                 followers, job["followers_from_link"] = float(d["followers_from_link"]), True
             job["link_details"] = {k: d.get(k) for k in ("platform", "video_id", "account", "duration_sec")}
+        elif inp.get("example"):                                    # D-065: a video from the study's collection
+            from src.serve import examples
+            ex = examples.get(inp["example"])
+            if ex is None:
+                raise StepFailed("that example is no longer available")
+            video = intake.store_upload(Path(ex["path"]))
+            platform, title = ex["platform"], ex["title"]
+            caption = "" if inp["no_caption"] else (inp["caption"] or None)
+            followers = inp["followers"]
         else:
             video = intake.store_upload(Path(inp["upload_path"]))
             platform, title = inp["platform"], None
@@ -110,6 +120,13 @@ def worker() -> None:
 
 
 # ------------------------------------------------------------------------------------------ views
+def bar_pct(p: dict | None) -> float | None:
+    """Where a value sits among the 192, 0-100, for the small position bar (D-065); beyond the range = the end."""
+    if not p or p.get("pct") is None:
+        return None
+    return {"below": 0.0, "above": 100.0}.get(p.get("beyond"), max(0.0, min(100.0, float(p["pct"]))))
+
+
 def result_view(job: dict) -> dict:
     """Everything the result page shows, as text, from the saved result (no measuring here)."""
     from src.serve.pipeline import artefacts
@@ -126,7 +143,8 @@ def result_view(job: dict) -> dict:
         else:
             low_all, low_plat = W.pct_text(dg.get("among_192")), W.pct_text(dg.get(f"among_{platform}"))
         rows.append({"name": name, "value": W.value_text(key, v, len(caption) if caption is not None else None),
-                     "all": low_all, "platform": low_plat})
+                     "all": low_all, "platform": low_plat,
+                     "bar": None if kind == "yesno" else bar_pct(dg.get("among_192"))})
     hand = []
     for h, d in (r.get("hand_codes") or {}).items():
         hand.append({"label": d["label"][:1].upper() + d["label"][1:], "answer": "yes" if d["answer"] else "no",
@@ -145,7 +163,13 @@ def result_view(job: dict) -> dict:
         recs = list(Path(r["video"]["work"]).glob("features/*.json"))
         r["speech_unclear"] = bool(recs) and speech_unclear(_json.loads(recs[0].read_text(encoding="utf-8")))
     b = r.get("base_rate")
-    return {"notices": W.top_notices(r, job["inputs"].get("zero_sugar"), art["schema"]),   # 12.7
+    kpi = None
+    if b:
+        kpi = {"rate": W.rate_text(b["rate_typical"]), "lo": W.rate_text(b["rate_80"][0]),
+               "hi": W.rate_text(b["rate_80"][1]), "clo": W.count_text(b["likes_comments_80"][0]),
+               "chi": W.count_text(b["likes_comments_80"][1]), "followers": f"{b['followers']:,.0f}"}
+    ig_pos = (r.get("instagram_score") or {}).get("higher_than_pct_of_120")
+    return {"kpi": kpi, "ig_pos": ig_pos,"notices": W.top_notices(r, job["inputs"].get("zero_sugar"), art["schema"]),   # 12.7
             "certainty": W.certainty(b) if b else None,
             "youtube_range": W.youtube_range_note(b) if (b and platform == "youtube") else None,
             "drivers": drivers, "others": others, "no_drivers": W.NO_DRIVERS_YOUTUBE if platform == "youtube" else None,
@@ -158,9 +182,16 @@ def result_view(job: dict) -> dict:
             "seconds": r["timing"]["total_sec"], "reused": r.get("reused_saved_measurement", False)}
 
 
+def form_page(**kw):
+    from src.serve import examples
+    ex, ex_json = examples.for_page()
+    return render_template("index.html", T=W.TEXT, questions=hand_code_questions(), examples=ex,
+                           examples_json=ex_json, **kw)
+
+
 @app.get("/")
 def index():
-    return render_template("index.html", T=W.TEXT, questions=hand_code_questions())
+    return form_page()
 
 
 @app.post("/submit")
@@ -169,8 +200,16 @@ def submit():
     link = (f.get("link") or "").strip()
     upload = request.files.get("video")
     errors = []
-    if not link and not (upload and upload.filename):
-        errors.append("Choose a video file or paste a link.")
+    example = None
+    if (f.get("example") or "").strip():                                 # D-065
+        from src.serve import examples
+        example = examples.get(f["example"].strip())
+        if example is None:
+            errors.append("That example is not available.")
+        elif link or (upload and upload.filename):
+            errors.append("Choose an example, a video file or a link - only one of them.")
+    elif not link and not (upload and upload.filename):
+        errors.append("Choose a video file or paste a link, or use one of the examples.")
     if link and upload and upload.filename:
         errors.append("Choose a video file or a link, not both.")
     followers = None
@@ -181,7 +220,7 @@ def submit():
                 raise ValueError
         except ValueError:
             errors.append("The follower count must be a positive number.")
-    if not link and f.get("platform") not in ("instagram", "youtube"):
+    if not link and not example and f.get("platform") not in ("instagram", "youtube"):
         errors.append("Choose the platform the video is for.")
     if link:
         from src.serve.intake import IntakeRefused, parse_link
@@ -190,10 +229,14 @@ def submit():
         except IntakeRefused as exc:
             errors.append(str(exc)[:1].upper() + str(exc)[1:] + ".")
     if errors:
-        return render_template("index.html", T=W.TEXT, questions=hand_code_questions(), errors=errors, form=f), 400
+        return form_page(errors=errors, form=f), 400
     jid = uuid.uuid4().hex[:12]
     upload_path = None
-    if not link:
+    # a browser sends a caption's line breaks as CR LF; the study's captions use LF (D-065)
+    caption = (f.get("caption") or "").replace(CRLF, LF)
+    if example and caption == (example["caption"] or "").replace(CRLF, LF):
+        caption = example["caption"]                     # unchanged example caption: exactly the collection's text
+    if not link and not example:
         d = UPLOADS / jid
         d.mkdir(parents=True, exist_ok=True)
         upload_path = d / (secure_filename(upload.filename) or "video.mp4")
@@ -202,8 +245,10 @@ def submit():
     job = {"id": jid, "created": datetime.now(timezone.utc).isoformat(timespec="seconds"), "status": "queued",
            "progress": [], "inputs": {
                "link": link or None, "upload_path": str(upload_path) if upload_path else None,
-               "upload_name": upload.filename if upload_path else None, "platform": f.get("platform"),
-               "followers": followers, "caption": f.get("caption") or "", "no_caption": f.get("no_caption") == "on",
+               "upload_name": upload.filename if upload_path else (f"example: {example['label']}" if example else None),
+               "example": example["key"] if example else None,
+               "platform": example["platform"] if example else f.get("platform"),
+               "followers": followers, "caption": caption, "no_caption": f.get("no_caption") == "on",
                "collab": {"yes": True, "no": False}.get(f.get("collab")), "zero_sugar": f.get("zero_sugar"),
                "answers": answers}}
     save_job(job)
@@ -221,7 +266,9 @@ def job_page(jid: str):
     others = [json.loads(p.read_text(encoding="utf-8")) for p in JOBS.glob("*.json")]
     ahead = sum(1 for j in others if j["id"] != jid and (j["status"] == "running" or
                                                          (j["status"] == "queued" and j["created"] < job["created"])))
-    return render_template("job.html", T=W.TEXT, job=job, ahead=ahead)
+    steps = [(name, any(line.startswith(name) for line in job["progress"])) for name in W.GROUP_NAMES.values()]
+    return render_template("job.html", T=W.TEXT, job=job, ahead=ahead, steps=steps,
+                           done=sum(1 for _, d in steps if d))
 
 
 @app.get("/about")

@@ -175,7 +175,8 @@ Three screens. Keep it plain; the audience is a marketer, not a data scientist.
 > result, and "About this tool". Where this section and D-046/D-054/D-059 differ, the decisions win: no platform
 > recommendation, no probability, no single predicted number, no SHAP drivers beyond the three of D-047 rule 9
 > (task 12.6). Every sentence is in `src/serve/wording.py`; `python -m src.serve.app --check` renders every page
-> and refuses forbidden wording.
+> and refuses forbidden wording. **Redesigned 2026-10-18 (D-065)**, with a box of six example videos from the corpus
+> that no model was fitted on (`src/serve/examples.py`; `python -m src.serve.examples --prepare` measures them in advance).
 
 ### 4.1 Input
 Drag-and-drop or paste a link. Platform toggle (YouTube / Instagram / both). Follower count
@@ -253,6 +254,7 @@ _Append dated entries as the service is built._
 | 2026-09-12 | Deliverable added to scope (D-017); this document written | Method specified; build begins after Phase 10 |
 | 2026-10-02 | G1 failed (D-045); tool re-scoped to the pre-registered fallback (D-046) | Base rate + diagnostics + exploratory Instagram content score; no platform recommendation. Pooled models saved in `models/` stay for comparison, not for serving |
 | 2026-10-09 | 12.1-12.2 done (D-053 spec, D-054 results) | Base rate fitted; G3 failed (67%; YouTube 49%) -> interval widened x1.26, YouTube still warned (69%). Instagram score: G2 failed as fitted and after Platt -> shown only as a position among the 120 videos, no probability. G4 pending (12.8). `reports/serving_models.md` |
+| 2026-10-18 | Pages redesigned; examples box (D-065, spec first) | Form in four steps with a drop area, progress steps, summary cards and position bars on the result, one card per check on the About page; light/dark and phone width checked. Six example videos from the corpus that no model was fitted on (`src/serve/examples.py`), measured in advance - all six equal the study's own measurements. No number or wording rule changed; `--check` passes |
 | 2026-10-17 | 12.8 release checks: G4 run (D-055 spec, D-062 results) | `python -m src.serve.parity --run` (85 min): 417 of 420 identical, 9 of 10 videos exact; the tenth's unclear speech is re-read at random. Model card and About page updated (`--record`); unclear-speech warning added. `reports/serving_parity.md` |
 | 2026-10-17 | 12.6 explanations and 12.7 warnings (D-060 spec first) | `src/serve/explain_video.py`: the Instagram model's three stable features only, same SHAP method and background as D-047 (signs agree with D-048; SHAP equals the linear formula). Warnings: not Zero Sugar, out-of-range followers, duration, shape and measures, certainty from the range width, YouTube's too-narrow range, what the tool cannot tell, the release checks. Wording check passed on 6 pages |
 | 2026-10-17 | 12.5 web page (D-059 spec first) | `src/serve/app.py`, `wording.py`, `templates/`. Tested with an upload (saved measurement reused), a YouTube link (cached, no new download), a non-video (refused in plain words) and an invalid form; wording check passed |

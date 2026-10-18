@@ -1,70 +1,103 @@
 {% extends "base.html" %}
+{% block style %}
+  .kcard h2 { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .range { display:flex; align-items:center; gap:10px; font-variant-numeric:tabular-nums; margin-top:6px; flex-wrap:wrap; }
+  .range .line { flex:1 1 120px; height:8px; border-radius:999px; background:linear-gradient(90deg, var(--bar), var(--accent) 50%, var(--bar)); opacity:.55; }
+  .drv { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:10px; }
+  .drv > div { border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:var(--soft); min-width:0; }
+  .drv h3 { margin-bottom:4px; }
+  td.barcell { width:30%; min-width:110px; }
+  @media (max-width:640px) { .hide-narrow { display:none; } td.barcell { min-width:80px; } }
+{% endblock %}
 {% block body %}
 <h1>Result</h1>
-<p class="lead">{{ v.platform }}{% if job.inputs.upload_name %} · {{ job.inputs.upload_name }}{% elif job.inputs.link %} · {{ job.inputs.link }}{% endif %}
-  · {% if v.reused %}same video and details as an earlier check, so its saved measurement was used{% else %}measured in {{ '%.0f'|format(v.seconds) }} s{% endif %}</p>
+<div class="meta">
+  <span class="badge">{{ v.platform }}</span>
+  {% if job.inputs.upload_name %}<span class="badge">{{ job.inputs.upload_name }}</span>{% elif job.inputs.link %}<span class="badge">{{ job.inputs.link }}</span>{% endif %}
+  <span class="badge">{% if v.reused %}same video and details as an earlier check, so its saved measurement was used{% else %}measured in {{ '%.0f'|format(v.seconds) }} s{% endif %}</span>
+</div>
 
 {% if v.notices %}
-<section class="note" role="alert">
-  <h2 style="margin-top:0">Unlike the videos the tool learned from</h2>
+<div class="callout" role="alert">
+  <h2>Unlike the videos the tool learned from</h2>
   <ul>{% for n in v.notices %}<li>{{ n }}</li>{% endfor %}</ul>
-</section>
+</div>
 {% endif %}
 
-<section>
-  <h2 style="margin-top:0">{{ T.base_head }}</h2>
-  <p class="muted">{{ T.base_lead }}</p>
-  {% if v.base %}
-    {% for line in v.base %}<p{% if loop.first %} class="big"{% endif %}>{{ line }}</p>{% endfor %}
-    {% if v.followers_from_link %}<p class="tag">follower count from the link</p>{% endif %}
-    <p><span class="tag">certainty: {{ v.certainty.level }}</span> {{ v.certainty.text }}</p>
-    {% if v.youtube_range %}<p class="note">{{ v.youtube_range }}</p>{% endif %}
-  {% else %}<p>{{ T.base_no_followers }}</p>{% endif %}
-</section>
+<div class="grid2">
+  <section class="card kcard" aria-labelledby="h-base">
+    <h2 id="h-base"><span>{{ T.base_head }}</span>{% if v.certainty %}<span class="badge amber">certainty: {{ v.certainty.level }}</span>{% endif %}</h2>
+    {% if v.kpi %}
+      <div class="kpi">{{ v.kpi.rate }}</div>
+      <div class="muted small">{{ T.kpi_rate_label }} - {{ v.platform }}, {{ v.kpi.followers }} followers{% if v.followers_from_link %} (from the link){% endif %}</div>
+      <div class="small" style="margin-top:12px">{{ T.kpi_range_label }}</div>
+      <div class="range"><strong>{{ v.kpi.lo }}</strong><span class="line" aria-hidden="true"></span><strong>{{ v.kpi.hi }}</strong></div>
+      <div class="tiny">about {{ v.kpi.clo }} to {{ v.kpi.chi }} likes and comments together</div>
+      {% if v.youtube_range %}<p class="callout small" style="margin:12px 0 0">{{ v.youtube_range }}</p>{% endif %}
+    {% else %}<p>{{ T.base_no_followers }}</p>{% endif %}
+  </section>
 
-{% if v.ig %}
-<section>
-  <h2 style="margin-top:0">{{ T.ig_head }} <span class="tag">exploratory</span></h2>
-  <p class="big">{{ v.ig }}</p>
-  <p class="muted">{{ T.ig_lead }}</p>
-  {% if v.drivers %}
-  <h2>{{ W.DRIVER_HEAD }}</h2>
-  <p class="muted">{{ W.DRIVER_LEAD }}</p>
-  <table>{% for d in v.drivers %}<tr><td><strong>{{ d.name }}</strong></td><td>{{ d.line }}{% if d.caution %}<br><span class="muted">{{ d.caution }}</span>{% endif %}</td></tr>{% endfor %}</table>
-  <p class="muted">{{ v.others }}</p>
+  {% if v.ig %}
+  <section class="card kcard" aria-labelledby="h-ig">
+    <h2 id="h-ig"><span>{{ T.ig_head_short }}</span><span class="badge red">exploratory</span></h2>
+    <div class="kpi">{{ '%.0f'|format(v.ig_pos) }}%</div>
+    <div class="muted small">{{ T.kpi_ig_label }}</div>
+    <div class="posbar" role="img" aria-label="Position {{ '%.0f'|format(v.ig_pos) }} out of 100">
+      <span class="fill" style="width:{{ v.ig_pos }}%"></span><span class="mk" style="left:{{ v.ig_pos }}%"></span></div>
+    <div class="scale"><span>lowest of the 120</span><span>highest</span></div>
+  </section>
+  {% else %}
+  <section class="card kcard">
+    <h2><span>{{ T.kpi_no_ig }}</span></h2>
+    <p class="muted">{{ v.no_drivers }}</p>
+  </section>
   {% endif %}
+</div>
+
+<section class="card">
+  <h2>How to read the typical result</h2>
+  <p class="small muted">{{ T.base_lead }}</p>
+  {% if v.base %}<ul class="small">{% for line in v.base %}<li>{{ line }}</li>{% endfor %}</ul>
+  <p class="small"><strong>How sure:</strong> {{ v.certainty.text }}</p>{% endif %}
+  {% if v.ig %}<p class="small muted">{{ T.ig_lead }}</p>{% endif %}
 </section>
-{% elif v.no_drivers %}
-<section><p class="muted">{{ v.no_drivers }}</p></section>
+
+{% if v.drivers %}
+<section class="card">
+  <h2>{{ W.DRIVER_HEAD }}</h2>
+  <p class="small muted">{{ W.DRIVER_LEAD }}</p>
+  <div class="drv">
+    {% for d in v.drivers %}<div><h3>{{ d.name }}</h3><p class="small">{{ d.line }}</p>{% if d.caution %}<p class="tiny">{{ d.caution }}</p>{% endif %}</div>{% endfor %}
+  </div>
+  <p class="small muted" style="margin-top:10px">{{ v.others }}</p>
+</section>
 {% endif %}
 
-<section>
-  <h2 style="margin-top:0">{{ T.diag_head }}</h2>
-  <p class="muted">{{ T.diag_lead }}</p>
-  <table>
-    <tr><th>Measure</th><th>This video</th><th class="num">Of the 192</th><th class="num">Of {{ v.platform }}</th></tr>
-    {% for r in v.rows %}<tr><td>{{ r.name }}</td><td>{{ r.value }}</td><td class="num">{{ r.all }}</td><td class="num">{{ r.platform }}</td></tr>{% endfor %}
-  </table>
+<section class="card">
+  <h2>{{ T.diag_head }}</h2>
+  <p class="small muted">{{ T.diag_lead }}</p>
+  <div class="scroll"><table>
+    <tr><th>Measure</th><th>This video</th><th class="num">Of the 192</th><th class="hide-narrow" aria-hidden="true"></th><th class="num">Of {{ v.platform }}</th></tr>
+    {% for r in v.rows %}<tr><td>{{ r.name }}</td><td>{{ r.value }}</td><td class="num">{{ r.all }}</td>
+      <td class="barcell hide-narrow">{% if r.bar is not none %}<div class="posbar thin" aria-hidden="true"><span class="fill" style="width:{{ r.bar }}%"></span><span class="mk" style="left:{{ r.bar }}%"></span></div>{% endif %}</td>
+      <td class="num">{{ r.platform }}</td></tr>{% endfor %}
+  </table></div>
+  <p class="tiny" style="margin-top:8px">{{ T.bar_note }}</p>
 </section>
 
 {% if v.hand %}
-<section>
-  <h2 style="margin-top:0">{{ T.hand_head }}</h2>
-  <p class="muted">{{ T.hand_lead }}</p>
-  <table><tr><th>Measure</th><th>Your answer</th><th class="num">"Yes" in the 192</th><th class="num">"Yes" in {{ v.platform }}</th></tr>
-  {% for h in v.hand %}<tr><td>{{ h.label }}</td><td>{{ h.answer }}</td><td class="num">{{ h.all }}</td><td class="num">{{ h.platform }}</td></tr>{% endfor %}</table>
+<section class="card">
+  <h2>{{ T.hand_head }}</h2>
+  <p class="small muted">{{ T.hand_lead }}</p>
+  <div class="scroll"><table><tr><th>Measure</th><th>Your answer</th><th class="num">"Yes" in the 192</th><th class="num">"Yes" in {{ v.platform }}</th></tr>
+  {% for h in v.hand %}<tr><td>{{ h.label }}</td><td>{{ h.answer }}</td><td class="num">{{ h.all }}</td><td class="num">{{ h.platform }}</td></tr>{% endfor %}</table></div>
 </section>
 {% endif %}
 
-<section>
-  <h2 style="margin-top:0">{{ T.missing_head }}</h2>
-  <ul>{% for m in v.missing %}<li>{{ m }}</li>{% endfor %}</ul>
-</section>
-
-<section>
-  <h2 style="margin-top:0">What this cannot tell you</h2>
-  <ul>{% for c in v.cannot %}<li>{{ c }}</li>{% endfor %}</ul>
-</section>
-<p class="muted">{{ v.checks }}</p>
-<p><a href="{{ url_for('about') }}">{{ T.about_link }}</a> · <a href="{{ url_for('index') }}">Check another video</a></p>
+<div class="grid2">
+  <section class="card"><h2>{{ T.missing_head }}</h2><ul class="plain small">{% for m in v.missing %}<li>{{ m }}</li>{% endfor %}</ul></section>
+  <section class="card"><h2>What this cannot tell you</h2><ul class="plain small">{% for c in v.cannot %}<li>{{ c }}</li>{% endfor %}</ul></section>
+</div>
+<p class="tiny">{{ v.checks }}</p>
+<p><a class="btn" href="{{ url_for('index') }}">Check another video</a> &nbsp; <a href="{{ url_for('about') }}">{{ T.about_link }}</a></p>
 {% endblock %}
