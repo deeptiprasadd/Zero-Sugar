@@ -1,7 +1,7 @@
 # Render blueprint for the online demo (D-066): saved results of six example videos, the About page, no measuring.
 services:
   - type: web
-    name: zero-sugar-video-check
+    name: reelmetrics
     runtime: python
     plan: free
     buildCommand: pip install -r requirements-render.txt

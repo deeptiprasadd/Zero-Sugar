@@ -94,7 +94,7 @@ def count_text(n: float) -> str:
 
 
 TEXT = {
-    "title": "Coca-Cola Zero Sugar short-video check",
+    "title": "ReelMetrics",
     "intro": ("Upload a short video or paste a link. In about 3 minutes you see a typical result for the account's "
               "size, how the video compares with 192 Zero Sugar videos, and ideas worth testing."),
     "base_head": "What a typical video gets",
@@ -129,7 +129,7 @@ TEXT = {
                     "researcher's computer."),
     "examples_lead_demo": "Six real videos from the study's collection. None was used to train the tool.",
     "own_head": "Use your own video",
-    "hero_tag": "Short-video check",
+    "hero_tag": "Coca-Cola Zero Sugar short-video check",
     "examples_head": "Try an example",
     "examples_lead": ("Six real videos from the study's collection. None was used to train the tool. Click one to "
                       "fill the form with its details."),

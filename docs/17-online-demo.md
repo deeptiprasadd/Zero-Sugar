@@ -18,7 +18,7 @@ The videos, `data/`, the other models and the speech and picture libraries are n
 
 ## Deploy
 1. Push the repository to GitHub (it is public).
-2. On render.com: **New +** > **Blueprint**, choose the repository, confirm `zero-sugar-video-check`. The free plan is enough.
+2. On render.com: **New +** > **Blueprint**, choose the repository, confirm `reelmetrics`. The free plan is enough.
 3. When the build finishes, open the address Render shows. `/healthz` answers "ok".
 
 Free services sleep after a quiet spell; the first visit afterwards takes about half a minute.
