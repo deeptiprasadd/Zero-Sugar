@@ -29,6 +29,9 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src import config  # noqa: E402
 
+# D-069: COKE_CPU=1 measures on the processor (the free public server has no graphics card).
+CPU_ONLY = os.environ.get("COKE_CPU") == "1"
+
 MANIFEST = config.MEDIA / "download_manifest.csv"
 AUDIO = config.INTERIM / "audio"
 CACHE = config.FEATURES_CACHE

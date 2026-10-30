@@ -9,6 +9,9 @@ from `src/serve/wording.py`. The pages were redesigned with a box of example vid
 
 With COKE_DEMO=1 (the online demo on Render, D-066) the site shows only the six examples' saved results, the About
 page and /healthz: nothing is measured, so no video libraries or models for measuring are loaded.
+
+With COKE_PUBLIC=1 (the free public server, D-069; started by gunicorn) the full tool runs for anyone: the queue starts
+when the app loads, and the six examples open their saved results (their videos are not published).
 """
 from __future__ import annotations
 
@@ -35,6 +38,8 @@ from src.serve.measure import SERVE, StepFailed  # noqa: E402
 
 HOST, PORT = "127.0.0.1", 5055
 DEMO = EX.DEMO
+PUBLIC = os.environ.get("COKE_PUBLIC") == "1"     # D-069
+SAVED = DEMO or PUBLIC                              # examples open saved results
 CRLF, LF = chr(13) + chr(10), chr(10)
 JOBS = SERVE / "jobs"
 UPLOADS = SERVE / "uploads"
@@ -54,7 +59,10 @@ def load_job(jid: str) -> dict | None:
     if not jid.replace("-", "").isalnum():
         return None
     p = job_file(jid)
-    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+    if p.exists():
+        return json.loads(p.read_text(encoding="utf-8"))
+    from src.serve import drive_store                          # D-071: after a restart, read it back from Drive
+    return drive_store.load(jid) if drive_store.enabled() else None
 
 
 def save_job(job: dict) -> None:
@@ -81,6 +89,7 @@ def run_job(jid: str) -> None:
         job["progress"].append(f"{name} - done ({parts[1]} s)" if len(parts) > 1 else name)
         save_job(job)
 
+    video = None
     try:
         if inp["link"]:
             video, d = intake.fetch_link(inp["link"])
@@ -115,6 +124,11 @@ def run_job(jid: str) -> None:
         job["status"], job["message"] = "error", f"Something went wrong while measuring ({type(exc).__name__})."
     job["finished"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     save_job(job)
+    from src.serve import drive_store                          # D-071: results only, never videos
+    if drive_store.enabled():
+        work = (job.get("result") or {}).get("video", {}).get("work")
+        drive_store.delete_video_copies(job, inp.get("upload_path"), video, Path(work) if work else None)
+        drive_store.save_in_background(job)
 
 
 def worker() -> None:
@@ -187,12 +201,13 @@ def result_view(job: dict) -> dict:
             "ig": W.ig_sentence(r["instagram_score"]) if r.get("instagram_score") else None,
             "rows": rows, "hand": hand, "missing": W.missing_lines(r["missing"], platform),
             "seconds": r["timing"]["total_sec"], "reused": r.get("reused_saved_measurement", False),
-            "meaning": W.meaning(r, platform), "tips": W.worth_testing(r, platform)}   # D-067
+            "meaning": W.meaning(r, platform), "tips": W.worth_testing(r, platform),   # D-067
+            "measured_on": W.measured_on_line(r)}                                           # D-069
 
 
 def form_page(**kw):
     ex, ex_json = EX.for_page()
-    return render_template("index.html", T=W.TEXT, questions=[] if DEMO else hand_code_questions(), examples=ex,
+    return render_template("index.html", T=W.TEXT, questions=hand_code_questions(), examples=ex,
                            examples_json=ex_json, demo=DEMO, **kw)
 
 
@@ -206,12 +221,88 @@ def demo_page(key: str) -> str | None:
     r["reused_saved_measurement"] = True
     job = {"id": key, "platform": e["platform"], "caption_used": e["caption"], "result": r,
            "inputs": {"upload_name": f"example: {e['label']}", "link": None, "zero_sugar": e["zero_sugar"]}}
-    return render_template("result.html", T=W.TEXT, W=W, job=job, v=result_view(job), demo=True, example=e)
+    return render_template("result.html", T=W.TEXT, W=W, job=job, v=result_view(job), example=e, example_saved=True)
 
 
 @app.context_processor
 def mode():
-    return {"demo": DEMO}
+    from src.serve import drive_store
+    return {"demo": DEMO, "public": PUBLIC, "saved": SAVED, "drive": drive_store.enabled()}
+
+
+# ------------------------------------------------------------------------------------------ quick check (D-072)
+def quick_view(job: dict) -> dict:
+    from src.serve.pipeline import artefacts
+    from src.serve.quick import CAPTION_KEYS
+    art = artefacts()
+    r, platform = job["result"], job["platform"]
+    shares = art["schema"]["flag_shares"]
+    rows = []
+    for key in CAPTION_KEYS:
+        dg = r["diagnostics"].get(key)
+        if dg is None:
+            continue
+        name, kind = W.FEATURES[key]
+        if kind == "yesno":
+            low_all, low_plat = f"{shares[key]['all']:.0%} yes", f"{shares[key][platform]:.0%} yes"
+        else:
+            low_all, low_plat = W.pct_text(dg.get("among_192")), W.pct_text(dg.get(f"among_{platform}"))
+        rows.append({"name": name, "value": W.value_text(key, dg.get("value"), job.get("caption_chars")),
+                     "all": low_all, "platform": low_plat, "bar": None if kind == "yesno" else bar_pct(dg.get("among_192"))})
+    hand = [{"label": d["label"][:1].upper() + d["label"][1:], "answer": "yes" if d["answer"] else "no",
+             "all": f"{d['share_among_192']:.0%}", "platform": f"{d[f'share_among_{platform}']:.0%}"}
+            for d in (r.get("hand_codes") or {}).values()]
+    b = r.get("base_rate")
+    kpi = None
+    if b:
+        kpi = {"rate": W.rate_text(b["rate_typical"]), "lo": W.rate_text(b["rate_80"][0]),
+               "hi": W.rate_text(b["rate_80"][1]), "followers": f"{b['followers']:,.0f}"}
+    return {"kpi": kpi, "certainty": W.certainty(b) if b else None,
+            "youtube_range": W.youtube_range_note(b) if (b and platform == "youtube") else None,
+            "base": W.base_sentence(b, platform) if b else None, "platform": W.PLATFORM[platform],
+            "rows": rows, "hand": hand, "caption_given": r.get("caption_given"),
+            "meaning": W.meaning(r, platform), "tips": W.worth_testing(r, platform), "cannot": W.CANNOT,
+            "checks": W.checks_line(art["card"]["gates"], art["card"].get("gates_plain"))}
+
+
+@app.post("/quick")
+def quick_submit():
+    f = request.form
+    errors = []
+    platform = f.get("platform")
+    if platform not in ("instagram", "youtube"):
+        errors.append("Choose the platform.")
+    followers = None
+    try:
+        followers = float((f.get("followers") or "").replace(",", "").strip())
+        if followers <= 0:
+            raise ValueError
+    except ValueError:
+        errors.append("Enter the account's follower count as a positive number.")
+    if errors:
+        return form_page(errors=errors, form=f), 400
+    raw = (f.get("caption") or "").replace(CRLF, LF)
+    caption = "" if f.get("no_caption") == "on" else (raw if raw.strip() else None)
+    answers = {h: (1.0 if f.get(h) == "yes" else 0.0) for h, _ in hand_code_questions() if f.get(h) in ("yes", "no")}
+    from src.serve import quick
+    r = quick.check(platform, followers, caption, answers or None)
+    job = {"id": "q" + uuid.uuid4().hex[:11], "kind": "quick", "status": "done", "platform": platform,
+           "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+           "caption_chars": len(caption) if caption is not None else None,
+           "inputs": {"platform": platform, "followers": followers, "caption_given": caption is not None,
+                      "answers": answers}, "result": r}
+    save_job(job)
+    from src.serve import drive_store
+    drive_store.save_in_background(job)
+    return redirect(url_for("quick_page", qid=job["id"]))
+
+
+@app.get("/quick/<qid>")
+def quick_page(qid: str):
+    job = load_job(qid)
+    if job is None or job.get("kind") != "quick":
+        abort(404)
+    return render_template("quick.html", T=W.TEXT, W=W, job=job, v=quick_view(job))
 
 
 @app.get("/healthz")
@@ -221,7 +312,7 @@ def healthz():
 
 @app.get("/example/<key>")
 def example_page(key: str):
-    html = demo_page(key) if DEMO else None
+    html = demo_page(key) if SAVED else None
     if html is None:
         abort(404)
     return html
@@ -235,6 +326,9 @@ def index():
 @app.post("/submit")
 def submit():
     f = request.form
+    if SAVED and (f.get("example") or "").strip() and not (f.get("link") or "").strip():
+        if EX.get(f["example"].strip()):                 # D-069: online, an example opens its saved result
+            return redirect(url_for("example_page", key=f["example"].strip()))
     if DEMO:                                             # D-066: only the saved examples can be opened online
         key = (f.get("example") or "").strip()
         if EX.get(key) is None:
@@ -305,6 +399,8 @@ def job_page(jid: str):
     job = load_job(jid) if not DEMO else None
     if job is None:
         abort(404)
+    if job.get("kind") == "quick":                       # D-072
+        return redirect(url_for("quick_page", qid=jid))
     if job["status"] == "done":
         return render_template("result.html", T=W.TEXT, W=W, job=job, v=result_view(job))
     others = [json.loads(p.read_text(encoding="utf-8")) for p in JOBS.glob("*.json")]
@@ -337,12 +433,20 @@ def check_pages() -> int:
     bad = 0
     with app.test_client() as c:
         pages = [("/about", c.get("/about")), ("/", c.get("/")), ("/healthz", c.get("/healthz"))]
-        if DEMO:
+        q = c.post("/quick", data={"platform": "instagram", "followers": "250000",          # D-072
+                                   "caption": "New Coca-Cola Zero Sugar for the match! #ZeroSugar #football"})
+        pages.append(("/quick (form sent)", q))
+        if q.status_code in (301, 302, 303):
+            url = q.headers["Location"]
+            pages.append((url, c.get(url)))
+            job_file(url.rsplit("/", 1)[-1]).unlink(missing_ok=True)      # a check's own test result is not kept
+        if SAVED:
             pages += [(f"/example/{e['key']}", c.get(f"/example/{e['key']}")) for e in EX.all_examples()]
-        else:
+        if not DEMO:
             for p in sorted(JOBS.glob("*.json")):
                 j = json.loads(p.read_text(encoding="utf-8"))
-                pages.append((f"/job/{j['id']}", c.get(f"/job/{j['id']}")))
+                url = f"/quick/{j['id']}" if j.get("kind") == "quick" else f"/job/{j['id']}"
+                pages.append((url, c.get(url)))
         for url, resp in pages:
             html = resp.get_data(as_text=True).lower()
             hits = [w for w in W.FORBIDDEN if w in html]
@@ -361,15 +465,25 @@ def main() -> None:
         print(f"Open http://{HOST}:{PORT} - demo mode, saved examples only. Stop with Ctrl+C.")
         app.run(host=HOST, port=PORT, debug=False, threaded=True, load_dotenv=False)
         return
+    start_worker()
+    host, port = ("0.0.0.0", int(os.environ.get("PORT", 7860))) if PUBLIC else (HOST, PORT)
+    print(f"Open http://{host}:{port} - {'public server' if PUBLIC else 'this computer only'}. Stop with Ctrl+C.")
+    app.run(host=host, port=port, debug=False, threaded=True, load_dotenv=False)
+
+
+def start_worker() -> None:
+    """Queue again any job a restart interrupted, in order, and start the one measuring thread."""
     restart = sorted((json.loads(p.read_text(encoding="utf-8")) for p in JOBS.glob("*.json")), key=lambda j: j["created"])
-    for j in restart:                                   # a job interrupted by a restart is queued again, in order
+    for j in restart:
         if j["status"] in ("queued", "running"):
             j["status"], j["progress"] = "queued", []
             save_job(j)
             QUEUE.put(j["id"])
     threading.Thread(target=worker, daemon=True).start()
-    print(f"Open http://{HOST}:{PORT} - this computer only. Stop with Ctrl+C.")
-    app.run(host=HOST, port=PORT, debug=False, threaded=True, load_dotenv=False)
+
+
+if PUBLIC and "--check" not in sys.argv:               # D-069: under gunicorn main() does not run
+    start_worker()
 
 
 if __name__ == "__main__":

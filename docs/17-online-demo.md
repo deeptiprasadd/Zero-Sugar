@@ -35,3 +35,15 @@ python -m src.serve.app --check                      # laptop mode
 set COKE_DEMO=1 && python -m src.serve.app --check   # demo mode (PowerShell: $env:COKE_DEMO=1)
 ```
 Both must say "wording ok" for every page.
+
+## Quick check and results in Google Drive (D-071, D-072)
+The public site also offers a **quick check**: the visitor enters the platform, the account's followers and the
+caption, and gets the typical result for that account size, the caption beside the 192 and ideas worth testing - in a
+few seconds, with no video. Each result can be kept in the researcher's Google Drive (folder "ReelMetrics data" and
+Sheet "ReelMetrics checks"): no caption text, no link, no personal data.
+
+To switch on Drive saving:
+1. Once, on the researcher's computer: `python -m src.serve.drive_login secrets/<OAuth client file>.json`
+   (signs in, creates the folder and Sheet, prints one line `REELMETRICS_GOOGLE = '''...'''`).
+2. In the Render dashboard: the service > **Environment** > add `REELMETRICS_GOOGLE` with the text between the triple
+   quotes as its value > **Save** (Render redeploys).

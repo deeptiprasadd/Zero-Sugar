@@ -6,3 +6,8 @@ numpy==2.4.4
 pandas==3.0.2
 scikit-learn==1.8.0
 joblib==1.5.3
+# D-072 / D-071: the quick check reads the caption; results go to the researcher's Google Drive
+langdetect==1.0.9
+emoji==2.15.0
+requests==2.33.1
+google-auth==2.49.2

@@ -130,7 +130,7 @@ def load_text_detector(allow_download: bool):
         raise SystemExit("EasyOCR's CRAFT text detector is not on disk. One-time download, about "
                          "80 MB, free (Apache-2.0). Re-run with --allow-download.")
     # recognizer=False keeps this to detection: no language models, nothing read.
-    return easyocr.Reader(["en"], gpu=True, verbose=False, recognizer=False,
+    return easyocr.Reader(["en"], gpu=not common.CPU_ONLY, verbose=False, recognizer=False,
                           download_enabled=allow_download or have)
 
 

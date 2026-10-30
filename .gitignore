@@ -2,6 +2,8 @@
 .env
 *.token
 secrets/
+.streamlit/secrets.toml
+token.json
 *cookies*.txt
 
 # Data — large, reproducible, and in Instagram's case not redistributable

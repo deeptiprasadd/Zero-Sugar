@@ -121,14 +121,31 @@ TEXT = {
     "footer": ("Runs on this computer only. Nothing is sent anywhere, except the request a link needs to reach "
                "Instagram or YouTube."),
     # D-066: the online demo (saved results of the six examples only) and the lighter pages
-    "demo_lead": ("Pick a video to see what the tool says: a typical result for the account's size, how the video "
-                  "compares with 192 Zero Sugar videos, and ideas worth testing."),
+    "demo_lead": ("Enter your account's size and caption for a quick check, or open one of the example videos to see "
+                  "the full result."),
     "demo_note": ("This online demo shows saved results only and cannot measure a new video. Measuring needs the "
                   "researcher's computer and takes about 3 minutes a video."),
     "footer_demo": ("Online demo of saved results for six example videos. Measuring a new video runs on the "
                     "researcher's computer."),
     "examples_lead_demo": "Six real videos from the study's collection. None was used to train the tool.",
     "own_head": "Use your own video",
+    # D-072: the quick check on the public site (no video)
+    "quick_head": "Check your post",
+    "quick_lead": ("Enter the account's size and the caption. You get what a typical video from an account this size "
+                   "gets, how the caption compares with the 192 study videos, and ideas worth testing. The video "
+                   "itself is not measured here: that needs the full tool and its 5 GB of models."),
+    "quick_submit": "Check my post",
+    "quick_note": "Takes a few seconds.",
+    "quick_only": ("Quick check from the caption and the account size. The video itself (faces, talking, music, "
+                   "pictures) and the Instagram content score need the full tool."),
+    "quick_keywords": "Event and offer words were looked for in the caption only; the full tool also listens to the speech.",
+    # D-069: the free public server
+    "footer_public": ("Public version on a free server. Uploaded videos are measured here, kept only until the server "
+                      "restarts, and never shared. No log-in and no personal data."),
+    "footer_drive": ("Results are kept by the researcher for the study. The video itself is deleted once measured "
+                     "and never stored. No log-in, no personal data."),                       # D-071
+    "submit_note_public": "Measuring runs on a free server without a graphics card, so it takes longer than on the "
+                          "researcher's computer. The page updates by itself.",
     "hero_tag": "Coca-Cola Zero Sugar short-video check",
     "examples_head": "Try an example",
     "examples_lead": ("Six real videos from the study's collection. None was used to train the tool. Click one to "
@@ -300,6 +317,21 @@ def worth_testing(r: dict, platform: str) -> list[dict]:
                                      f"score leaned towards {what}; seen on Instagram only - YouTube Shorts ran the "
                                      "other way."})
     return tips[:3]
+
+
+# ------------------------------------------------------------------------------------------ D-069 public server
+# Set from the processor check of D-069 before release (src.serve.parity --cpu-check); None = it measured as the study.
+CPU_CAUTION = None
+
+
+def measured_on_line(r: dict) -> str | None:
+    if r.get("measured_on") != "processor":
+        return None
+    if r.get("speech_precision") == "int8":                                    # D-070
+        return ("Measured on a free server without a graphics card, with a lighter speech setting than the study "
+                "used: the speech-based measures (talking, speech rate, speech tone, language) may differ a little "
+                "from the study's own.")
+    return CPU_CAUTION or "Measured on a server without a graphics card, with the study's own settings."
 
 
 # ------------------------------------------------------------------------------------------ 12.7 warnings

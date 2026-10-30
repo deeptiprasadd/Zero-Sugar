@@ -67,7 +67,36 @@
 {% if errors %}<div class="errs" role="alert">{% for e in errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
 
 {% if demo %}
-<div class="callout"><p style="margin:0">{{ T.demo_note }}</p></div>
+<h2 style="font-size:1.3rem">{{ T.quick_head }}</h2>
+<form method="post" action="{{ url_for('quick_submit') }}" id="quick" class="card">
+  <p class="small muted" style="margin-top:0">{{ T.quick_lead }}</p>
+  <div class="step"><span class="n">1</span><h2>The account</h2></div>
+  <label class="f">Platform</label>
+  <div class="pills" role="radiogroup" aria-label="Platform">
+    <label class="pill"><input type="radio" name="platform" value="instagram" {% if not form or form.platform != 'youtube' %}checked{% endif %}><span>Instagram Reels</span></label>
+    <label class="pill"><input type="radio" name="platform" value="youtube" {% if form and form.platform == 'youtube' %}checked{% endif %}><span>YouTube Shorts</span></label>
+  </div>
+  <label class="f" for="q-followers">Followers of the account</label>
+  <input id="q-followers" name="followers" type="text" inputmode="numeric" placeholder="e.g. 500000" value="{{ form.followers if form else '' }}" required>
+  <div class="step"><span class="n">2</span><h2>The caption</h2></div>
+  <label class="f" for="q-caption">Caption <span class="hint">(optional; YouTube: the title on the first line, then the description)</span></label>
+  <textarea id="q-caption" name="caption">{{ form.caption if form else '' }}</textarea>
+  <label class="check"><input type="checkbox" name="no_caption" {% if form and form.no_caption %}checked{% endif %}> This post has no caption</label>
+  <details class="more" style="margin-top:26px">
+    <summary>{{ T.step_hand }} (11 yes/no questions)</summary>
+    <p class="small muted">{{ T.hand_lead }}</p>
+    {% for key, label in questions %}
+    <div class="qrow"><span>{{ label[:1]|upper }}{{ label[1:] }}</span>
+      <span class="pills">
+        <label class="pill"><input type="radio" name="{{ key }}" value="yes" aria-label="{{ label }}: yes"><span>Yes</span></label>
+        <label class="pill"><input type="radio" name="{{ key }}" value="no" aria-label="{{ label }}: no"><span>No</span></label>
+        <label class="pill"><input type="radio" name="{{ key }}" value="skip" checked aria-label="{{ label }}: skip"><span>Skip</span></label>
+      </span></div>
+    {% endfor %}
+  </details>
+  <div class="submitbar"><button type="submit" class="btn">{{ T.quick_submit }}</button>
+    <span class="small muted">{{ T.quick_note }}</span></div>
+</form>
 {% else %}
 <h2 style="font-size:1.3rem">{{ T.own_head }}</h2>
 <form method="post" action="{{ url_for('submit') }}" enctype="multipart/form-data" id="form" class="card">
@@ -134,22 +163,22 @@
 
   <div class="submitbar">
     <button type="submit" class="btn">{{ T.submit }}</button>
-    <span class="small muted">{{ T.submit_note }}</span>
+    <span class="small muted">{{ T.submit_note_public if public else T.submit_note }}</span>
   </div>
 </form>
 <script type="application/json" id="examples-data">{{ examples_json|safe }}</script>
 {% endif %}
 
 <h2 id="ex-head" style="font-size:1.3rem; margin-top:48px">{{ T.examples_head }}</h2>
-<p class="small muted" style="max-width:68ch">{{ T.examples_lead_demo if demo else T.examples_lead }}</p>
+<p class="small muted" style="max-width:68ch">{{ T.examples_lead_demo if saved else T.examples_lead }}</p>
 <div class="exgrid">
 {% for e in examples %}
-  {% if demo %}<a class="ex rv" href="{{ url_for('example_page', key=e.key) }}" aria-label="Open the example {{ e.label }}">
+  {% if saved %}<a class="ex rv" href="{{ url_for('example_page', key=e.key) }}" aria-label="Open the example {{ e.label }}">
   {% else %}<button type="button" class="ex rv" id="ex-{{ e.key }}" data-example="{{ e.key }}" aria-label="Use the example {{ e.label }}">{% endif %}
     <span class="top"><span class="acc">{{ e.account }}</span><span class="badge {{ 'red' if e.platform == 'instagram' else '' }}">{{ 'Instagram' if e.platform == 'instagram' else 'YouTube' }}</span></span>
-    <span class="sub">{{ '%.0f'|format(e.duration) }} s · {{ 'Zero Sugar' if e.zero_sugar == 'yes' else 'Regular Coca-Cola' }}{% if not demo %} · {{ T.examples_ready if e.ready else T.examples_not_ready }}{% endif %}</span>
-    <span class="go">{{ 'See the result' if demo else 'Use this example' }} <span>&rarr;</span></span>
-  {% if demo %}</a>{% else %}</button>{% endif %}
+    <span class="sub">{{ '%.0f'|format(e.duration) }} s · {{ 'Zero Sugar' if e.zero_sugar == 'yes' else 'Regular Coca-Cola' }}{% if not saved %} · {{ T.examples_ready if e.ready else T.examples_not_ready }}{% endif %}</span>
+    <span class="go">{{ 'See the result' if saved else 'Use this example' }} <span>&rarr;</span></span>
+  {% if saved %}</a>{% else %}</button>{% endif %}
 {% endfor %}
 </div>
 

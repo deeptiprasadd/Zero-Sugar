@@ -116,18 +116,19 @@
   @media (prefers-reduced-motion: reduce) { .liquid { transform:translateY(calc((1 - var(--lvl)) * 156px)); } }
   @media (max-width:560px) { h1 { font-size:1.6rem; } .kpi { font-size:2.1rem; } .card { padding:20px 18px; } .wrap { padding:0 16px; } main { padding:28px 0 48px; } }
   {% block style %}{% endblock %}
+  {% if embedded %}.js .rv { opacity:1 !important; translate:none !important; }{% endif %}
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap">
+{% if not embedded %}<header class="top"><div class="wrap">
   <a class="brand" href="{{ url_for('index') }}"><svg viewBox="22 20 76 182" aria-hidden="true"><rect x="22" y="34" width="76" height="156" rx="11" fill="#e61a27"/><path d="M22 118 C44 96 70 140 98 112 L98 134 C70 162 44 118 22 140 Z" fill="#fff"/><rect x="28" y="22" width="64" height="15" rx="6" fill="#cdd1d6"/><rect x="28" y="186" width="64" height="14" rx="6" fill="#cdd1d6"/></svg>{{ T.title }}</a>
   <nav>{% set here = request.endpoint %}
     <a href="{{ url_for('index') }}" class="{{ 'on' if here in ('index', 'submit', 'example_page', 'job_page') }}">Home</a>
     <a href="{{ url_for('about') }}" class="{{ 'on' if here == 'about' }}">About this tool</a></nav>
-</div></header>
+</div></header>{% endif %}
 {% block hero %}{% endblock %}
-<main><div class="wrap">{% block body %}{% endblock %}</div></main>
-<footer class="foot"><div class="wrap">{{ T.footer_demo if demo else T.footer }}</div></footer>
+<main{% if embedded %} style="padding-top:8px"{% endif %}><div class="wrap">{% block body %}{% endblock %}</div></main>
+{% if not embedded %}<footer class="foot"><div class="wrap">{{ T.footer_demo if demo else (T.footer_drive if drive else (T.footer_public if public else T.footer)) }}</div></footer>{% endif %}
 <script>
 (function () {
   // cards ease in as they come into view; numbers count up (skipped when the person asks for less motion)

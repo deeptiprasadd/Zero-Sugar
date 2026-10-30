@@ -18,7 +18,7 @@
   @media (max-width:640px) { .hide-narrow { display:none; } td.barcell { min-width:80px; } }
 {% endblock %}
 {% block body %}
-<div class="topline"><h1>Result</h1><a class="btn ghost" href="{{ url_for('index') }}">&larr; {{ 'All examples' if demo else 'Check another video' }}</a></div>
+<div class="topline"><h1>Result</h1>{% if not embedded %}<a class="btn ghost" href="{{ url_for('index') }}">&larr; {{ 'All examples' if (demo or example_saved) else 'Check another video' }}</a>{% endif %}</div>
 <div class="meta">
   <span class="badge red">{{ v.platform }}</span>
   {% if job.inputs.upload_name %}<span class="badge">{{ job.inputs.upload_name }}</span>{% elif job.inputs.link %}<span class="badge">{{ job.inputs.link }}</span>{% endif %}
@@ -117,8 +117,9 @@
   <h3 class="sec">What this cannot tell you</h3>
   <ul class="plain small">{% for c in v.cannot %}<li>{{ c }}</li>{% endfor %}</ul>
   <p class="tiny" style="margin-top:12px">{{ v.checks }}</p>
-  {% if not demo %}<p class="tiny">{% if v.reused %}Same video and details as an earlier check, so its saved measurement was used.{% else %}Measured in {{ '%.0f'|format(v.seconds) }} s.{% endif %}</p>{% endif %}
+  {% if v.measured_on %}<p class="tiny">{{ v.measured_on }}</p>{% endif %}
+  {% if not (demo or example_saved) %}<p class="tiny">{% if v.reused %}Same video and details as an earlier check, so its saved measurement was used.{% else %}Measured in {{ '%.0f'|format(v.seconds) }} s.{% endif %}</p>{% endif %}
 </details>
 
-<p style="margin-top:20px"><a class="btn" href="{{ url_for('index') }}">{{ 'See another example' if demo else 'Check another video' }}</a> &nbsp; <a href="{{ url_for('about') }}">How far to trust this tool</a></p>
+{% if not embedded %}<p style="margin-top:20px"><a class="btn" href="{{ url_for('index') }}">{{ 'See another example' if (demo or example_saved) else 'Check another video' }}</a> &nbsp; <a href="{{ url_for('about') }}">How far to trust this tool</a></p>{% endif %}
 {% endblock %}

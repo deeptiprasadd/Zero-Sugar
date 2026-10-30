@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Quick check · {{ T.title }}{% endblock %}
+{% block style %}
+  .kcard h2 { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .kcard .plain { margin-top:10px; font-size:.9rem; color:var(--ink2); }
+  .range { display:flex; align-items:center; gap:10px; font-variant-numeric:tabular-nums; margin-top:6px; flex-wrap:wrap; }
+  .range .line { flex:1 1 120px; height:8px; border-radius:999px; background:linear-gradient(90deg, var(--bar), var(--red) 50%, var(--bar)); opacity:.6; }
+  ul.points { margin:0; padding-left:1.2em; } ul.points li { margin:.5em 0; }
+  .tips { display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px; margin-top:16px; }
+  .tip { border:1px solid var(--line); border-left:4px solid var(--red); border-radius:12px; padding:16px 18px; background:var(--soft); min-width:0; }
+  .tip h3 { margin-bottom:4px; } .tip p { margin:0; font-size:.92rem; } .tip .tag { display:inline-block; margin-top:8px; }
+  .full h3.sec { margin:32px 0 8px; font-size:1rem; }
+  td.barcell { width:30%; min-width:110px; }
+  .topline { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+  @media (max-width:640px) { .hide-narrow { display:none; } td.barcell { min-width:80px; } }
+{% endblock %}
+{% block body %}
+<div class="topline"><h1>Your quick check</h1><a class="btn ghost" href="{{ url_for('index') }}">&larr; Check another post</a></div>
+<div class="meta"><span class="badge red">{{ v.platform }}</span><span class="badge">{{ job.created[:10] }}</span></div>
+<p class="callout small">{{ T.quick_only }}</p>
+
+<div class="grid2">
+  <section class="card kcard rv" aria-labelledby="h-base">
+    <h2 id="h-base"><span>{{ T.base_head }}</span>{% if v.certainty %}<span class="badge amber">certainty: {{ v.certainty.level }}</span>{% endif %}</h2>
+    <div class="kpi" data-count="up">{{ v.kpi.rate }}</div>
+    <div class="muted small">{{ T.kpi_rate_label }} ({{ v.kpi.followers }} followers)</div>
+    <div class="range"><strong>{{ v.kpi.lo }}</strong><span class="line" aria-hidden="true"></span><strong>{{ v.kpi.hi }}</strong></div>
+    <p class="plain">{{ T.kpi_range_plain }}</p>
+    {% if v.youtube_range %}<p class="plain"><strong>{{ v.youtube_range }}</strong></p>{% endif %}
+  </section>
+  <section class="card rv">
+    <h2>Your caption beside the 192</h2>
+    {% if v.rows %}
+    <div class="scroll"><table>
+      <tr><th>Measure</th><th>Yours</th><th class="num">Of the 192</th><th class="hide-narrow" aria-hidden="true"></th></tr>
+      {% for r in v.rows %}<tr><td>{{ r.name }}</td><td>{{ r.value }}</td><td class="num">{{ r.all }}</td>
+        <td class="barcell hide-narrow">{% if r.bar is not none %}<div class="posbar thin" aria-hidden="true"><span class="fill" style="width:{{ r.bar }}%"></span><span class="mk" style="left:{{ r.bar }}%"></span></div>{% endif %}</td></tr>{% endfor %}
+    </table></div>
+    <p class="tiny" style="margin-top:8px">{{ T.quick_keywords }}</p>
+    {% else %}<p class="muted">No caption was given, so only the account size was used.</p>{% endif %}
+  </section>
+</div>
+
+{% if v.meaning %}
+<section class="card rv">
+  <h2>What this means</h2>
+  <ul class="points">{% for m in v.meaning %}<li>{{ m }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+<section class="card rv">
+  <h2>Ideas worth testing</h2>
+  <p class="small muted">{{ W.TIPS_LEAD }}</p>
+  {% if v.tips %}
+  <div class="tips">{% for t in v.tips %}<div class="tip"><h3>{{ t.head }}</h3><p>{{ t.line }}</p><span class="badge tag">{{ W.PATTERN_TAG }}</span></div>{% endfor %}</div>
+  {% else %}<p>{{ W.NO_TIPS }}</p>{% endif %}
+</section>
+
+<details class="card rv full">
+  <summary>Full details</summary>
+  <h3 class="sec" style="margin-top:6px">How to read the typical result</h3>
+  <p class="small muted">{{ T.base_lead }}</p>
+  {% if v.base %}<ul class="small">{% for line in v.base %}<li>{{ line }}</li>{% endfor %}</ul>
+  <p class="small"><strong>How sure:</strong> {{ v.certainty.text }}</p>{% endif %}
+  {% if v.hand %}
+  <h3 class="sec">{{ T.hand_head }}</h3>
+  <p class="small muted">{{ T.hand_lead }}</p>
+  <div class="scroll"><table><tr><th>Measure</th><th>Your answer</th><th class="num">"Yes" in the 192</th><th class="num">"Yes" in {{ v.platform }}</th></tr>
+  {% for h in v.hand %}<tr><td>{{ h.label }}</td><td>{{ h.answer }}</td><td class="num">{{ h.all }}</td><td class="num">{{ h.platform }}</td></tr>{% endfor %}</table></div>
+  {% endif %}
+  <h3 class="sec">What this cannot tell you</h3>
+  <ul class="plain small">{% for c in v.cannot %}<li>{{ c }}</li>{% endfor %}</ul>
+  <p class="tiny" style="margin-top:12px">{{ v.checks }}</p>
+</details>
+
+<p style="margin-top:20px"><a class="btn" href="{{ url_for('index') }}">Check another post</a> &nbsp; <a href="{{ url_for('about') }}">How far to trust this tool</a></p>
+{% endblock %}

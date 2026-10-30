@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -310,6 +311,9 @@ def predict(video_path: Path, platform: str, caption: str | None = None, followe
         "model_inputs": {c: (None if pd.isna(v) else float(v)) for c, v in X.iloc[0].items()},
         "timing": {"total_sec": measured["total_sec"], "steps": measured["steps"]},
         "gates": art["card"]["gates"],
+        "measured_on": "processor" if common.CPU_ONLY else "graphics card",       # D-069
+        "speech_precision": (os.environ.get("COKE_ASR_COMPUTE", "float32") if common.CPU_ONLY
+                             else "float16"),                                   # D-070
     }
     (Path(work) / "result.json").write_text(json.dumps(result, indent=1, default=float), encoding="utf-8")
     return result

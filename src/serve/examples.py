@@ -27,6 +27,7 @@ from src import config  # noqa: E402
 
 LF = chr(10)
 DEMO = os.environ.get("COKE_DEMO") == "1"
+SAVED = DEMO or os.environ.get("COKE_PUBLIC") == "1"     # D-069: no example videos on the public server
 DEPLOY = config.ROOT / "deploy"
 PUBLIC = ("key", "platform", "account", "duration", "followers", "caption", "title", "collab", "zero_sugar", "why",
           "notes", "label")
@@ -79,7 +80,7 @@ def _examples() -> tuple[dict, ...]:
 
 def all_examples() -> list[dict]:
     """The six examples, each with `ready` = its saved measurement exists for these exact details."""
-    if DEMO:                                                          # D-066: the saved copy in deploy/
+    if SAVED:                                                         # D-066/D-069: the saved copy in deploy/
         return [{**e, "ready": True} for e in json.loads((DEPLOY / "examples.json").read_text(encoding="utf-8"))]
     from src.serve.intake import VIDEOS, inputs_key
     out = []

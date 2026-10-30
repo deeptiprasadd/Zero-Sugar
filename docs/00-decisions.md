@@ -3555,6 +3555,157 @@ first and the examples below it; choosing an example scrolls back up to the fill
 
 ---
 
+## D-069 - The full tool online, free and public, on a computer without a graphics card, written before it was built
+
+**Date:** 2026-10-30
+**Status:** Accepted (researcher, chat, 30 October, after seeing the Render demo of D-066: "i want full app like in my
+system", it must be public, and "i dont have money to spend on deployment"). Code `src/features/asr.py`,
+`src/features/faces_text.py`, `src/serve/`, new `space/`.
+
+**Where.** Hugging Face Spaces, free "CPU basic" hardware (2 processors, 16 GB memory, no graphics card), a public
+Docker Space. Render's free plan (0.5 GB memory) cannot hold the measuring models; every other option with a graphics
+card costs money. The Space's two files (`space/Dockerfile`, `space/README.md`) copy the public GitHub repository at
+build time, install the packages, and download the free model files once (`python -m src.serve.prefetch`). **Superseded by D-070** (Hugging Face now charges for this; the host is Streamlit Community Cloud).
+The Render demo of D-066 stays as it is.
+
+**Measuring without a graphics card (`COKE_CPU=1`).** The study measured on a graphics card. Without one:
+- speech: faster-whisper large-v3 on the processor with `float32` (the study used `float16` on the graphics card;
+  `float16` does not run on a processor, and `float32` is the closest; beam size, language handling and every other
+  setting unchanged);
+- every PyTorch step (sound events, sentiment, picture and product checks) and EasyOCR choose the processor
+  automatically; the face detector and the picture steps already ran on the processor.
+- The steps record the device they ran on, so a result always says how it was measured.
+
+**Check before release, rule fixed now.** Four of the ten G4 videos (D-055 section 6; per platform the first row with speech and
+the first row without, in the order of `reports/serving_parity_sample.csv`: Instagram `Da4ZFCUssvp`, `DcGF4VEIxbT`,
+YouTube `Uf__4_hjwoM`, `7P6P4bSZr5g`) are measured
+once in processor mode in a fresh folder and compared with the study, with the G4 comparison code
+(`src/serve/parity.py`). Outcome rule:
+- every model input identical (or within the G4 tolerance) -> the pages say the online tool measures as the study did;
+- otherwise -> the online pages always show "Measured on a server without a graphics card: small differences from the
+  study's own measurements are possible (speech in particular)", and the differences found are recorded here. The
+  tool is released either way; nothing is tuned to make the check pass.
+
+**Public mode (`COKE_PUBLIC=1`).**
+- Anyone can upload a video or paste a link; one video is measured at a time (a queue), as on the laptop. Measuring on
+  2 processors is slower than on the laptop - the page states the time measured in the check above.
+- Uploaded videos and results are kept only on the Space's own disk, which is wiped when it restarts; nothing is
+  shared or sold, and the page says so. No log-in, no collection of personal data.
+- The six examples open their saved results (as in D-066); their video files are not published (the Instagram videos
+  are not ours to redistribute).
+- Links: Instagram and YouTube often refuse downloads from cloud servers; if a link fails, the page asks for the file
+  instead (D-058's refusal wording).
+- Started by gunicorn (one worker), so the measuring queue starts when the app loads, not only from `main()`.
+
+**What does not change:** the models, the reference values, the wording rules (`FORBIDDEN`, `--check`), the
+release checks G1-G4 and their results, and the laptop tool.
+
+---
+
+## D-070 - The public full tool on Streamlit Community Cloud instead, written before it was built
+
+**Dropped 2026-10-30 (researcher):** the Streamlit app is not used and its folder was deleted before any commit. The
+processor mode of D-069 and the `int8` speech option stay in the code, unused by default.
+
+**Date:** 2026-10-30
+**Status:** Accepted (researcher, chat, 30 October). Hugging Face now asks for a paid plan to create Docker Spaces and
+to use its CPU hardware for new Spaces, so D-069's host is not free any more. The researcher chose Streamlit Community
+Cloud ("just work on streamlit its safe"), after being told its limits. D-069's processor mode, public mode and
+processor check still apply; only the host and the speech precision change. Code: new `streamlit/`.
+
+**Host.** Streamlit Community Cloud, free and public, built from the GitHub repository (`streamlit/streamlit_app.py`,
+`streamlit/requirements.txt`, `streamlit/packages.txt`). Its published limits are at most 2.7 GB of memory, 2 shared
+processor cores, no graphics card, and 50 GB of disk. The model files download from Hugging Face on the first start.
+
+**Speech precision.** The study's speech model (faster-whisper large-v3) needs about 3 GB in `float32`, which does
+not fit in 2.7 GB. On Streamlit it runs in `int8` (about 1.6 GB), set by `COKE_ASR_COMPUTE=int8`; everything else is
+as in D-069. This is a further step away from the study's own `float16` measurement, so:
+- **Check, rule fixed now:** the two G4 videos with speech of D-069's check (Instagram `Da4ZFCUssvp`, YouTube
+  `Uf__4_hjwoM`) are measured once more in `int8` and compared with the study as in D-069. The result and the
+  measured time are recorded here, whatever they are.
+- **The page always says so** on the Streamlit version: "Measured on a free server without a graphics card, with a
+  lighter speech setting than the study used: the speech-based measures (talking, speech rate, speech tone, language)
+  may differ a little from the study's own." Nothing is tuned to make the check look better.
+
+**The app.** The same steps, models and wording as the laptop tool: the form (video file or link, followers, caption,
+the two questions, optional descriptions); the result page is the tool's own page (`result.html`), shown inside
+Streamlit; the six examples open their saved results. One video is measured at a time for all visitors (a shared
+lock), because two at once would not fit in memory; others wait with a message. Uploaded videos stay only on the
+app's own disk until it restarts. If memory runs out, Streamlit restarts the app; the page says to try a shorter video
+or the examples.
+
+**What does not change:** the models, the reference values, the wording rules (`FORBIDDEN`), the release checks and
+their results, the laptop tool and the Render demo.
+
+---
+
+## D-071 - Results kept in the researcher's own Google Drive (results only, never videos), written before it was built
+
+**Date:** 2026-10-30
+**Status:** Accepted (researcher, chat, 30 October: use a hidden folder in her own Google Drive as the app's storage
+instead of a database; chose "results only, never videos" and "a folder plus one Google Sheet"). Code: new
+`src/serve/drive_store.py`, `src/serve/drive_login.py`; `src/serve/app.py`, `streamlit/streamlit_app.py`,
+`src/serve/wording.py`.
+
+**Why.** The free Streamlit server (D-070) wipes its disk when it restarts, so results vanish; the researcher wants them
+kept for later study, free, without a database.
+
+**What is stored, and only this.** For every finished check: one JSON file (the saved job as the tool already writes it:
+the inputs given, the measured values, the outputs, the timing) and one row in a Google Sheet (date and time, platform,
+follower count, typical rate and its range, Instagram position, hashtags / talking / faces, the tips shown, where it was
+measured, the speech setting, seconds taken). **Never the video**: the uploaded file and the server's working copy are
+deleted once the check ends, whatever its outcome. **The caption text is not stored** - only its length and counts,
+as the measured values already hold them; the link a visitor pasted is not stored either. No name, e-mail, IP address
+or any other personal data is collected.
+
+**Where and who.** A folder "ReelMetrics data" and a Sheet "ReelMetrics checks" in the researcher's own Drive, reached
+with her own Google login token kept as a server secret (Streamlit "Secrets"; on the laptop in `secrets/`, gitignored).
+Google's service accounts cannot store files in a personal Drive, so a personal token is the only free route. The app
+asks only for the `drive.file` permission: it can see the files it created and nothing else in her Drive. Visitors never
+see Drive. Only the researcher can open the folder.
+
+**Behaviour.** Saving is switched on only when the secret is present; without it the tool works exactly as before. A
+Drive failure never stops a result from showing - it is logged. After a server restart, a result page that is no longer
+on the server's disk is read back from Drive.
+
+**Pages.** The privacy sentence becomes: "Results are kept by the researcher for the study. The video itself is deleted
+once measured and never stored. No log-in, no personal data." (only where saving is switched on).
+
+---
+
+## D-072 - A quick check from the caption and account size on the public Render site, written before it was built
+
+**Date:** 2026-10-30
+**Status:** Accepted (researcher, chat, 30 October: no laptop and no Streamlit; the public Render site must give every
+visitor a result of their own, with results kept in her Google Drive, D-071). Measuring a video needs about 5 GB of
+models and no free server can hold them (D-069, D-070), so the public site checks what can be computed exactly without
+the video. Code: new `src/serve/quick.py`, `src/serve/templates/quick.html`; `src/serve/app.py`, `index.html`,
+`wording.py`, `requirements-render.txt`.
+
+**Inputs:** platform, the account's followers, the caption (optional), and the optional yes/no descriptions,
+including "call to action" (the visitor's own answers, as on the laptop tool).
+
+**What it shows - all computed exactly as the study and the laptop tool do, no new model:**
+1. **What a typical video gets** for that platform and account size, with the 80% range and the certainty: the base-rate
+   model of D-053/D-054, the same numbers the full tool shows.
+2. **The caption beside the 192:** hashtags, emoji, caption length (within its language), "mentions an event",
+   "mentions an offer or something new" - the study's own steps (`metadata.text_counts`, `language`, `keywords`) run on
+   the caption alone. Keywords are searched in the caption only (the full tool also searches the speech), and the page
+   says so.
+3. **Ideas worth testing:** the D-067 rules that need no video - hashtags (below half of the 192) and call to action
+   (unless answered yes).
+4. **What it does not show:** the Instagram content score, faces, talking, music, picture and every other video
+   measure - these need the video and the full tool. The page says this in one line at the top, never as a forecast.
+
+**Storage:** each quick check is kept as a result (D-071 rules: no caption text, no link, no personal data) in the
+Drive folder and one row in the Sheet, marked "quick check (caption and account size)". The visitor gets a result page
+with its own link; after a restart it is read back from Drive.
+
+**What does not change:** the models, the reference values, the wording rules (`FORBIDDEN`), the laptop tool, the
+examples. The demo's "cannot measure a new video" box is replaced by this form.
+
+---
+
 ## Open decisions
 
 | ID | Question | Blocking | Needed by |

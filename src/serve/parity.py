@@ -9,6 +9,8 @@ in fresh folders, and their inputs are compared with the values the models were 
 
     python -m src.serve.parity --run       # G4 itself (task 12.8): the 10, twice, each time in a fresh folder
     python -m src.serve.parity --record    # write the outcome on models/model_card.json (and rebuild the schema)
+    COKE_CPU=1 python -m src.serve.parity --cpu-check   # D-069: 4 of the 10, measured on the processor only
+    COKE_CPU=1 COKE_ASR_COMPUTE=int8 python -m src.serve.parity --int8-check   # D-070: the 2 with speech
 
 The sample is drawn once and never redrawn: per platform 3 videos with speech and 2 without (speech status
 from 5.6), seed 20261017. These 10 are kept out of development; development checks use corpus videos
@@ -305,6 +307,54 @@ def record_on_card(note: str | None = None) -> None:
     print("model card G4:", card["gates"]["G4"])
 
 
+def _peak_memory(stop, out: dict) -> None:
+    """Largest memory any measuring process of this run used, sampled each second (for the 2.7 GB limit, D-070)."""
+    import psutil
+    me = psutil.Process()
+    while not stop.is_set():
+        for ch in me.children(recursive=True):
+            try:
+                out["peak_mb"] = max(out.get("peak_mb", 0), ch.memory_info().rss / 2 ** 20)
+            except psutil.Error:
+                pass
+        stop.wait(1.0)
+
+
+def cpu_check(int8: bool = False) -> dict:
+    """D-069: per platform the first G4 video with speech and the first without, once, on the processor, in a fresh
+    folder. With int8 (D-070): only the two with speech, speech in int8."""
+    import os
+    import threading
+    if not common.CPU_ONLY:
+        raise SystemExit("set COKE_CPU=1 (and hide the graphics card, CUDA_VISIBLE_DEVICES=) before running this")
+    if int8 != (os.environ.get("COKE_ASR_COMPUTE") == "int8"):
+        raise SystemExit("--int8-check needs COKE_ASR_COMPUTE=int8, and --cpu-check needs it unset")
+    s = pd.read_csv(SAMPLE, dtype={"media_id": str})
+    s = pd.concat([s[(s["platform"] == p) & (s["speech"] == sp)].head(1)        # per platform: speech, no speech
+                   for p in ("instagram", "youtube") for sp in ((True,) if int8 else (True, False))])
+    vids = list(zip(s["platform"], s["media_id"]))
+    tag = "g4_int8" if int8 else "g4_cpu"
+    mem, stop = {}, threading.Event()
+    threading.Thread(target=_peak_memory, args=(stop, mem), daemon=True).start()
+    df = check(vids, config.INTERIM / "serve" / tag, with_inputs=True)
+    stop.set()
+    df.to_csv(config.INTERIM / "serve" / f"{tag}.csv", index=False)
+    gate = df[df["level"].isin(["model input", "output"])]
+    res = {"decision": "D-070" if int8 else "D-069", "videos": [list(v) for v in vids],
+           "gate_rows": int(len(gate)), "gate_rows_identical": int(gate["identical"].sum()),
+           "gate_rows_within_tolerance": int(gate["within_tolerance"].sum()),
+           "feature_rows": int((df["level"] == "feature").sum()),
+           "feature_rows_identical": int(df.loc[df["level"] == "feature", "identical"].sum()),
+           "seconds_per_video": round(float(df.groupby(["platform", "media_id"])["sec"].first().mean()), 1),
+           "peak_memory_mb_of_a_measuring_process": round(mem.get("peak_mb", 0.0)),
+           "differences": [{k: str(x[k]) for k in ("platform", "media_id", "level", "column", "served", "trained")}
+                           for _, x in df[~df["identical"]].iterrows()]}
+    (config.INTERIM / "serve" / f"{tag}_result.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+    print(summarise(df))
+    print(json.dumps({k: v for k, v in res.items() if k != "differences"}, indent=1))
+    return res
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="G4 - training/serving parity (D-055).")
     ap.add_argument("--draw", action="store_true", help="draw the 10 G4 videos (once)")
@@ -312,6 +362,8 @@ def main() -> None:
     ap.add_argument("--run", action="store_true", help="G4: the 10 drawn videos, twice, fresh folders (task 12.8)")
     ap.add_argument("--record", action="store_true", help="write the G4 outcome on the model card")
     ap.add_argument("--note", help="with --record: the outcome in plain words for the tool's pages")
+    ap.add_argument("--cpu-check", action="store_true", help="D-069: 4 G4 videos measured without a graphics card")
+    ap.add_argument("--int8-check", action="store_true", help="D-070: the 2 with speech, speech in int8")
     args = ap.parse_args()
     if args.run:
         print(json.dumps(run_g4(), indent=1))
@@ -321,6 +373,10 @@ def main() -> None:
         s = draw()
         print(f"-> {SAMPLE.relative_to(config.ROOT)}")
         print(s.to_string(index=False))
+    if args.cpu_check:
+        cpu_check()
+    if args.int8_check:
+        cpu_check(int8=True)
     if args.dev:
         vids = dev_videos()
         df = check(vids, config.INTERIM / "serve" / "parity_dev", with_inputs=False)

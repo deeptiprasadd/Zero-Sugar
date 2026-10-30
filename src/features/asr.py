@@ -103,6 +103,12 @@ PARAMS = {"model": MODEL, "compute_type": COMPUTE_TYPE, "beam_size": BEAM_SIZE,
 
 
 def load_model(allow_download: bool):
+    if common.CPU_ONLY:                    # D-069: no graphics card; float16 does not run on a processor
+        from faster_whisper import WhisperModel
+        import os
+        compute = os.environ.get("COKE_ASR_COMPUTE", "float32")   # D-070: int8 where memory is short
+        return WhisperModel(MODEL, device="cpu", compute_type=compute, cpu_threads=os.cpu_count() or 2,
+                            local_files_only=not allow_download)
     dirs = common.enable_cuda12_dlls()
     if not dirs:
         raise SystemExit("NVIDIA CUDA 12 libraries not found (nvidia-cublas-cu12, "
