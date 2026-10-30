@@ -3464,6 +3464,97 @@ models, the pipeline, the measurements, the release checks and G4. New sentences
 
 ---
 
+## D-066 - A lighter, livelier look and an online demo for Render, written before either was built
+
+**Date:** 2026-10-30
+**Status:** Accepted (researcher, chat, 30 October: simpler, more attractive, animated "in the style of the Coca-Cola
+can" pages that stay fast and easy to use; the repository is now public so the site can go on Render; chose "online
+demo of the examples" and agreed that the small model and result files may be committed). Code `src/serve/`,
+`render.yaml`, `requirements-render.txt`, `deploy/`.
+
+**What changes - presentation and hosting only.** Every number, model, measurement, release check and sentence rule of
+D-046 to D-065 stays as it is (`FORBIDDEN` is still checked by `--check`).
+1. **Look.** One column, fewer boxes; the six examples first as large cards, the upload / link form under "Use your own
+   video"; red and white; a can-shaped heading graphic with rising bubbles, a can that fills while a video is measured,
+   figures that count up and position bars that slide in. Plain CSS and a few lines of script, no outside fonts, files
+   or libraries (D-059: nothing is sent anywhere). Motion uses only transform and opacity and is switched off for
+   people who ask their system for reduced motion. Light and dark modes and the phone width stay.
+2. **Two ways to run.** On the laptop everything works as before. With the environment variable `COKE_DEMO=1` (set on
+   Render) the site is a **demo**: it shows the six examples' saved results, the About page and a health page. It cannot
+   measure a new video - Render has no graphics card and the models for measuring need about 6 GB - so the upload and
+   link form is replaced by one sentence saying that live measuring runs on the researcher's computer.
+3. **What goes public (the repository is public).** Only small files: the five served model / reference files
+   (`models/`, about 0.3 MB), `deploy/examples.json` (the six cards: account, followers, caption - already public
+   collection data) and `deploy/results/<key>.json` (the six saved results, with the local folder path removed). The
+   videos, `data/`, `internal/`, `writing/` and the README stay off git. `.gitattributes` keeps the model files'
+   bytes unchanged so their fingerprints (D-055) still match on Render.
+4. **Light server.** The demo does not load torch, the speech engine or the video libraries. The Instagram
+   explanation uses shap on the laptop; where shap is not installed it uses the straight formula that the build step
+   proved equal to shap (`shap_linear_check` in the schema, below 1e-6, D-060), so the numbers do not change.
+5. **Checks.** `python -m src.serve.app --check` must pass in both modes; the six demo results must render to the same
+   figures as the laptop's saved results.
+
+**What does not change:** the laptop tool, its job queue, the measuring code, and the rule that no probability is shown.
+
+---
+
+## D-067 - A shorter result page in plain words, with "ideas worth testing", written before it was built
+
+**Date:** 2026-10-30
+**Status:** Accepted (researcher, chat, 30 October: keep the D-066 animations, but show only the most important
+findings and recommendations in simple language, without long explanations). Code `src/serve/templates/`,
+`src/serve/wording.py`, `src/serve/app.py`.
+
+**What changes - presentation only.** No number, model, measurement or check changes; every `FORBIDDEN` phrase is
+still refused by `--check`.
+1. **Result page, in this order:** the warnings (D-060, unchanged); the two summary cards; "What this means" - two or
+   three plain sentences built from values already on the page; "Ideas worth testing" (below); then **one collapsed
+   "Full details" section** holding everything else unchanged: how to read the range and how sure it is, the three
+   driver explanations, the 20 measures beside the 192, the hand codes, what the tool did not have, what it cannot
+   tell you, and the release checks.
+2. **"Ideas worth testing" instead of recommendations.** The study found nothing shown to raise engagement (D-043,
+   D-045), so the page gives no advice; it lists at most three patterns from the study that this video does not
+   already follow, each marked "a pattern, not proof". The rules are fixed here, before any page shows them:
+   - **Hashtags** (both platforms, only when the caption is known): shown when the video has fewer hashtags than half
+     of the 192 (its position below 50). Text: accounts that used more hashtags had higher engagement; seen between
+     accounts, not shown to help a single video (D-043, H6).
+   - **Call to action:** shown unless the person answered "yes" to the call-to-action question. Text: videos with a
+     call to action ranked about 11 points higher out of 100, the study's most robust pattern; the researcher's own
+     coding of it was only moderately repeatable (D-051, H5).
+   - **Talking and faces** (Instagram only, one tip each): shown when the video sits below half of the 120 Instagram
+     videos. Text: the Instagram score leaned towards more talking / more faces; seen on Instagram only, and the
+     YouTube Shorts ran the other way (D-048).
+   - None fires: "This video already follows the patterns the study saw."
+3. **Home page:** a shorter heading text; example cards show account, platform, length and Zero Sugar or not (why
+   each was left out of the 192 moves to About); the laptop form keeps every field.
+4. **About page:** three short sections (what it learned from, how far to trust it, what it cannot tell you) and one
+   collapsed "More detail" with the platform table and the examples.
+
+---
+
+## D-068 - A calmer, more spacious look with a stored font, written before it was built
+
+**Date:** 2026-10-30
+**Status:** Accepted (researcher, chat, 30 October: the font "looks a bit too AI-generated", the layout feels
+congested; wants a natural, clean, professional font, more space, cleaner and more corporate, a shorter About page,
+the animations kept, everything free). Code `src/serve/templates/`, `src/serve/static/fonts/`.
+
+**What changes - presentation only.** No number, sentence rule or check changes.
+1. **Font:** IBM Plex Sans (SIL Open Font License, free), regular / medium / semibold, Latin only, about 60 KB, stored
+   in `src/serve/static/fonts/` with its licence and served by the tool itself. Nothing is loaded from outside, so
+   D-059 ("nothing is sent anywhere") still holds; if the files are missing, the system font is used.
+2. **Calmer and more spacious:** slimmer header; red kept for accents (buttons, badges, bars, the can); larger white
+   space between and inside sections, lighter borders and softer shadows; a narrower reading width; headings in
+   semibold rather than heavy bold.
+3. **About page shorter still:** three short sections; the list of data limits joins the platform table and the
+   examples in "More detail".
+4. The animations of D-066 stay as they are.
+
+**Note 2026-10-30 - order of the home page.** At the researcher's request the form for checking a video now comes
+first and the examples below it; choosing an example scrolls back up to the filled form. Presentation only.
+
+---
+
 ## Open decisions
 
 | ID | Question | Blocking | Needed by |

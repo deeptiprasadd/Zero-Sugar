@@ -1,0 +1,14 @@
+# Render blueprint for the online demo (D-066): saved results of six example videos, the About page, no measuring.
+services:
+  - type: web
+    name: zero-sugar-video-check
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-render.txt
+    startCommand: gunicorn --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT src.serve.app:app
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: COKE_DEMO
+        value: "1"

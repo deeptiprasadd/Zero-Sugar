@@ -6,16 +6,21 @@
 One video is measured at a time (the graphics card); each job is saved under data/interim/serve/jobs/ so a
 finished result survives a restart. The page shows only what D-046, D-054 and D-059 allow; every sentence comes
 from `src/serve/wording.py`. The pages were redesigned with a box of example videos in D-065 (`src/serve/examples.py`).
+
+With COKE_DEMO=1 (the online demo on Render, D-066) the site shows only the six examples' saved results, the About
+page and /healthz: nothing is measured, so no video libraries or models for measuring are loaded.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import queue
 import sys
 import threading
 import traceback
 import uuid
+from functools import lru_cache
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -24,10 +29,12 @@ from werkzeug.utils import secure_filename
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src import config  # noqa: E402
+from src.serve import examples as EX  # noqa: E402
 from src.serve import wording as W  # noqa: E402
 from src.serve.measure import SERVE, StepFailed  # noqa: E402
 
 HOST, PORT = "127.0.0.1", 5055
+DEMO = EX.DEMO
 CRLF, LF = chr(13) + chr(10), chr(10)
 JOBS = SERVE / "jobs"
 UPLOADS = SERVE / "uploads"
@@ -179,14 +186,45 @@ def result_view(job: dict) -> dict:
             "followers_from_link": job.get("followers_from_link", False),
             "ig": W.ig_sentence(r["instagram_score"]) if r.get("instagram_score") else None,
             "rows": rows, "hand": hand, "missing": W.missing_lines(r["missing"], platform),
-            "seconds": r["timing"]["total_sec"], "reused": r.get("reused_saved_measurement", False)}
+            "seconds": r["timing"]["total_sec"], "reused": r.get("reused_saved_measurement", False),
+            "meaning": W.meaning(r, platform), "tips": W.worth_testing(r, platform)}   # D-067
 
 
 def form_page(**kw):
-    from src.serve import examples
-    ex, ex_json = examples.for_page()
-    return render_template("index.html", T=W.TEXT, questions=hand_code_questions(), examples=ex,
-                           examples_json=ex_json, **kw)
+    ex, ex_json = EX.for_page()
+    return render_template("index.html", T=W.TEXT, questions=[] if DEMO else hand_code_questions(), examples=ex,
+                           examples_json=ex_json, demo=DEMO, **kw)
+
+
+@lru_cache(maxsize=None)
+def demo_page(key: str) -> str | None:
+    """D-066: the result page of one example, built from its saved result (no measuring)."""
+    e = EX.get(key)
+    if e is None:
+        return None
+    r = EX.saved_result(key)
+    r["reused_saved_measurement"] = True
+    job = {"id": key, "platform": e["platform"], "caption_used": e["caption"], "result": r,
+           "inputs": {"upload_name": f"example: {e['label']}", "link": None, "zero_sugar": e["zero_sugar"]}}
+    return render_template("result.html", T=W.TEXT, W=W, job=job, v=result_view(job), demo=True, example=e)
+
+
+@app.context_processor
+def mode():
+    return {"demo": DEMO}
+
+
+@app.get("/healthz")
+def healthz():
+    return "ok"
+
+
+@app.get("/example/<key>")
+def example_page(key: str):
+    html = demo_page(key) if DEMO else None
+    if html is None:
+        abort(404)
+    return html
 
 
 @app.get("/")
@@ -197,6 +235,12 @@ def index():
 @app.post("/submit")
 def submit():
     f = request.form
+    if DEMO:                                             # D-066: only the saved examples can be opened online
+        key = (f.get("example") or "").strip()
+        if EX.get(key) is None:
+            return form_page(errors=["Choose one of the examples. This online demo cannot measure a new video."],
+                             form=f), 400
+        return redirect(url_for("example_page", key=key))
     link = (f.get("link") or "").strip()
     upload = request.files.get("video")
     errors = []
@@ -258,7 +302,7 @@ def submit():
 
 @app.get("/job/<jid>")
 def job_page(jid: str):
-    job = load_job(jid)
+    job = load_job(jid) if not DEMO else None
     if job is None:
         abort(404)
     if job["status"] == "done":
@@ -292,10 +336,13 @@ def check_pages() -> int:
     """Render the about page and every finished job; fail if a forbidden phrase appears."""
     bad = 0
     with app.test_client() as c:
-        pages = [("/about", c.get("/about")), ("/", c.get("/"))]
-        for p in sorted(JOBS.glob("*.json")):
-            j = json.loads(p.read_text(encoding="utf-8"))
-            pages.append((f"/job/{j['id']}", c.get(f"/job/{j['id']}")))
+        pages = [("/about", c.get("/about")), ("/", c.get("/")), ("/healthz", c.get("/healthz"))]
+        if DEMO:
+            pages += [(f"/example/{e['key']}", c.get(f"/example/{e['key']}")) for e in EX.all_examples()]
+        else:
+            for p in sorted(JOBS.glob("*.json")):
+                j = json.loads(p.read_text(encoding="utf-8"))
+                pages.append((f"/job/{j['id']}", c.get(f"/job/{j['id']}")))
         for url, resp in pages:
             html = resp.get_data(as_text=True).lower()
             hits = [w for w in W.FORBIDDEN if w in html]
@@ -310,6 +357,10 @@ def main() -> None:
     args = ap.parse_args()
     if args.check:
         sys.exit(1 if check_pages() else 0)
+    if DEMO:
+        print(f"Open http://{HOST}:{PORT} - demo mode, saved examples only. Stop with Ctrl+C.")
+        app.run(host=HOST, port=PORT, debug=False, threaded=True, load_dotenv=False)
+        return
     restart = sorted((json.loads(p.read_text(encoding="utf-8")) for p in JOBS.glob("*.json")), key=lambda j: j["created"])
     for j in restart:                                   # a job interrupted by a restart is queued again, in order
         if j["status"] in ("queued", "running"):

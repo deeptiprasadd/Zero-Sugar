@@ -22,6 +22,26 @@ def _explainer(model, background: np.ndarray):
     return shap.LinearExplainer(model.named_steps["m"], shap.maskers.Independent(background, max_samples=len(background)))
 
 
+class _Formula:
+    """What shap's LinearExplainer returns for a linear model: coefficient x (value - background mean). The build step
+    proves the two equal (`shap_linear_check`, D-060); the online demo (D-066) has no shap and uses this."""
+
+    def __init__(self, model, background: np.ndarray):
+        m = model.named_steps["m"]
+        self.coef, self.mean = m.coef_[0], background.mean(axis=0)
+        self.expected_value = float(self.coef @ self.mean + m.intercept_[0])
+
+    def shap_values(self, z):
+        return self.coef * (np.asarray(z, float) - self.mean)
+
+
+def _explainer_for(model, background: np.ndarray):
+    try:
+        return _explainer(model, background)
+    except ImportError:
+        return _Formula(model, background)
+
+
 def linear_check(model, background: np.ndarray) -> float:
     """Largest gap between shap's values and coefficient x (z - background mean) on the background itself."""
     sv = np.asarray(_explainer(model, background).shap_values(background))
@@ -35,7 +55,7 @@ def explain(X: pd.DataFrame, art: dict) -> dict:
     schema, model = art["schema"], art["model"]
     order = schema["feature_order"]
     bg = np.asarray(schema["ig_background_z"], float)
-    ex = _explainer(model, bg)
+    ex = _explainer_for(model, bg)
     z = model[:-1].transform(X[order])
     sv = np.asarray(ex.shap_values(z))[0]
     margin = float(model.named_steps["m"].decision_function(z)[0])

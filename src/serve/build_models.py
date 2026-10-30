@@ -35,6 +35,7 @@ from src import config  # noqa: E402
 from src.coding.focus_codes import H, LABEL as HLABEL, coded  # noqa: E402
 from src.eda.explore import GREY, INK2  # noqa: E402  (also sets the figure style)
 from src.models.train import GRIDS, M1, SEEDS, build, pipe  # noqa: E402
+from src.serve.base_math import base_predict, design  # noqa: E402,F401
 from src.stats.hypotheses import RAW, fit  # noqa: E402
 
 MODELS = config.ROOT / "models"
@@ -57,19 +58,6 @@ def base_fit(d: pd.DataFrame) -> dict:
     cov = m.cov_params().loc[fe.index, fe.index]
     return {"names": list(fe.index), "beta": fe.to_numpy(), "cov": cov.to_numpy(),
             "var_account": float(m.cov_re.iloc[0, 0]), "var_resid": float(m.scale), "converged": conv}
-
-
-def design(platform: pd.Series, log_f: pd.Series) -> np.ndarray:
-    return np.column_stack([np.ones(len(platform)), (platform == "instagram").astype(float).to_numpy(),
-                            log_f.to_numpy(float)])
-
-
-def base_predict(b: dict, platform: pd.Series, log_f: pd.Series) -> tuple[np.ndarray, np.ndarray]:
-    x = design(platform, log_f)
-    mean = x @ b["beta"]
-    var_fixed = np.einsum("ij,jk,ik->i", x, b["cov"], x)
-    sd = np.sqrt(var_fixed + b["var_account"] + b["var_resid"])
-    return mean, sd
 
 
 def g3(df: pd.DataFrame) -> dict:

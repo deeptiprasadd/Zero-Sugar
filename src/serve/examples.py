@@ -7,10 +7,15 @@ one of the 192 - a training video would score itself.
 
     python -m src.serve.examples              # list the examples and whether each saved measurement is ready
     python -m src.serve.examples --prepare    # measure every example not yet measured (3-4 minutes each)
+    python -m src.serve.examples --export-demo   # write deploy/examples.json and deploy/results/ for the online demo
+
+With COKE_DEMO=1 (the online demo, D-066) the examples and their saved results are read from deploy/ instead.
 """
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import sys
 from functools import lru_cache
 from pathlib import Path
@@ -19,6 +24,12 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src import config  # noqa: E402
+
+LF = chr(10)
+DEMO = os.environ.get("COKE_DEMO") == "1"
+DEPLOY = config.ROOT / "deploy"
+PUBLIC = ("key", "platform", "account", "duration", "followers", "caption", "title", "collab", "zero_sugar", "why",
+          "notes", "label")
 
 # (platform, media_id) in the order the box shows them (D-065)
 CHOSEN = [("instagram", "C4-MHHxqE2M"), ("youtube", "fkQUn9CHreE"), ("instagram", "DATm42ctA-V"),
@@ -68,6 +79,8 @@ def _examples() -> tuple[dict, ...]:
 
 def all_examples() -> list[dict]:
     """The six examples, each with `ready` = its saved measurement exists for these exact details."""
+    if DEMO:                                                          # D-066: the saved copy in deploy/
+        return [{**e, "ready": True} for e in json.loads((DEPLOY / "examples.json").read_text(encoding="utf-8"))]
     from src.serve.intake import VIDEOS, inputs_key
     out = []
     for e in _examples():
@@ -80,9 +93,13 @@ def get(key: str) -> dict | None:
     return next((e for e in all_examples() if e["key"] == key), None)
 
 
+def saved_result(key: str) -> dict:
+    """The online demo's saved result for one example (D-066)."""
+    return json.loads((DEPLOY / "results" / f"{key}.json").read_text(encoding="utf-8"))
+
+
 def for_page() -> tuple[list[dict], str]:
     """The examples for the form, and the same as JSON for its script (no file paths, `</` escaped)."""
-    import json
     ex = all_examples()
     public = [{k: e[k] for k in ("key", "platform", "account", "followers", "caption", "collab", "zero_sugar", "label")}
               for e in ex]
@@ -104,12 +121,38 @@ def prepare() -> None:
         print(f"{e['key']}: done in {r['timing']['total_sec']:.0f} s", flush=True)
 
 
+def export_demo() -> None:
+    """Copy the six cards and their saved results into deploy/ for the online demo (D-066): no video, no file path."""
+    from src.serve.intake import VIDEOS, inputs_key
+    ex = all_examples()
+    missing = [e["key"] for e in ex if not e["ready"]]
+    if missing:
+        raise SystemExit(f"not measured yet: {missing} - run --prepare first")
+    (DEPLOY / "results").mkdir(parents=True, exist_ok=True)
+    public = []
+    for e in ex:
+        key = inputs_key(e["platform"], e["caption"], e["title"], e["collab"] if e["platform"] == "instagram" else None)
+        r = json.loads((VIDEOS / _fingerprint(e["path"]) / key / "result.json").read_text(encoding="utf-8"))
+        r["video"].pop("work", None)                                   # a folder on this computer
+        (DEPLOY / "results" / f"{e['key']}.json").write_text(
+            json.dumps(r, ensure_ascii=False, indent=1, default=float) + LF, encoding="utf-8", newline=LF)
+        public.append({k: e[k] for k in PUBLIC})
+    (DEPLOY / "examples.json").write_text(json.dumps(public, ensure_ascii=False, indent=1) + LF, encoding="utf-8",
+                                          newline=LF)
+    print(f"wrote deploy/examples.json and {len(public)} results")
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description="The examples box (D-065).")
     ap.add_argument("--prepare", action="store_true")
-    if ap.parse_args().prepare:
+    ap.add_argument("--export-demo", action="store_true")
+    args = ap.parse_args()
+    if args.prepare:
         prepare()
+    if args.export_demo:
+        export_demo()
+        return
     for e in all_examples():
         print(f"{e['key']:24} {e['account']:22} {e['duration']:5.0f} s  {e['followers']:>11,.0f}  "
               f"{', '.join(e['notes'])}  [{'ready' if e['ready'] else 'not measured yet'}]")

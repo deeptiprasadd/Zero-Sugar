@@ -95,9 +95,8 @@ def count_text(n: float) -> str:
 
 TEXT = {
     "title": "Coca-Cola Zero Sugar short-video check",
-    "intro": ("Upload a short video or paste an Instagram or YouTube link. The tool measures it the same way it "
-              "measured 192 Coca-Cola Zero Sugar videos (Instagram 120, YouTube 72) and shows what a typical video "
-              "from an account of your size gets, and how this video's measures compare."),
+    "intro": ("Upload a short video or paste a link. In about 3 minutes you see a typical result for the account's "
+              "size, how the video compares with 192 Zero Sugar videos, and ideas worth testing."),
     "base_head": "What a typical video gets",
     "base_lead": ("For an account the models have not seen, they could not predict better than this. It is the "
                   "typical result for a Zero Sugar video from an account of this size, not a forecast for this video."),
@@ -121,10 +120,19 @@ TEXT = {
     "tagline": "Measures a short video the way the study measured 192 Coca-Cola Zero Sugar videos.",
     "footer": ("Runs on this computer only. Nothing is sent anywhere, except the request a link needs to reach "
                "Instagram or YouTube."),
+    # D-066: the online demo (saved results of the six examples only) and the lighter pages
+    "demo_lead": ("Pick a video to see what the tool says: a typical result for the account's size, how the video "
+                  "compares with 192 Zero Sugar videos, and ideas worth testing."),
+    "demo_note": ("This online demo shows saved results only and cannot measure a new video. Measuring needs the "
+                  "researcher's computer and takes about 3 minutes a video."),
+    "footer_demo": ("Online demo of saved results for six example videos. Measuring a new video runs on the "
+                    "researcher's computer."),
+    "examples_lead_demo": "Six real videos from the study's collection. None was used to train the tool.",
+    "own_head": "Use your own video",
+    "hero_tag": "Short-video check",
     "examples_head": "Try an example",
-    "examples_lead": ("Six videos from the study's collection that no model was fitted on: five Zero Sugar videos "
-                      "(likes hidden or comments off) and one regular Reel that shows the warning. Click one to fill "
-                      "the form with its real details."),
+    "examples_lead": ("Six real videos from the study's collection. None was used to train the tool. Click one to "
+                      "fill the form with its details."),
     "examples_ready": "ready",
     "examples_not_ready": "~3 min",
     "example_chosen": "Example from the study's collection",
@@ -144,6 +152,10 @@ TEXT = {
     "kpi_range_label": "Eight in ten such videos fall between",
     "kpi_ig_label": "higher than this share of the 120 Instagram Zero Sugar videos, scored by the same model",
     "kpi_no_ig": "No content score for YouTube",
+    # D-067: plain one-liners on the summary cards
+    "kpi_range_plain": "Eight in ten videos from accounts this size land in this range.",
+    "kpi_ig_plain": "of the 120 Instagram videos score lower on content. A rough guide, not a chance of success.",
+    "no_ig_plain": "The study had too few YouTube channels to test a content score, so none is shown.",
     "bar_note": "The bar shows where this video sits among the 192: left = lower than all of them, right = higher.",
 }
 
@@ -223,6 +235,71 @@ def others_line(e: dict) -> str:
     comp = "more" if rest > three else "less"
     return (f"The model also uses 18 other measures, none consistent enough to explain. Together they moved this "
             f"video's score {comp} than these three did.")
+
+
+# ------------------------------------------------------------------------------------------ D-067 plain summary
+PATTERN_TAG = "a pattern, not proof"
+NO_TIPS = "This video already follows the patterns the study saw."
+TIPS_LEAD = ("The study found nothing proven to raise engagement. These are patterns it saw that this video does not "
+             "already follow - worth trying, not promises.")
+
+
+def _pos(r: dict, key: str, among: str) -> float | None:
+    d = (r.get("diagnostics") or {}).get(key) or {}
+    if d.get("value") is None:
+        return None
+    p = d.get(among) or {}
+    return {"below": 0.0, "above": 100.0}.get(p.get("beyond"), p.get("pct"))
+
+
+def meaning(r: dict, platform: str) -> list[str]:
+    """Two or three plain sentences from values already on the page (D-067)."""
+    out = []
+    if r.get("base_rate"):
+        out.append("The big number is what a typical video from an account this size gets. It is not a forecast for "
+                   "this video: most of the difference between videos comes from the account itself.")
+    s = r.get("instagram_score")
+    if s:
+        out.append(f"On content alone, this Reel scores higher than {s['higher_than_pct_of_120']:.0f}% of the 120 "
+                   "Instagram videos the tool learned from - a rough guide, not a chance of success.")
+    words = []
+    for key, more, fewer in (("hashtag_count", "more hashtags", "fewer hashtags"),
+                             ("talk_dur_frac", "more talking", "less talking"),
+                             ("face_present_frac", "more faces on screen", "fewer faces on screen")):
+        pos = _pos(r, key, "among_192")
+        if pos is not None and pos != 50:
+            words.append(more if pos > 50 else fewer)
+    if words:
+        out.append("Compared with the 192 study videos, it has " + ", ".join(words[:-1]) +
+                   (" and " if len(words) > 1 else "") + words[-1] + " than most.")
+    return out
+
+
+def worth_testing(r: dict, platform: str) -> list[dict]:
+    """At most three "ideas worth testing", by the rules fixed in D-067 before any page showed them."""
+    tips = []
+    pos = _pos(r, "hashtag_count", "among_192")
+    if pos is not None and pos < 50:
+        tips.append({"head": "Try a few more hashtags",
+                     "line": "This video uses fewer hashtags than most of the 192. In the study, accounts that used "
+                             "more hashtags had higher engagement - seen between accounts, not shown to help a single "
+                             "video."})
+    cta = ((r.get("hand_codes") or {}).get("hc_cta") or {}).get("answer")
+    if cta != 1.0:
+        tips.append({"head": "Ask viewers to do something",
+                     "line": "A clear call to action (\"comment below\", \"tag a friend\") went with videos ranking "
+                             "about 11 points higher out of 100 - the study's steadiest pattern, though judging it "
+                             "by eye was only moderately repeatable."})
+    if platform == "instagram":
+        for key, head, what in (("talk_dur_frac", "Try more talking", "more talking"),
+                                ("face_present_frac", "Show more faces", "more faces on screen")):
+            pos = _pos(r, key, "among_instagram")
+            if pos is not None and pos < 50:
+                tips.append({"head": head,
+                             "line": f"This Reel has less of this than most of the 120 Instagram videos. The Instagram "
+                                     f"score leaned towards {what}; seen on Instagram only - YouTube Shorts ran the "
+                                     "other way."})
+    return tips[:3]
 
 
 # ------------------------------------------------------------------------------------------ 12.7 warnings

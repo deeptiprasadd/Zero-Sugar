@@ -1,0 +1,366 @@
+{
+ "video": {
+  "file_sha256_16": "e0bc2e4c39d4383c",
+  "platform": "instagram",
+  "duration_sec": 24.751,
+  "aspect_ratio": 0.5625,
+  "shorter_than_training": false,
+  "shape_outside_training": false
+ },
+ "base_rate": {
+  "rate_typical": 0.005936255713203189,
+  "rate_80": [
+   8.296990127964308e-05,
+   0.42472187322203714
+  ],
+  "likes_comments_80": [
+   3.416036775485465,
+   17486.648964297714
+  ],
+  "followers": 41172.0,
+  "followers_outside_training": false,
+  "interval_coverage_on_held_out_accounts": 0.8638888888888889,
+  "interval_under_covered": false,
+  "widened_by": 1.2570659279822203
+ },
+ "instagram_score": {
+  "higher_than_pct_of_120": 51.7,
+  "score": 0.507736,
+  "outside_the_120": null,
+  "label": "exploratory: found in a secondary analysis, not confirmed",
+  "probability_shown": false
+ },
+ "diagnostics": {
+  "duration_sec": {
+   "value": 24.751,
+   "among_192": {
+    "pct": 56.69520095701213,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 56.00014574072725,
+    "beyond": null
+   }
+  },
+  "cuts_log1p": {
+   "value": 0.4737715218146548,
+   "among_192": {
+    "pct": 61.107253491327455,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 60.65059445541402,
+    "beyond": null
+   }
+  },
+  "motion_px_per_sec": {
+   "value": 13.608,
+   "among_192": {
+    "pct": 30.78457446808511,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 30.422975335739,
+    "beyond": null
+   }
+  },
+  "face_present_frac": {
+   "value": 0.24,
+   "among_192": {
+    "pct": 27.821933511654564,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 28.149606299212596,
+    "beyond": null
+   }
+  },
+  "face_area0": {
+   "value": 0.08011,
+   "among_192": {
+    "pct": 50.732506032402625,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 57.94780793319416,
+    "beyond": null
+   }
+  },
+  "edge_density": {
+   "value": 0.03239,
+   "among_192": {
+    "pct": 22.48958815363258,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 25.969868173258007,
+    "beyond": null
+   }
+  },
+  "colourfulness": {
+   "value": 0.11475,
+   "among_192": {
+    "pct": 3.979014785037815,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 2.159284182503883,
+    "beyond": null
+   }
+  },
+  "red_ratio": {
+   "value": 0.08545,
+   "among_192": {
+    "pct": 8.53975808760378,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 8.88888888888889,
+    "beyond": null
+   }
+  },
+  "ocr_region_count": {
+   "value": 0.48,
+   "among_192": {
+    "pct": 2.3674383868558624,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 2.7531700538474895,
+    "beyond": null
+   }
+  },
+  "ocr_mean_text_area": {
+   "value": 0.01289,
+   "among_192": {
+    "pct": 8.518312985571587,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 12.541926209870628,
+    "beyond": null
+   }
+  },
+  "music_frac": {
+   "value": 1.0,
+   "among_192": {
+    "pct": 87.5,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 85.0,
+    "beyond": null
+   }
+  },
+  "talk_dur_frac": {
+   "value": 0.0,
+   "among_192": {
+    "pct": 20.0,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 22.5,
+    "beyond": null
+   }
+  },
+  "loudness_db_mean": {
+   "value": -17.93,
+   "among_192": {
+    "pct": 88.43978102189782,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 92.18592964824121,
+    "beyond": null
+   }
+  },
+  "loudness_range_db": {
+   "value": 5.02,
+   "among_192": {
+    "pct": 0.0,
+    "beyond": "below"
+   },
+   "among_instagram": {
+    "pct": 0.0,
+    "beyond": "below"
+   }
+  },
+  "sentiment_caption": {
+   "value": -0.6162,
+   "among_192": {
+    "pct": 1.5900737689961684,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 1.5290136608597569,
+    "beyond": null
+   }
+  },
+  "caplen_lang": {
+   "value": -0.4083852593652858,
+   "among_192": {
+    "pct": 39.199126117319395,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 39.54605464903501,
+    "beyond": null
+   }
+  },
+  "hashtag_count": {
+   "value": 0.0,
+   "among_192": {
+    "pct": 15.0,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 12.5,
+    "beyond": null
+   }
+  },
+  "emoji_count": {
+   "value": 1.0,
+   "among_192": {
+    "pct": 52.5,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": 50.0,
+    "beyond": null
+   }
+  },
+  "kw_event": {
+   "value": null,
+   "among_192": {
+    "pct": null,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": null,
+    "beyond": null
+   }
+  },
+  "kw_promotional": {
+   "value": null,
+   "among_192": {
+    "pct": null,
+    "beyond": null
+   },
+   "among_instagram": {
+    "pct": null,
+    "beyond": null
+   }
+  }
+ },
+ "missing": {
+  "inputs_missing": [
+   "kw_event",
+   "kw_promotional"
+  ],
+  "caption_given": true,
+  "collaboration_given": true,
+  "speech": "no_speech",
+  "filled_by": "the saved model's training median (as in training)"
+ },
+ "speech_unclear": false,
+ "hand_codes": null,
+ "model_inputs": {
+  "duration_sec": 24.751,
+  "cuts_log1p": 0.4737715218146548,
+  "motion_px_per_sec": 13.608,
+  "face_present_frac": 0.24,
+  "face_area0": 0.08011,
+  "edge_density": 0.03239,
+  "colourfulness": 0.11475,
+  "red_ratio": 0.08545,
+  "ocr_region_count": 0.48,
+  "ocr_mean_text_area": 0.01289,
+  "music_frac": 1.0,
+  "talk_dur_frac": 0.0,
+  "loudness_db_mean": -17.93,
+  "loudness_range_db": 5.02,
+  "sentiment_caption": -0.6162,
+  "caplen_lang": -0.4083852593652858,
+  "hashtag_count": 0.0,
+  "emoji_count": 1.0,
+  "kw_event": null,
+  "kw_promotional": null,
+  "creator_collab_f": 1.0
+ },
+ "timing": {
+  "total_sec": 341.1,
+  "steps": [
+   {
+    "step": "prep",
+    "status": "ok",
+    "sec": 0.5
+   },
+   {
+    "step": "scenes",
+    "status": "detect+montage_check+final_rules",
+    "sec": 9.5
+   },
+   {
+    "step": "frames",
+    "status": "ok",
+    "sec": 2.7
+   },
+   {
+    "step": "asr",
+    "status": "no_speech",
+    "sec": 18.9
+   },
+   {
+    "step": "audio_signal",
+    "status": "reused",
+    "sec": 0.0
+   },
+   {
+    "step": "faces",
+    "status": "ok",
+    "sec": 4.0
+   },
+   {
+    "step": "visual",
+    "status": "ok",
+    "sec": 1.9
+   },
+   {
+    "step": "audio_events",
+    "status": "ok",
+    "sec": 203.0
+   },
+   {
+    "step": "sentiment",
+    "status": "ok",
+    "sec": 16.1
+   },
+   {
+    "step": "ocr",
+    "status": "ok",
+    "sec": 21.4
+   },
+   {
+    "step": "language",
+    "status": "ok",
+    "sec": 1.4
+   },
+   {
+    "step": "keywords",
+    "status": "ok",
+    "sec": 0.0
+   },
+   {
+    "step": "meta",
+    "status": "ok",
+    "sec": 0.3
+   }
+  ]
+ },
+ "gates": {
+  "G1": "failed (D-045) - content did not beat reach for unseen accounts",
+  "G2": "fail - see instagram_content_score",
+  "G3": "fail (interval widened) - see base_rate",
+  "G4": "fail (D-055): on 10 of the 192 videos, measured twice, the tool's model inputs equal the study's in 417 of 420 comparisons"
+ }
+}

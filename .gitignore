@@ -70,3 +70,10 @@ writing/
 
 # Generated frame-check images - local inspection only
 reports/product_frame_check/
+
+# The online demo (D-066) needs only these small served files from models/ and the deploy/ folder; nothing else.
+!models/base_rate.json
+!models/instagram_content_logreg.joblib
+!models/reference_quantiles.json
+!models/model_card.json
+!models/serving_schema.json

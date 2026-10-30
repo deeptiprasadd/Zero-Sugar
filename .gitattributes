@@ -1,0 +1,4 @@
+# The served model files carry fingerprints of their exact bytes (D-055); keep those bytes unchanged on every computer.
+models/*.json -text
+models/*.joblib binary
+deploy/** -text

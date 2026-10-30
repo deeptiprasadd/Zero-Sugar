@@ -193,7 +193,7 @@ def percentile(v: float, qv: list[float], qs: list[float]) -> dict:
 
 def base_rate(art: dict, platform: str, followers: float | None) -> dict | None:
     """D-053/D-054: typical rate and 80% interval for a new account of this platform and size."""
-    from src.serve.build_models import base_predict
+    from src.serve.base_math import base_predict
     if not followers or followers <= 0:
         return None
     b = art["base"]

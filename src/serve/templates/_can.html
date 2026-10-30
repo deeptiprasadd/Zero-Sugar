@@ -1,0 +1,27 @@
+{# A plain can drawing (red body, white wave, silver rims) for the hero and the progress page (D-066).
+   `level` (0-1) makes the can fill with liquid, as the progress page does; leave it out for a full can. #}
+{% macro can(level=None, cls='') %}
+<svg class="can {{ cls }}" viewBox="0 0 120 220" role="img" aria-label="A can" focusable="false">
+  <defs><clipPath id="body-{{ cls or 'x' }}"><rect x="22" y="34" width="76" height="156" rx="11"/></clipPath></defs>
+  <ellipse class="shadow" cx="60" cy="208" rx="38" ry="6"/>
+  {% if level is not none %}
+  <rect x="22" y="34" width="76" height="156" rx="11" fill="none" stroke="currentColor" stroke-width="3" opacity=".35"/>
+  <g clip-path="url(#body-{{ cls or 'x' }})"><g class="liquid" style="--lvl:{{ level }}">
+    <rect x="18" y="34" width="84" height="170" fill="var(--red)"/>
+    <path class="wave" d="M-60 34 q15 -8 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 v12 h-300z" fill="var(--red)"/>
+  </g></g>
+  {% else %}
+  <rect x="22" y="34" width="76" height="156" rx="11" fill="var(--can-body, var(--red))"/>
+  <path d="M22 118 C44 96 70 140 98 112 L98 134 C70 162 44 118 22 140 Z" fill="var(--can-wave, #fff)"/>
+  <rect x="31" y="40" width="7" height="144" rx="3.5" fill="#fff" opacity=".28"/>
+  <text x="60" y="84" text-anchor="middle" font-size="26" font-weight="800" fill="var(--can-0, #fff)" font-family="system-ui, sans-serif">0</text>
+  {% endif %}
+  <rect x="28" y="22" width="64" height="15" rx="6" fill="#cdd1d6"/>
+  <rect x="38" y="26" width="30" height="5" rx="2.5" fill="#9aa0a8"/>
+  <rect x="28" y="186" width="64" height="14" rx="6" fill="#cdd1d6"/>
+</svg>
+{% endmacro %}
+
+{% macro bubbles(n=14) %}
+<span class="bubbles" aria-hidden="true">{% for i in range(n) %}<i style="--x:{{ (i * 37 + 7) % 100 }}%;--d:{{ 6 + (i * 13) % 7 }}s;--s:{{ 5 + (i * 5) % 11 }}px;--w:-{{ (i * 7) % 9 }}s"></i>{% endfor %}</span>
+{% endmacro %}
